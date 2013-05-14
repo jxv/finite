@@ -239,35 +239,6 @@ struct game
 
 /* tile_functions */
 
-/*
-A is worth
- 1B is worth
- 3C is worth
- 3D is worth
- 2E is worth
- 1F is worth
- 4G is worth
- 2H is worth
- 4I is worth
- 1J is worth
- 8K is worth
- 5L is worth
- 1M is worth
- 3N is worth
- 1O is worth
- 1P is worth
- 3Q is worth
- 10R is worth
- 1S is worth
- 1T is worth
- 1U is worth
- 1V is worth
- 4W is worth
- 4X is worth
- 8Y is worth
- 4Z is worth
- 10
-*/
 
 int tile_score(struct tile *t)
 {
@@ -275,30 +246,30 @@ int tile_score(struct tile *t)
 		return 0;
 	switch (t->letter) {
 	case LETTER_A: return 1;
-	case LETTER_B: return 1;
-	case LETTER_C: return 1;
-	case LETTER_D: return 1;
+	case LETTER_B: return 3;
+	case LETTER_C: return 3;
+	case LETTER_D: return 2;
 	case LETTER_E: return 1;
-	case LETTER_F: return 1;
-	case LETTER_G: return 1;
-	case LETTER_H: return 1;
+	case LETTER_F: return 4;
+	case LETTER_G: return 2;
+	case LETTER_H: return 4;
 	case LETTER_I: return 1;
 	case LETTER_J: return 8;
-	case LETTER_K: return 1;
+	case LETTER_K: return 5;
 	case LETTER_L: return 1;
-	case LETTER_M: return 1;
+	case LETTER_M: return 3;
 	case LETTER_N: return 1;
 	case LETTER_O: return 1;
-	case LETTER_P: return 1;
+	case LETTER_P: return 3;
 	case LETTER_Q: return 10;
 	case LETTER_R: return 1;
 	case LETTER_S: return 1;
 	case LETTER_T: return 1;
 	case LETTER_U: return 1;
-	case LETTER_V: return 1;
-	case LETTER_W: return 1;
-	case LETTER_X: return 10;
-	case LETTER_Y: return 1;
+	case LETTER_V: return 4;
+	case LETTER_W: return 4;
+	case LETTER_X: return 8;
+	case LETTER_Y: return 4;
 	case LETTER_Z: return 10;
 	default: break;
 	}
