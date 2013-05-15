@@ -1356,17 +1356,24 @@ int init(struct env *e)
 			SDL_SWSURFACE);
 	if (e->io.screen == NULL)
 		return 0;
+
 	if (!load_dictionary(&e->game.dictionary, RES_PATH "dictionary.txt"))
 		return 0;
+
 	e->io.back = load_surface(RES_PATH "back.png");
 	if (!e->io.back)
 		return 0;
+
 	e->io.lockon = load_surface(RES_PATH "lockon.png");
+	if (!e->io.lockon)
 		return 0;
+
 	if (!load_fontmap(&e->io.white_font, 6, 12, RES_PATH "white_font.png"))
 		return 0;
+
 	if (!load_fontmap(&e->io.black_font, 6, 12, RES_PATH "black_font.png"))
 		return 0;
+
 	tile = load_surface(RES_PATH "tile.png");
 	if (!tile)
 		return 0;
