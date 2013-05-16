@@ -18,7 +18,7 @@ void *alloc_mem(size_t s)
 void free_mem(void *m)
 {
 	NOT(m);
-	free_mem(m);
+	free(m);
 }
 
 
@@ -454,22 +454,21 @@ void draw_rack(struct io *io, struct player *p)
 	off_x = 162;
 	off_y = 222;
 	w = io->wild->w + TILE_SPACING_X;
-	LOG("draw_rack loop begin");
 	for (i = 0; i < RACK_SIZE; i++) {
 		type = p->tile[i].type;
-		LOG("draw_rack loop 0");
+		t = NULL;
+		if (type == TILE_NONE) {
+			continue;
+		}
 		letter = p->tile[i].letter;
-		LOG("draw_rack loop 1");
 		if (type == TILE_LETTER) {
 			assert(letter > LETTER_INVALID && letter < LETTER_COUNT);
 			t = io->tile[1][letter];
 		}
-		LOG("draw_rack loop 2");
-		if (type == TILE_WILD)
+		if (type == TILE_WILD) {
 			t = io->wild;
-		LOG("draw_rack loop 3");
-		if (type != TILE_NONE) 
-			draw_surface(io->screen, t, off_x + i * w, off_y);
+		}
+		draw_surface(io->screen, t, off_x + i * w, off_y);
 	}
 }
 
