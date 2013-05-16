@@ -385,7 +385,7 @@ void draw_board(struct io *io, struct board *b)
 	off_x = 106;
 	off_y = 6;
 	w = io->wild->w + 2;
-	h = io->wild->h + 2;
+	h = io->wild->h;
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
 			type = 1;
