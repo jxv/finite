@@ -11,6 +11,7 @@ int strlen_as_word(char str[])
 {
 	int i, len = 0;
 	char c;
+	assert(str);
 	for (i = 0; str[i] != '\0'; i++) {
 		c = toupper(str[i]);
 		if (c >= 'A' && c <= 'Z') 
@@ -378,8 +379,8 @@ struct env
 /* */
 
 
-#define TILE_SPACING_X (0)
-#define TILE_SPACING_Y (-1)
+#define TILE_SPACING_X	2
+#define TILE_SPACING_Y	0
 
 
 void draw_board(struct io *io, struct board *b)
@@ -452,6 +453,7 @@ void draw_str(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 	int i;
 	char c;
 	SDL_Rect offset, clip;
+	NOT(s), NOT(f), NOT(str);
 	offset.x = x;
 	offset.y = y;
 	clip.y = 0;
