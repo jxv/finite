@@ -444,18 +444,25 @@ void draw_rack(struct io *io, struct player *p)
 {
 	int off_x, off_y, w, i, letter, type;
 	SDL_Surface *t;
-	NOT(io), NOT(p);
+	NOT(io), NOT(p), NOT(io->wild);
 	off_x = 162;
 	off_y = 222;
 	w = io->wild->w + TILE_SPACING_X;
+	LOG("draw_rack loop begin");
 	for (i = 0; i < RACK_SIZE; i++) {
 		type = p->tile[i].type;
+		LOG("draw_rack loop 0");
 		letter = p->tile[i].letter;
-		if (type == TILE_LETTER)
-			t = io->tile[type][letter];
+		LOG("draw_rack loop 1");
+		if (type == TILE_LETTER) {
+			assert(letter > LETTER_INVALID && letter < LETTER_COUNT);
+			t = io->tile[1][letter];
+		}
+		LOG("draw_rack loop 2");
 		if (type == TILE_WILD)
 			t = io->wild;
-		if (type != TILE_NONE)
+		LOG("draw_rack loop 3");
+		if (type != TILE_NONE) 
 			draw_surface(io->screen, t, off_x + i * w, off_y);
 	}
 }

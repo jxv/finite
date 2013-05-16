@@ -55,6 +55,7 @@ typedef enum
 
 typedef enum
 {
+	LETTER_INVALID = -1,
 	LETTER_A = 0,
 	LETTER_B,
 	LETTER_C,
