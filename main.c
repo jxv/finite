@@ -158,6 +158,10 @@ void init_board(struct board *b)
 		for (x = 0; x < BOARD_X; x++) {
 			b->tile[y][x].type = TILE_NONE;
 			b->sq[y][x] = SQ_NORMAL;
+			{
+				b->tile[y][x].letter = (x * y) % 26;
+				b->tile[y][x].type = (x%2) ? TILE_WILD:TILE_LETTER;
+			}
 		}
 	}
 }
@@ -380,8 +384,8 @@ void draw_board(struct io *io, struct board *b)
 	NOT(io), NOT(b);
 	off_x = 106;
 	off_y = 6;
-	w = 14;
-	h = 14;
+	w = io->wild->w + 2;
+	h = io->wild->h + 2;
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
 			type = 1;
@@ -409,7 +413,7 @@ void draw_rack(struct io *io, struct player *p)
 	NOT(io), NOT(p);
 	off_x = 162;
 	off_y = 222;
-	w = 14;
+	w = io->wild->w + 2;
 	for (i = 0; i < RACK_SIZE; i++) {
 		type = p->tile[i].type;
 		letter = p->tile[i].letter;
