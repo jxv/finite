@@ -7,11 +7,11 @@
 #define SCREEN_BPP	32
 
 
-int strlen_as_word(char str[])
+int strlen_as_word(const char *str)
 {
 	int i, len = 0;
 	char c;
-	assert(str);
+	NOT(str);
 	for (i = 0; str[i] != '\0'; i++) {
 		c = toupper(str[i]);
 		if (c >= 'A' && c <= 'Z') 
@@ -21,10 +21,11 @@ int strlen_as_word(char str[])
 }
 
 
-void word_from_str(letter_t word[], char *str)
+void word_from_str(letter_t *word, const char *str)
 {
 	int i, j;
 	char c;
+	NOT(word), NOT(str);
 	for (i = 0, j = 0; str[i] != '\0'; i++) {
 		c = toupper(str[i]);
 		if (c >= 'A' && c <= 'Z') {
@@ -37,8 +38,11 @@ void word_from_str(letter_t word[], char *str)
 
 void swap_words(letter_t **w0, int *len0, letter_t **w1, int *len1)
 {
-	int tmp_len = *len0;
-	letter_t *tmp_w = *w0;
+	int tmp_len;
+	letter_t *tmp_w;
+	NOT(w0), NOT(len0), NOT(w1), NOT(len1), NOT(*w0), NOT(*w1);
+	tmp_len = *len0;
+	tmp_w = *w0;
 	*len0 = *len1;
 	*w0 = *w1;
 	*len1 = tmp_len; 
@@ -51,6 +55,7 @@ int load_dictionary(struct dictionary *dict, const char *filename)
 	long i, j;
 	FILE *f = NULL;
 	char buf[BOARD_SIZE+1];
+	NOT(dict), NOT(filename);
 	f = fopen(filename,"r");
 	if (f == NULL)
 		return 0;
@@ -68,9 +73,12 @@ int load_dictionary(struct dictionary *dict, const char *filename)
 	rewind(f);
 	/* alloc */
 	dict->word = malloc(sizeof(letter_t*) * dict->num);
+	NOT(dict->word);
 	dict->len = malloc(sizeof(long) * dict->num);
+	NOT(dict->len);
 	for (i = 0; i < dict->num; i++)
 		dict->word[i] = malloc(sizeof(letter_t) * BOARD_SIZE);
+		NOT(dict->word[i]);
 	/* assign */
 	i = 0;
 	for(i = 0; i < dict->num && fgets(buf, BOARD_SIZE+1, f); i++) {
@@ -106,9 +114,10 @@ int load_dictionary(struct dictionary *dict, const char *filename)
 /* end of core functionality */
 
 
-void print_word(letter_t word[], int len) {
+void print_word(letter_t *word, int len) {
 	char str[BOARD_SIZE];
 	int j;
+	NOT(word);
 	for (j = 0; j < len; j++) 
 		str[j] = 'A' + word[j] - LETTER_A;
 	str[j] = '\0';
@@ -119,6 +128,7 @@ void print_word(letter_t word[], int len) {
 void print_dictionary(struct dictionary *dict)
 {
 	int i;
+	NOT(dict);
 	printf("== Size:%ld\n", dict->num);
 	for (i = 0; i < dict->num; i++)
 		print_word(dict->word[i], dict->len[i]);
@@ -135,7 +145,8 @@ int scabs();
 
 int main()
 {
-	return scabs();
+	test();
+	return 0;
 }
 
 
@@ -258,6 +269,7 @@ void print_board(struct board *b)
 	}
 }
 
+#define RES_PATH "data/"
 
 void test()
 {
@@ -266,7 +278,7 @@ void test()
 	struct action a;
 	g.turn = 0;
 	g.player_num = 1;
-	load_dictionary(&g.dictionary, "data/dictionary.txt");
+	load_dictionary(&g.dictionary, RES_PATH "dictionary.txt");
 	init_board(&g.board);
 	init_bag(&g.bag);
 	init_player(&g.player[0]);
@@ -312,16 +324,19 @@ void free_surface(SDL_Surface *s)
 SDL_Surface *load_surface(const char *filename)
 {
 	/* Magenta represents transparency */
-	SDL_Surface *s = NULL;
-	SDL_Surface *tmp = IMG_Load(filename);
-	if (tmp) {
-		s = SDL_DisplayFormat(tmp);
-		SDL_FreeSurface(tmp);
-	}
-	if (s) {
-		Uint32 a = SDL_MapRGB(s->format, 0xff, 0x00, 0xff);
-		SDL_SetColorKey(s, SDL_SRCCOLORKEY, a);
-	}
+	SDL_Surface *s, *tmp;
+	Uint32 a;
+	NOT(filename);
+	s = NULL;
+	tmp = IMG_Load(filename);
+	if (!tmp)
+		return NULL;
+	s = SDL_DisplayFormat(tmp);
+	SDL_FreeSurface(tmp);
+	if (!s)
+		return NULL;
+	a = SDL_MapRGB(s->format, 0xff, 0x00, 0xff);
+	SDL_SetColorKey(s, SDL_SRCCOLORKEY, a);
 	return s;
 } 
 
@@ -434,7 +449,7 @@ void draw_rack(struct io *io, struct player *p)
 
 int load_fontmap(struct font *f, int w, int h, const char *filename)
 {
-	NOT(f);
+	NOT(f), NOT(filename);
 	f->w = w;
 	f->h = h;
 	f->map = load_surface(filename);
@@ -443,7 +458,7 @@ int load_fontmap(struct font *f, int w, int h, const char *filename)
 
 void unload_fontmap(struct font *f)
 {
-	NOT(f);
+	NOT(f), NOT(f->map);
 	free_surface(f->map);
 }
 
@@ -453,7 +468,7 @@ void draw_str(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 	int i;
 	char c;
 	SDL_Rect offset, clip;
-	NOT(s), NOT(f), NOT(str);
+	NOT(s), NOT(f), NOT(f->map), NOT(str);
 	offset.x = x;
 	offset.y = y;
 	clip.y = 0;
@@ -472,10 +487,11 @@ void draw_str(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 /***/
 
 
-#define RES_PATH "data/"
+
 
 int init_io(struct io *io)
 {
+	NOT(io);
 	return 0;
 }
 
@@ -518,11 +534,15 @@ int init(struct env *e)
 	e->io.wild = cpy_surface(tile);
 	for (i = 0; i < 26; i++) {
 		e->io.tile[0][i] = cpy_surface(tile);
+		if (!e->io.tile[0][i])
+			return 0;
 		e->io.tile[1][i] = cpy_surface(tile);
-		sprintf(str,"%c",i+'a');
-		draw_str(e->io.tile[0][i], &e->io.black_font,str, 3, 0);
-		sprintf(str,"%c",i+'A');
-		draw_str(e->io.tile[1][i], &e->io.black_font,str, 3, 0);
+		if (!e->io.tile[0][i])
+			return 0;
+		sprintf(str,"%c", i + 'a');
+		draw_str(e->io.tile[0][i], &e->io.black_font, str, 3, 0);
+		sprintf(str,"%c", i + 'A');
+		draw_str(e->io.tile[1][i], &e->io.black_font, str, 3, 0);
 	}
 	free_surface(tile);
 	init_board(&e->game.board);
@@ -580,6 +600,7 @@ int handle_event(struct env *e)
 void exec(struct env *e)
 {
 	int st, q = 0;
+	NOT(e);
 	do {
 		st = SDL_GetTicks();
 		q = handle_event(e);
