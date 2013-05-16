@@ -109,10 +109,12 @@ int score_dir(struct board *b, struct dir *d)
 	}
 	default: break;
 	}
-	if (dw > 0)
+	if (dw > 0) {
 		score *= dw * 2;
-	if (tw > 0)
+	}
+	if (tw > 0) {
 		score *= tw * 3;
+	}
 	return score;
 }
 
@@ -127,10 +129,11 @@ int score_meta_path(struct dir *d, struct dir *adj, int n, struct board *b)
 	s = 0;
 	if (d->type != DIR_INVALID) {
 		s = score_dir(b, d);
-		for (i = 0; i < n; i++)
-			if (adj[i].type != DIR_INVALID)
+		for (i = 0; i < n; i++) {
+			if (adj[i].type != DIR_INVALID) {
 				s += score_dir(b, adj+i);
-		
+			}
+		}
 	}
 	return s;
 }
@@ -144,18 +147,23 @@ int score_path(struct path *p)
 	score = 0;
 	b = &p->board;
 	switch (p->type) {
-	case PATH_DOT:
-		if (p->data.dot.right.type == DIR_RIGHT)
+	case PATH_DOT: {
+		if (p->data.dot.right.type == DIR_RIGHT) {
 			score  = score_dir(b, &p->data.dot.right);
-		if (p->data.dot.down.type == DIR_DOWN)
+		}
+		if (p->data.dot.down.type == DIR_DOWN) {
 			score += score_dir(b, &p->data.dot.down);
+		}
 		break;
-	case PATH_HORZ:
+	}
+	case PATH_HORZ: {
 		score = score_meta_path(&p->data.horz.right, p->data.horz.down, BOARD_X, b);
 		break;
-	case PATH_VERT:
+	}
+	case PATH_VERT: {
 		score = score_meta_path(&p->data.vert.down, p->data.vert.right, BOARD_Y, b);
 		break;
+	}
 	default: break;
 	}
 	return score;
@@ -185,8 +193,9 @@ int bag_empty(struct bag *b)
 int bag_size(struct bag *b)
 {
 	NOT(b);
-	if (b->head > b->tail)
+	if (b->head > b->tail) {
 		return b->head - b->tail;
+	}
 	return b->tail - b->head;
 }
 
@@ -196,8 +205,9 @@ struct tile bag_peek(struct bag *b)
 	struct tile next;
 	NOT(b);
 	next.type = TILE_NONE;
-	if (b->head != b->tail)
+	if (b->head != b->tail) {
 		next = b->tile[b->head];
+	}
 	return next;
 }
 
@@ -227,47 +237,54 @@ void shake_bag(struct bag *b)
 
 int cmp_word(letter_t w0[], int len0, letter_t w1[], int len1) 
 {
-	/* returns | w0 >  w1 = -1
-	 *         | w0 <  w1 =  1
-	 *         | w0 == w1 =  0
+	/* returns  
+	 * | w0 >  w1 = -1
+	 * | w0 <  w1 =  1
+	 * | w0 == w1 =  0
 	 */
 	int i;
 	for (i = 0; ; i++) {
-		if      (len0 >  len1 && i == len1)
+		if (len0 >  len1 && i == len1) {
 			return -1;
-		else if (len0 <  len1 && i == len0)
+		} else if (len0 <  len1 && i == len0) {
 			return  1;
-		else if (len0 == len1 && i == len0)
+		} else if (len0 == len1 && i == len0) {
 			return  0;
-		if (w0[i] == w1[i])
+		}
+		if (w0[i] == w1[i]) {
 			continue;
-		else if (w0[i] > w1[i])
+		}
+		if (w0[i] > w1[i]) {
 			return -1;
-		else
+		} else {
 			return  1;
+		}
 	}
 	return 0;
 }
 
 
-int valid_word(letter_t word[], int len, struct dictionary *dict)
+int valid_word(letter_t *word, int len, struct dictionary *dict)
 {
+	int res;
+	long min, max, mid;
 	/* Glorified binary search */
-	long min = 0;
-	long max = dict->num;
-	long mid = dict->num / 2;
-	for (;;) {
-		switch (cmp_word(word, len, dict->word[mid], dict->len[mid])) {
-		case 0: return 1;
-		case -1: min = mid + 1; break;
-		case  1: max = mid - 1; break;
-		default: return 0;
+	min = 0;
+	max = dict->num;
+	mid = dict->num / 2;
+	while (min <= max) {
+		res = cmp_word(word, len, dict->word[mid], dict->len[mid]);
+		if (res == 0) {
+			return 1;
+		}
+		if (res == -1) {
+			min = mid + 1;
+		}
+		if (res ==  1) {
+			max = mid - 1;
 		}
 		mid = (min + max) / 2;
-		if (min > max)
-			return 0;
 	}
-	/* Should never reach to this point */
 	return 0;
 }
 
@@ -280,28 +297,25 @@ int valid_dir(struct dir *dir, struct board *b, struct dictionary *dict)
 	x = dir->x;
 	y = dir->y;
 	len = dir->length;
-	switch (dir->type) {
-	case DIR_RIGHT: {
+	if (dir->type == DIR_RIGHT) {
 		int i;
 		for (i = 0; i < len; i++) {
-			if (b->tile[y][x+i].type != TILE_NONE)
+			if (b->tile[y][x+i].type != TILE_NONE) {
 				word[i] = b->tile[y][x+i].letter;
-			else
+			} else {
 				return 0;
+			}
 		}
-		break;
 	}
-	case DIR_DOWN: {
+	if (dir->type == DIR_DOWN) {
 		int i;
 		for (i = 0; i < len; i++) {
-			if (b->tile[y+i][x].type != TILE_NONE)
+			if (b->tile[y+i][x].type != TILE_NONE) {
 				word[i] = b->tile[y+i][x].letter;
-			else
+			} else {
 				return 0;
+			}
 		}
-		break;
-	}
-	default: return 0;
 	}
 	return valid_word(word, len, dict);
 }
@@ -310,30 +324,35 @@ int valid_dir(struct dir *dir, struct board *b, struct dictionary *dict)
 int valid_path(struct path *p, struct dictionary *d)
 {
 	int i;
-	switch (p->type) {
-	case PATH_DOT:
-		if (!valid_dir(&p->data.dot.right, &p->board, d))
+	if (p->type == PATH_DOT) {
+		if (!valid_dir(&p->data.dot.right, &p->board, d)) {
 			return 0;
-		if (!valid_dir(&p->data.dot.down, &p->board, d))
+		}
+		if (!valid_dir(&p->data.dot.down, &p->board, d)) {
 			return 0;
-		break;
-	case PATH_HORZ:
-		if (!valid_dir(&p->data.horz.right, &p->board, d))
+		}
+	}
+	if (p->type == PATH_HORZ) {
+		if (!valid_dir(&p->data.horz.right, &p->board, d)) {
 			return 0;
-		for (i = 0; i < BOARD_X; i++)
+		}
+		for (i = 0; i < BOARD_X; i++) {
 			if (p->data.horz.down[i].type == DIR_DOWN &&
-			   (!valid_dir(&p->data.horz.down[i], &p->board, d)))
+			   (!valid_dir(&p->data.horz.down[i], &p->board, d))) {
 				return 0;
-		break;
-	case PATH_VERT:
-		if (!valid_dir(&p->data.vert.down, &p->board, d)) 
+			}
+		}
+	}
+	if (p->type == PATH_VERT) {
+		if (!valid_dir(&p->data.vert.down, &p->board, d)) {
 			return 0;
-		for (i = 0; i < BOARD_Y; i++)
-			if (p->data.vert.right[i].type == DIR_RIGHT &&
-			   (!valid_dir(&p->data.vert.right[i], &p->board, d))) 
+		}
+		for (i = 0; i < BOARD_Y; i++) {
+			if (p->data.vert.right[i].type == DIR_RIGHT && 
+			   (!valid_dir(&p->data.vert.right[i], &p->board, d))) {
 				return 0;
-		break;
-	default: return 0;
+			}
+		}
 	}
 	return 1;
 }
@@ -350,8 +369,9 @@ int cpy_rack_board(struct board *b, struct place *place, struct player *player)
 		y = place->coor[i].y;
 		x = place->coor[i].x;
 		if (player->tile[r].type != TILE_NONE) {
-			if (b->tile[y][x].type != TILE_NONE)
+			if (b->tile[y][x].type != TILE_NONE) {
 				return 1;
+			}
 			memcpy(&b->tile[y][x], &player->tile[r],
 					sizeof(struct tile));
 		}
@@ -364,23 +384,31 @@ int is_horz(struct action *a, struct move *m)
 {
 	int i, min, max, y;
 	struct coor *coor;
-	struct board *board = &a->data.place.path.board;
+	struct board *b;
+	NOT(a), NOT(m);
+	b = &a->data.place.path.board;
 	y = m->data.place.coor[0].y;
 	min = max = m->data.place.coor[0].x;
-	if (m->data.place.num < 2)
+	if (m->data.place.num < 2) {
 		return 0;
+	}
 	for (i = 1; i < m->data.place.num; i++) {
 		coor = &m->data.place.coor[i];
-		if (y != coor->y)
+		if (y != coor->y) {
 			return 0;
-		if (min < coor->x)
+		}
+		if (min < coor->x) {
 			min = coor->x;
-		if (max > coor->x)
+		}
+		if (max > coor->x) {
 			max = coor->x;
+		}
 	}
-	for (i = min; i <= max; i++)
-		if (board->tile[y][i].type == TILE_NONE)
+	for (i = min; i <= max; i++) {
+		if (b->tile[y][i].type == TILE_NONE) {
 			return 0;
+		}
+	}
 	return 1;
 }
 
@@ -392,20 +420,26 @@ int is_vert(struct action *a, struct move *m)
 	struct board *board = &a->data.place.path.board;
 	x = m->data.place.coor[0].x;
 	min = max = m->data.place.coor[0].y;
-	if (m->data.place.num < 2)
+	if (m->data.place.num < 2) {
 		return 0;
+	}
 	for (i = 1; i < m->data.place.num; i++) {
 		coor = &m->data.place.coor[i];
-		if (x != coor->x)
+		if (x != coor->x) {
 			return 0;
-		if (min > coor->y)
+		}
+		if (min > coor->y) {
 			min = coor->y;
-		if (max < coor->y)
+		}
+		if (max < coor->y) {
 			max = coor->y;
+		}
 	}
-	for (i = min; i <= max; i++)
-		if (board->tile[i][x].type == TILE_NONE)
+	for (i = min; i <= max; i++) {
+		if (board->tile[i][x].type == TILE_NONE) {
 			return 0;
+		}
+	}
 	return 1;
 }
 
@@ -413,71 +447,88 @@ int is_vert(struct action *a, struct move *m)
 void mk_right(struct dir *d, int x, int y, struct board *b)
 {
 	int i;
+	NOT(d), NOT(b);
 	d->type = DIR_RIGHT;
 	d->y = y;
 	memset(d->pos, 0, sizeof(int) * BOARD_SIZE);
 	d->pos[x] = 1;
-	for (i = x; i >= 0 && b->tile[y][i].type != TILE_NONE; i--)
+	for (i = x; i >= 0 && b->tile[y][i].type != TILE_NONE; i--) {
 		d->x = i;
-	for (i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++)
+	}
+	for (i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++) {
 		d->length = i;
+	}
 	d->length -= d->x - 1;
-	if (d->length == 1)
+	if (d->length == 1) {
 		 d->type = DIR_INVALID;
+	}
 }
 
 
 void mk_down(struct dir *d, int x, int y, struct board *b)
 {
 	int i;
+	NOT(d), NOT(b);
 	d->type = DIR_DOWN;
 	d->x = x;
 	memset(d->pos, 0, sizeof(int) * BOARD_SIZE);
 	d->pos[y] = 1;
-	for (i = y; i >= 0 && b->tile[i][x].type != TILE_NONE; i--)
+	for (i = y; i >= 0 && b->tile[i][x].type != TILE_NONE; i--) {
 		d->y = i;
-	for (i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++)
+	}
+	for (i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++) {
 		d->length = i;
+	}
 	d->length -= d->y - 1;
-	if (d->length == 1)
+	if (d->length == 1) {
 		 d->type = DIR_INVALID;
+	}
 }
 
 
 void mk_dot(struct action *a, struct move *m)
 {
-	int x = m->data.place.coor[0].x;
-	int y = m->data.place.coor[0].y;
-	struct path *path = &a->data.place.path; 
-	struct board *b = &a->data.place.path.board;
-	struct dir *d = NULL;
-	path->type = PATH_DOT;
-	d = &path->data.dot.right;
+	int x, y;
+	struct path *p;
+	struct board *b;
+	struct dir *d;
+	NOT(a), NOT(m);
+	x = m->data.place.coor[0].x;
+	y = m->data.place.coor[0].y;
+	p = &a->data.place.path; 
+	b = &a->data.place.path.board;
+	d = NULL;
+	p->type = PATH_DOT;
+	d = &p->data.dot.right;
 	mk_right(d, x, y, b);
-	d = &path->data.dot.down;
+	d = &p->data.dot.down;
 	mk_down(d, x, y, b);
 }
 
 
 void mk_horz(struct action *a, struct move *m)
 {
-	int i;
-	int x = m->data.place.coor[0].x;
-	int y = m->data.place.coor[0].y;
-	struct path *path = &a->data.place.path; 
-	struct board *b = &a->data.place.path.board;
-	struct dir *d = NULL;
-	path->type = PATH_HORZ;
-	d = &path->data.horz.right;
+	int i, x, y;
+	struct path *p;
+	struct board *b;
+	struct dir *d;
+	NOT(a), NOT(m);
+	x = m->data.place.coor[0].x;
+	y = m->data.place.coor[0].y;
+	p = &a->data.place.path; 
+	b = &a->data.place.path.board;
+	p->type = PATH_HORZ;
+	d = &p->data.horz.right;
 	mk_right(d, x, y, b);
 	for (i = 0; i < m->data.place.num; i++) {
 		x = m->data.place.coor[i].x;
 		d->pos[x] = 1;
 	}
-	for (i = 0; i < BOARD_X; i++)
-		path->data.horz.down[i].type = DIR_INVALID;
+	for (i = 0; i < BOARD_X; i++) {
+		p->data.horz.down[i].type = DIR_INVALID;
+	}
 	for (i = 0; i < m->data.place.num; i++) {
-		d = &path->data.horz.down[i];
+		d = &p->data.horz.down[i];
 		x = m->data.place.coor[i].x;
 		y = m->data.place.coor[i].y;
 		mk_down(d, x, y, b);
@@ -487,21 +538,24 @@ void mk_horz(struct action *a, struct move *m)
 
 void mk_vert(struct action *a, struct move *m)
 {
-	int i;
-	int x = m->data.place.coor[0].x;
-	int y = m->data.place.coor[0].y;
-	struct path *path = &a->data.place.path; 
-	struct board *b = &a->data.place.path.board;
-	struct dir *d = NULL;
-	path->type = PATH_VERT;
+	int i, x, y;
+	struct path *path;
+	struct board *b;
+	struct dir *d;
+	x = m->data.place.coor[0].x;
+	y = m->data.place.coor[0].y;
+	b = &a->data.place.path.board;
+	path = &a->data.place.path; 
 	d = &path->data.vert.down;
+	path->type = PATH_VERT;
 	mk_down(d, x, y, b);
 	for (i = 0; i < m->data.place.num; i++) {
 		y = m->data.place.coor[i].y;
 		d->pos[y] = 1;
 	}
-	for (i = 0; i < BOARD_Y; i++)
+	for (i = 0; i < BOARD_Y; i++) {
 		path->data.vert.right[i].type = DIR_INVALID;
+	}
 	for (i = 0; i < m->data.place.num; i++) {
 		d = &path->data.vert.right[i];
 		x = m->data.place.coor[i].x;
@@ -515,23 +569,26 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 {
 	/* copy current board and recently placed tiles
 	 * note: not-TILE_NONE impiles TILE_WILD or TILE_LETTER */
-	struct path *path = &a->data.place.path;
+	int num;
+	struct path *path;
+	struct player *player;
+	num = m->data.place.num;
+	path = &a->data.place.path;
+	player = &g->player[m->player_id];
 	a->type = ACTION_PLACE;
 	a->data.place.num = m->data.place.num;
 	memcpy(&path->board, &g->board, sizeof(struct board));
-	if (cpy_rack_board(&path->board, &m->data.place,
-			&g->player[m->player_id])) {
+	if (cpy_rack_board(&path->board, &m->data.place, player)) {
 		a->type = ACTION_INVALID;
 		return;
 	}
-	switch (m->data.place.num) {
-	case 0:
+	if (num == 0) {
 		a->type = ACTION_INVALID;
-		return;
-	case 1:
+	}
+	if (num == 1) {
 		mk_dot(a, m);
-		break;
-	default:
+	}
+	if (num > 2) {
 		if (is_horz(a, m)) {
 			mk_horz(a, m);
 		} else if (is_vert(a, m)) {
@@ -540,7 +597,6 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 			a->type = ACTION_INVALID;
 			return;
 		}
-		break;
 	}
 	if (!valid_path(path, &g->dictionary)) {
 		a->type = ACTION_INVALID;
@@ -552,62 +608,60 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 
 void mk_action(struct action *a, struct game *g, struct move *m)
 {
+	NOT(a), NOT(g), NOT(m);
 	a->player_id = m->player_id;
-	switch (m->type) {
-	case MOVE_INVALID:
+	if (m->type == MOVE_INVALID) {
 		a->type = ACTION_INVALID;
-		break;
-	case MOVE_PLACE:
+		return;
+	}
+	if (m->type == MOVE_PLACE) {
 		mk_place(a, g, m);
-		break;
-	case MOVE_SWAP:
-		a->type = ACTION_INVALID;
-		if (bag_size(&g->bag) >= m->data.swap.num) {
-			a->type = ACTION_SWAP;
-			memcpy(&a->data.swap, &m->data.swap,
-					sizeof(struct swap));
+		return;
+	}
+	if (m->type == MOVE_SWAP) {
+		a->type = ACTION_SWAP;
+		if (m->data.swap.num > bag_size(&g->bag)) {
+			a->type = ACTION_INVALID;
+			return;
 		}
-		break;
-	case MOVE_SKIP:
+		memcpy(&a->data.swap, &m->data.swap,
+				sizeof(struct swap));
+		return;
+	}
+	if (m->type == MOVE_SKIP) {
 		a->type = ACTION_SKIP;
-		break;
-	default:break;
 	}
 }
 
 
 void apply_action(struct game *g, struct action *a)
 {
-	int pid = a->player_id;
-	if (pid != g->turn)
+	int id, i, r;
+	struct tile *t;
+	id = a->player_id;
+	if (id != g->turn)
 		return;
-	switch (a->type) {
-	case ACTION_PLACE: {
-		int i, r;
+	if (a->type == ACTION_PLACE) {
 		memcpy(&g->board, &a->data.place.path.board,
 				sizeof(struct board));
-		g->player[pid].score += a->data.place.score;
+		g->player[id].score += a->data.place.score;
 		for (i = 0; i < a->data.place.num; i++) {
 			r = a->data.place.rack_id[i];
-			g->player[pid].tile[r].type = TILE_NONE;
+			g->player[id].tile[r].type = TILE_NONE;
 		}
-		break;
 	}
-	case ACTION_SWAP: {
-		struct tile *t;
-		int i, r;
+	if (a->type == ACTION_SWAP) {
 		for (i = 0; i < a->data.swap.num; i++) {
 			r = a->data.swap.rack_id[i];
-			t = &g->player[pid].tile[r];
+			t = &g->player[id].tile[r];
 			bag_add(&g->bag, *t);
 			*t = bag_peek(&g->bag);
 			bag_drop(&g->bag);
 		}
 		shake_bag(&g->bag);
-		break;
 	}
-	case ACTION_SKIP:
-	default: break;
+	if (a->type == ACTION_SKIP) {
+		return;
 	}
 }
 
