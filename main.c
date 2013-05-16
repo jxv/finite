@@ -515,11 +515,13 @@ int init(struct env *e)
 	int i;
 	char str[32];
 	SDL_Surface *tile;
+	LOG("init");
 	NOT(e);
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
 		return 0;
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("scabs", NULL);
+	LOG("init:io.screen");
 	e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP,
 			SDL_SWSURFACE);
 	if (e->io.screen == NULL)
@@ -528,24 +530,31 @@ int init(struct env *e)
 	if (!load_dictionary(&e->game.dictionary, RES_PATH "dictionary.txt"))
 		return 0;
 */
+	LOG("init:io.back");
 	e->io.back = load_surface(RES_PATH "back.png");
 	if (!e->io.back)
 		return 0;
 
+	LOG("init:io.lockon");
 	e->io.lockon = load_surface(RES_PATH "lockon.png");
 	if (!e->io.lockon)
 		return 0;
 
+	LOG("init:io.white_font");
 	if (!load_fontmap(&e->io.white_font, 6, 12, RES_PATH "white_font.png"))
 		return 0;
 
+	LOG("init:io.black_font");
 	if (!load_fontmap(&e->io.black_font, 6, 12, RES_PATH "black_font.png"))
 		return 0;
 
+	LOG("init:io.tile");
 	tile = load_surface(RES_PATH "tile.png");
 	if (!tile)
 		return 0;
+	LOG("init:io.wild");
 	e->io.wild = cpy_surface(tile);
+	LOG("init:io.tiles");
 	for (i = 0; i < 26; i++) {
 		e->io.tile[0][i] = cpy_surface(tile);
 		if (!e->io.tile[0][i])
@@ -558,8 +567,11 @@ int init(struct env *e)
 		sprintf(str,"%c", i + 'A');
 		draw_str(e->io.tile[1][i], &e->io.black_font, str, 3, 0);
 	}
+	LOG("init:free io.tile");
 	free_surface(tile);
+	LOG("init_board");
 	init_board(&e->game.board);
+	LOG("init_player");
 	init_player(&e->game.player[0]);
 	return 1;
 }
@@ -614,6 +626,7 @@ int handle_event(struct env *e)
 void exec(struct env *e)
 {
 	int st, q = 0;
+	LOG("exec");
 	NOT(e);
 	do {
 		st = SDL_GetTicks();

@@ -6,7 +6,10 @@
 #include <memory.h>
 #include <assert.h>
 
-#define NOT(t)	assert((t))
+#define LOG(x)	printf("["x"]\n")
+
+
+#define NOT(t)	assert((t) != NULL)
 #define RANGE(a,b,c)	assert((a) >= (b) && (a) <= (c))
 #define XRANGE(a,b,c)	assert((a) > (b) && (a) < (c))
 
