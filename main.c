@@ -629,14 +629,23 @@ void exec(struct env *e)
 	LOG("exec");
 	NOT(e);
 	do {
+		LOG("exec:start frame");
 		st = SDL_GetTicks();
+		LOG("exec:handle events");
 		q = handle_event(e);
+		LOG("exec:fill screen");
 		SDL_FillRect(e->io.screen, NULL, 0);
+		LOG("exec:draw back");
 		draw_surface(e->io.screen, e->io.back, 0, 0);
+		LOG("exec:draw board");
 		draw_board(&e->io, &e->game.board);
+		LOG("exec:draw rack");
 		draw_rack(&e->io, e->game.player + e->game.turn);
+		LOG("exec:flip");
 		SDL_Flip(e->io.screen);
+		LOG("exec:delay");
 		delay(st, SDL_GetTicks(), 60);
+		LOG("exec:end frame");
 	} while (!q);
 }
 
