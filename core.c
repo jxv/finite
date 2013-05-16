@@ -82,8 +82,7 @@ int score_dir(struct board *b, struct dir *d)
 	x = d->x;
 	y = d->y;
 	score = 0;
-	switch (d->type) {
-	case DIR_RIGHT: {
+	if (d->type == DIR_RIGHT) {
 		int p, i, t;
 		for (p = 0, i = d->x; i < d->length + d->x; p++, i++) {
 			t   = tile_score(&b->tile[y][i]);
@@ -93,9 +92,8 @@ int score_dir(struct board *b, struct dir *d)
 			tw += can_use_trp_wrd(b, d, p, i, y);
 			score += t;
 		}
-		break;
 	}
-	case DIR_DOWN: {
+	if (d->type == DIR_DOWN) {
 		int p, i, t;
 		for (p = 0, i = d->y; i < d->length + d->y; p++, i++) {
 			t   = tile_score(&b->tile[i][x]);
@@ -105,9 +103,6 @@ int score_dir(struct board *b, struct dir *d)
 			tw += can_use_trp_wrd(b, d, p, x, i);
 			score += t;
 		}
-		break;
-	}
-	default: break;
 	}
 	if (dw > 0) {
 		score *= dw * 2;
@@ -146,25 +141,19 @@ int score_path(struct path *p)
 	NOT(p);
 	score = 0;
 	b = &p->board;
-	switch (p->type) {
-	case PATH_DOT: {
+	if (p->type == PATH_DOT) {
 		if (p->data.dot.right.type == DIR_RIGHT) {
 			score  = score_dir(b, &p->data.dot.right);
 		}
 		if (p->data.dot.down.type == DIR_DOWN) {
 			score += score_dir(b, &p->data.dot.down);
 		}
-		break;
 	}
-	case PATH_HORZ: {
+	if (p->type == PATH_HORZ) {
 		score = score_meta_path(&p->data.horz.right, p->data.horz.down, BOARD_X, b);
-		break;
 	}
-	case PATH_VERT: {
+	if (p->type == PATH_VERT) {
 		score = score_meta_path(&p->data.vert.down, p->data.vert.right, BOARD_Y, b);
-		break;
-	}
-	default: break;
 	}
 	return score;
 }
@@ -174,6 +163,7 @@ int score_path(struct path *p)
  * `struct bag' is implemented as a fixed-sized, circular queue.
  * Be careful not to add more tiles than BAG_SIZE-1.
  */
+
 
 
 int bag_full(struct bag *b)
