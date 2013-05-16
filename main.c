@@ -634,6 +634,7 @@ void exec(struct env *e)
 {
 	int st, q = 0;
 	LOG("exec");
+	e->game.turn = 0;
 	NOT(e);
 	do {
 		LOG("exec:start frame");
