@@ -378,14 +378,18 @@ struct env
 /* */
 
 
+#define TILE_SPACING_X (0)
+#define TILE_SPACING_Y (-1)
+
+
 void draw_board(struct io *io, struct board *b)
 {
 	int off_x, off_y, x, y, w, h, letter, type;
 	NOT(io), NOT(b);
 	off_x = 106;
 	off_y = 6;
-	w = io->wild->w + 2;
-	h = io->wild->h;
+	w = io->wild->w + TILE_SPACING_X;
+	h = io->wild->h + TILE_SPACING_Y;
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
 			type = 1;
@@ -413,7 +417,7 @@ void draw_rack(struct io *io, struct player *p)
 	NOT(io), NOT(p);
 	off_x = 162;
 	off_y = 222;
-	w = io->wild->w + 2;
+	w = io->wild->w + TILE_SPACING_X;
 	for (i = 0; i < RACK_SIZE; i++) {
 		type = p->tile[i].type;
 		letter = p->tile[i].letter;
