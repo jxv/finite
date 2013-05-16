@@ -7,6 +7,21 @@
 #define SCREEN_BPP	32
 
 
+void *alloc_mem(size_t s)
+{
+	void *m = malloc(s);
+	NOT(m);
+	return m;
+}
+
+
+void free_mem(void *m)
+{
+	NOT(m);
+	free_mem(m);
+}
+
+
 int strlen_as_word(const char *str)
 {
 	int i, len = 0;
@@ -72,12 +87,12 @@ int load_dictionary(struct dictionary *dict, const char *filename)
 	}
 	rewind(f);
 	/* alloc */
-	dict->word = malloc(sizeof(letter_t*) * dict->num);
+	dict->word = alloc_mem(sizeof(letter_t*) * dict->num);
 	NOT(dict->word);
-	dict->len = malloc(sizeof(long) * dict->num);
+	dict->len = alloc_mem(sizeof(long) * dict->num);
 	NOT(dict->len);
 	for (i = 0; i < dict->num; i++)
-		dict->word[i] = malloc(sizeof(letter_t) * BOARD_SIZE);
+		dict->word[i] = alloc_mem(sizeof(letter_t) * BOARD_SIZE);
 		NOT(dict->word[i]);
 	/* assign */
 	i = 0;
@@ -156,10 +171,10 @@ int main()
 void unload_dictionary(struct dictionary *dict)
 {
 	long i;
-	free(dict->len);
+	free_mem(dict->len);
 	for (i = 0; i < dict->num; i++)
-		free(dict->word[i]);
-	free(dict->word);
+		free_mem(dict->word[i]);
+	free_mem(dict->word);
 }
 
 
@@ -278,7 +293,7 @@ void test()
 	struct action a;
 	g.turn = 0;
 	g.player_num = 1;
-	load_dictionary(&g.dictionary, RES_PATH "dictionary.txt");
+	/*load_dictionary(&g.dictionary, RES_PATH "dictionary.txt");*/
 	init_board(&g.board);
 	init_bag(&g.bag);
 	init_player(&g.player[0]);
@@ -288,7 +303,7 @@ void test()
 	apply_action(&g, &a);
 	print_board(&g.board);
 	/*print_dictionary(&g.dictionary); */
-	unload_dictionary(&g.dictionary);
+/*	unload_dictionary(&g.dictionary);*/
 }
 
 /* end example */
