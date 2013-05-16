@@ -160,8 +160,7 @@ int scabs();
 
 int main()
 {
-	test();
-	return 0;
+	return scabs();
 }
 
 
@@ -525,10 +524,10 @@ int init(struct env *e)
 			SDL_SWSURFACE);
 	if (e->io.screen == NULL)
 		return 0;
-
+/*
 	if (!load_dictionary(&e->game.dictionary, RES_PATH "dictionary.txt"))
 		return 0;
-
+*/
 	e->io.back = load_surface(RES_PATH "back.png");
 	if (!e->io.back)
 		return 0;
@@ -570,7 +569,7 @@ void quit(struct env *e)
 {
 	int i;
 	NOT(e);
-	unload_dictionary(&e->game.dictionary);
+	/*unload_dictionary(&e->game.dictionary);*/
 	free_surface(e->io.screen);
 	free_surface(e->io.back);
 	free_surface(e->io.lockon);
