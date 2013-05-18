@@ -3,28 +3,29 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
 #include <assert.h>
+#include "mem.h"
 
+#define RES_PATH		"data/"
 
 #ifdef LOGGING
-#define LOG(x)	printf("["x"]\n")
+#define LOG(x)			printf("["x"]\n")
 #else
-#define LOG(x)	((void)NULL)
+#define LOG(x)			((void)NULL)
 #endif
 
 
-#define NOT(t)	assert((t) != NULL)
-#define RANGE(a,b,c)	assert((a) >= (b) && (a) <= (c))
-#define XRANGE(a,b,c)	assert((a) > (b) && (a) < (c))
+#define NOT(t)			assert((t) != NULL)
+#define RANGE(a,b,c)		assert((a) >= (b) && (a) <= (c))
+#define XRANGE(a,b,c)		assert((a) > (b) && (a) < (c))
 
 
-#define BOARD_X	15
-#define BOARD_Y	15
-#define BOARD_SIZE	BOARD_Y	/* Max among BOARD_X and BOARD_Y */
-#define RACK_SIZE	7
-#define BAG_SIZE	(100+1)	/* needs extra element for size check */
-#define MAX_PLAYER	4
+#define BOARD_X			15
+#define BOARD_Y			15
+#define BOARD_SIZE		BOARD_Y	/* Max among BOARD_X and BOARD_Y */
+#define RACK_SIZE		7
+#define BAG_SIZE		(100+1)	/* needs extra element for size check */
+#define MAX_PLAYER		4
 
 #define VALID_BOARD_X(x)	RANGE(x,0,BOARD_X-1)
 #define VALID_BOARD_Y(y)	RANGE(y,0,BOARD_Y-1)
@@ -33,8 +34,8 @@
 
 typedef enum
 {
-	FALSE = 0,
-	TRUE = 1
+	false = 0,
+	true = 1
 } bool;
 
 
@@ -54,6 +55,7 @@ typedef enum
 	SQ_DBL_WRD,
 	SQ_TRP_LET,
 	SQ_TRP_WRD,
+	SQ_FREE,
 	SQ_COUNT
 } sq_t;
 
@@ -96,6 +98,7 @@ typedef enum
 	MOVE_INVALID = -1,
 	MOVE_PLACE = 0,
 	MOVE_SWAP,
+	MOVE_DISCARD,
 	MOVE_SKIP,
 	MOVE_COUNT
 } move_t;
@@ -125,6 +128,7 @@ typedef enum
 	ACTION_INVALID = -1,
 	ACTION_PLACE = 0,
 	ACTION_SWAP,
+	ACTION_DISCARD,
 	ACTION_SKIP,
 	ACTION_COUNT
 } action_t;
@@ -132,54 +136,54 @@ typedef enum
 
 struct tile
 {
-	tile_t type;
-	letter_t letter;
+	tile_t		type;
+	letter_t	letter;
 };
 
 
 struct board
 {
-	struct tile tile[BOARD_Y][BOARD_X];
-	sq_t sq[BOARD_Y][BOARD_X];
+	struct tile	tile[BOARD_Y][BOARD_X];
+	sq_t		sq[BOARD_Y][BOARD_X];
 };
 
 
 struct player
 {
-	int score;
-	struct tile tile[RACK_SIZE];
+	int		score;
+	struct tile	tile[RACK_SIZE];
 };
 
 
 struct coor
 {
-	int x;
-	int y;
+	int		x;
+	int		y;
 };
 
 
 struct place
 {
-	int num;
-	int rack_id[RACK_SIZE];
-	struct coor coor[RACK_SIZE];
+	int		num;
+	int		rack_id[RACK_SIZE];
+	struct coor	coor[RACK_SIZE];
 };
 
 
 struct swap
 {
-	int num;
-	int rack_id[RACK_SIZE];
+	int		num;
+	int		rack_id[RACK_SIZE];
 };
 
 
 struct move
 {
-	move_t type;
-	int player_id;
+	move_t		type;
+	int		player_id;
 	union {
-		struct place place;
-		struct swap swap;
+		struct place			place;
+		struct swap			swap;
 	} data;
 };
 
@@ -188,17 +192,17 @@ struct bag
 {
 	int head;
 	int tail;
-	struct tile tile[BAG_SIZE];
+	struct tile	tile[BAG_SIZE];
 };
 
 
 struct dir
 {
-	dir_t type;
-	int x;
-	int y;
-	int length;
-	int pos[BOARD_SIZE];
+	dir_t		type;
+	int		x;
+	int		y;
+	int		length;
+	int		pos[BOARD_SIZE];
 };
 
 
@@ -207,16 +211,16 @@ struct path
 	path_t type;
 	union {
 		struct {
-			struct dir right;
-			struct dir down; 
+			struct dir		right;
+			struct dir		down; 
 		} dot;
 		struct {
-			struct dir right;
-			struct dir down[BOARD_X];
+			struct dir		right;
+			struct dir		down[BOARD_X];
 		} horz;
 		struct {
-			struct dir right[BOARD_Y];
-			struct dir down;
+			struct dir		right[BOARD_Y];
+			struct dir		down;
 		} vert;
 	} data;
 	struct board board;
@@ -229,10 +233,10 @@ struct action
 	int player_id;
 	union {
 		struct {
-			int score;
-			int num;
-			int rack_id[RACK_SIZE];
-			struct path path;
+			int			score;
+			int			num;
+			int			rack_id[RACK_SIZE];
+			struct path		path;
 		} place;
 		struct swap swap;
 		
@@ -240,22 +244,22 @@ struct action
 };
 
 
-struct dictionary
+struct dict
 {
-	long num;
-	letter_t **word;
-	int *len;
+	long		num;
+	letter_t 	**word;
+	int		*len;
 };
 
 
 struct game
 {
-	int turn;
-	int player_num;
-	struct player player[MAX_PLAYER];
-	struct board board;
-	struct bag bag;
-	struct dictionary dictionary;
+	int			turn;
+	int			player_num;
+	struct player		player[MAX_PLAYER];
+	struct board		board;
+	struct bag		bag;
+	struct dict	dict;
 };
 
 
@@ -264,5 +268,7 @@ void apply_action(struct game*, struct action*);
 void next_turn(struct game*);
 int cmp_word(letter_t*, int, letter_t*, int);
 
+
 #endif
+
 

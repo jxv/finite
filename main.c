@@ -1,178 +1,27 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include "core.h"
+#include "dict.h"
+#include "init.h"
+#include "terminal.h"
+
 
 #define SCREEN_WIDTH	320
 #define SCREEN_HEIGHT	240
 #define SCREEN_BPP	32
 
 
-void *alloc_mem(size_t s)
-{
-	void *m = malloc(s);
-	NOT(m);
-	return m;
-}
-
-
-void free_mem(void *m)
-{
-	NOT(m);
-	free(m);
-}
-
-
-int strlen_as_word(const char *str)
-{
-	int i, len = 0;
-	char c;
-	NOT(str);
-	for (i = 0; str[i] != '\0'; i++) {
-		c = toupper(str[i]);
-		if (c >= 'A' && c <= 'Z') 
-			len++;
-	}
-	return len;
-}
-
-
-void word_from_str(letter_t *word, const char *str)
-{
-	int i, j;
-	char c;
-	NOT(word), NOT(str);
-	for (i = 0, j = 0; str[i] != '\0'; i++) {
-		c = toupper(str[i]);
-		if (c >= 'A' && c <= 'Z') {
-			word[j] = LETTER_A + c - 'A';
-			j++;
-		}
-	}
-}
-
-
-void swap_words(letter_t **w0, int *len0, letter_t **w1, int *len1)
-{
-	int tmp_len;
-	letter_t *tmp_w;
-	NOT(w0), NOT(len0), NOT(w1), NOT(len1), NOT(*w0), NOT(*w1);
-	tmp_len = *len0;
-	tmp_w = *w0;
-	*len0 = *len1;
-	*w0 = *w1;
-	*len1 = tmp_len; 
-	*w1 = tmp_w;
-}
-
-
-int load_dictionary(struct dictionary *dict, const char *filename)
-{
-	long i, j;
-	FILE *f = NULL;
-	char buf[BOARD_SIZE+1];
-	NOT(dict), NOT(filename);
-	f = fopen(filename,"r");
-	if (f == NULL) {
-		return 0;
-	}
-	/* count */
-	dict->num = 0;
-	while(fgets(buf, BOARD_SIZE+1, f)) {
-		if (strlen_as_word(buf) > 1) {
-			dict->num ++;
-		}
-	}
-	/* error check */
-	if (ferror(f)) {
-		fclose(f);
-		return 0;
-	}
-	rewind(f);
-	/* alloc */
-	dict->word = alloc_mem(sizeof(letter_t*) * dict->num);
-	NOT(dict->word);
-	dict->len = alloc_mem(sizeof(long) * dict->num);
-	NOT(dict->len);
-	for (i = 0; i < dict->num; i++) {
-		dict->word[i] = alloc_mem(sizeof(letter_t) * BOARD_SIZE);
-		NOT(dict->word[i]);
-	}
-	/* assign */
-	i = 0;
-	for(i = 0; i < dict->num && fgets(buf, BOARD_SIZE+1, f); i++) {
-		j = strlen_as_word(buf);
-		if (j <= 1) {
-			i--;
-			continue;
-		}
-		word_from_str(dict->word[i], buf);
-		dict->len[i] = j;
-	}
-	/* error check */
-	if (ferror(f)) {
-		fclose(f);
-		return 0;
-	}
-	fclose(f);
-	/* sort */
-	return 1;
-	for (i = 0; i < dict->num; i++) {
-		for (j = 0; j < dict->num; j++) {
-			if (cmp_word(dict->word[i], dict->len[i],
-				     dict->word[j], dict->len[j]) == 1) {
-				swap_words(&dict->word[i], &dict->len[i],
-					  &dict->word[j], &dict->len[j]);
-			}
-		}
-	}
-	return 1;
-}
-
-
-/* end of core functionality */
-
-
-void print_word(letter_t *word, int len) {
-	char str[BOARD_SIZE];
-	int j;
-	NOT(word);
-	for (j = 0; j < len; j++) {
-		str[j] = 'A' + word[j] - LETTER_A;
-	}
-	str[j] = '\0';
-	puts(str);
-}
-
-
-void print_dictionary(struct dictionary *dict)
-{
-	int i;
-	NOT(dict);
-	printf("== Size:%ld\n", dict->num);
-	for (i = 0; i < dict->num; i++) {
-		print_word(dict->word[i], dict->len[i]);
-	}
-}
-
-
-/* */
-
-
-void test();
-
 int scabs();
 
 
 int main()
 {
-	return scabs();
+	terminal_ui();
+	return 0;
 }
 
 
-/** example **/
-
-
-void unload_dictionary(struct dictionary *dict)
+void unload_dict(struct dict *dict)
 {
 	long i;
 	free_mem(dict->len);
@@ -181,139 +30,6 @@ void unload_dictionary(struct dictionary *dict)
 	}
 	free_mem(dict->word);
 }
-
-
-void init_board(struct board *b)
-{
-	int x, y;
-	for (y = 0; y < BOARD_Y; y++) {
-		for (x = 0; x < BOARD_X; x++) {
-			b->tile[y][x].type = TILE_NONE;
-			b->sq[y][x] = SQ_NORMAL;
-			{
-				b->tile[y][x].letter = (x * y) % 26;
-				b->tile[y][x].type = (x%2) ? TILE_WILD:TILE_LETTER;
-			}
-		}
-	}
-}
-
-
-void init_bag(struct bag *b)
-{
-	int i;
-	b->head = 0;
-	b->tail = BAG_SIZE - 1;
-	for (i = 0; i < BAG_SIZE; i++) {
-		b->tile[i].type = TILE_LETTER;
-		b->tile[i].letter = LETTER_A;
-	}
-}
-
-
-void init_player(struct player *p)
-{
-	int i;
-	for (i = 0; i < RACK_SIZE; i++) {
-		p->tile[i].type = TILE_LETTER;
-		p->tile[i].letter = LETTER_A;
-	}
-	p->tile[0].letter = LETTER_C;
-	p->tile[1].letter = LETTER_R;
-	p->tile[2].letter = LETTER_A;
-	p->tile[3].letter = LETTER_P;
-}
-
-
-void init_move(struct move *m)
-{
-	int i;
-	m->type = MOVE_PLACE;
-	m->data.place.num = 4;
-	for (i = 0; i < RACK_SIZE; i++) {
-		m->data.place.rack_id[i] = i;
-		m->data.place.coor[i].x = 0;
-		m->data.place.coor[i].y = 0;
-	}
-	m->data.place.coor[0].y = 0;
-	m->data.place.coor[1].y = 1;
-	m->data.place.coor[2].y = 2;
-	m->data.place.coor[3].y = 3;
-}
-
-
-void print_action(struct action *a)
-{
-	switch (a->type) {
-	case ACTION_INVALID:
-		printf("action invalid\n");
-		break;
-	case ACTION_PLACE:
-		printf("action place\n");
-		switch (a->data.place.path.type) {
-		case PATH_DOT:
-			printf("path_dot\n");
-			break;
-		case PATH_HORZ:
-			printf("path_horz\n");
-			break;
-		case PATH_VERT:
-			printf("path_vert\n");
-			break;
-		default: break;
-		}
-		printf("score: %d\n", a->data.place.score);
-		break;
-	default: printf("action default?\n"); break;
-	}
-}
-
-
-void print_board(struct board *b)
-{
-	int x, y;
-	char c;
-	struct tile *t;
-	for (y = 0; y < BOARD_Y; y++) {
-		for (x = 0; x < BOARD_X; x++) {
-			t = &b->tile[y][x];
-			switch (t->type) {
-			case TILE_WILD:   c = 'a' + t->letter; break;
-			case TILE_LETTER: c = 'A' + t->letter; break;
-			case TILE_NONE:
-			default: c = '_'; break;
-			}
-			printf("%c",c);
-		}
-		printf("\n");
-	}
-}
-
-#define RES_PATH "data/"
-
-void test()
-{
-	struct game g;
-	struct move m;
-	struct action a;
-	g.turn = 0;
-	g.player_num = 1;
-	/*load_dictionary(&g.dictionary, RES_PATH "dictionary.txt");*/
-	init_board(&g.board);
-	init_bag(&g.bag);
-	init_player(&g.player[0]);
-	init_move(&m);
-	mk_action(&a, &g, &m);
-	print_action(&a);
-	apply_action(&g, &a);
-	print_board(&g.board);
-	/*print_dictionary(&g.dictionary); */
-/*	unload_dictionary(&g.dictionary);*/
-}
-
-/* end example */
-
-/* aux_sdl_enum && aux_sdl_structs */
 
 
 typedef enum
@@ -333,13 +49,14 @@ struct font
 	SDL_Surface *map;
 };
 
-/* aux_sdl_functions */
-
 
 void free_surface(SDL_Surface *s)
 {
-	if (s) SDL_FreeSurface(s);
+	if (s) {
+		 SDL_FreeSurface(s);
+	}
 }
+
 
 SDL_Surface *load_surface(const char *filename)
 {
@@ -389,9 +106,6 @@ SDL_Surface *cpy_surface(SDL_Surface *s)
 }
 
 
-/* */
-
-
 struct io
 {
 	SDL_Surface *screen;
@@ -404,10 +118,24 @@ struct io
 };
 
 
+struct controls
+{
+	KeyState up;
+	KeyState down;
+	KeyState left;
+	KeyState right;
+	KeyState a;
+	KeyState b;
+	KeyState x;
+	KeyState y;
+};
+
+
 struct env
 {
 	struct io io;
 	struct game game;
+	struct controls controls;
 };
 
 
@@ -539,7 +267,7 @@ int init(struct env *e)
 		return 0;
 	}
 
-	if (!load_dictionary(&e->game.dictionary, RES_PATH "dictionary.txt")) {
+	if (!load_dict(&e->game.dict, RES_PATH "dict.txt")) {
 		return 0;
 	}
 	
@@ -592,7 +320,7 @@ void quit(struct env *e)
 {
 	int i;
 	NOT(e);
-	unload_dictionary(&e->game.dictionary);
+	unload_dict(&e->game.dict);
 	free_surface(e->io.screen);
 	free_surface(e->io.back);
 	free_surface(e->io.lockon);

@@ -1,9 +1,6 @@
 #include "core.h"
 
 
-/* tile_functions */
-
-
 int tile_score(struct tile *t)
 {
 	NOT(t);
@@ -40,9 +37,6 @@ int tile_score(struct tile *t)
 	}
 	return 0;
 }
-
-
-/* dir_functions */
 
 
 bool can_use_dbl_let(struct board *b, struct dir *s, int p, int x, int y)
@@ -114,8 +108,6 @@ int score_dir(struct board *b, struct dir *d)
 }
 
 
-/* path_functions */
-
 
 int score_meta_path(struct dir *d, struct dir *adj, int n, struct board *b)
 {
@@ -157,13 +149,6 @@ int score_path(struct path *p)
 	}
 	return score;
 }
-
-
-/* bag_functions 
- * `struct bag' is implemented as a fixed-sized, circular queue.
- * Be careful not to add more tiles than BAG_SIZE-1.
- */
-
 
 
 int bag_full(struct bag *b)
@@ -227,10 +212,9 @@ void shake_bag(struct bag *b)
 
 int cmp_word(letter_t w0[], int len0, letter_t w1[], int len1) 
 {
-	/* returns  
-	 * | w0 >  w1 = -1
-	 * | w0 <  w1 =  1
-	 * | w0 == w1 =  0
+	/* w0 >  w1 -> -1
+	 * w0 <  w1 ->  1
+	 * w0 == w1 ->  0
 	 */
 	int i;
 	for (i = 0; ; i++) {
@@ -254,11 +238,10 @@ int cmp_word(letter_t w0[], int len0, letter_t w1[], int len1)
 }
 
 
-int valid_word(letter_t *word, int len, struct dictionary *dict)
+int valid_word(letter_t *word, int len, struct dict *dict)
 {
 	int res;
 	long min, max, mid;
-	/* Glorified binary search */
 	min = 0;
 	max = dict->num;
 	mid = dict->num / 2;
@@ -279,7 +262,7 @@ int valid_word(letter_t *word, int len, struct dictionary *dict)
 }
 
 
-int valid_dir(struct dir *dir, struct board *b, struct dictionary *dict)
+int valid_dir(struct dir *dir, struct board *b, struct dict *dict)
 {
 	int x, y, len;
 	letter_t word[BOARD_SIZE];
@@ -311,47 +294,89 @@ int valid_dir(struct dir *dir, struct board *b, struct dictionary *dict)
 }
 
 
-int valid_path(struct path *p, struct dictionary *d)
+bool valid_path(struct path *p, struct dict *d)
 {
 	int i;
 	if (p->type == PATH_DOT) {
 		if (!valid_dir(&p->data.dot.right, &p->board, d)) {
-			return 0;
+			return false;
 		}
 		if (!valid_dir(&p->data.dot.down, &p->board, d)) {
-			return 0;
+			return false;
 		}
 	}
 	if (p->type == PATH_HORZ) {
 		if (!valid_dir(&p->data.horz.right, &p->board, d)) {
-			return 0;
+			return false;
 		}
 		for (i = 0; i < BOARD_X; i++) {
 			if (p->data.horz.down[i].type == DIR_DOWN &&
 			   (!valid_dir(&p->data.horz.down[i], &p->board, d))) {
-				return 0;
+				return false;
 			}
 		}
 	}
 	if (p->type == PATH_VERT) {
 		if (!valid_dir(&p->data.vert.down, &p->board, d)) {
-			return 0;
+			return false;
 		}
 		for (i = 0; i < BOARD_Y; i++) {
 			if (p->data.vert.right[i].type == DIR_RIGHT && 
 			   (!valid_dir(&p->data.vert.right[i], &p->board, d))) {
-				return 0;
+				return false;
 			}
 		}
 	}
-	return 1;
+	return true;
 }
 
 
-/* act_move_functions */
+bool adjacent_tiles(struct board *b, struct place *place, struct player *player)
+{
+	int x, y, i, r;
+	for (i = 0; i < place->num; i++) {
+		r = place->rack_id[i];
+		y = place->coor[i].y;
+		x = place->coor[i].x;
+		if (player->tile[r].type != TILE_NONE) {
+			if (x > 0 && b->tile[y][x - 1].type != TILE_NONE) {
+				return true;
+			}
+			if (y > 0 && b->tile[y - 1][x].type != TILE_NONE) {
+				return true;
+			}
+			if (x < BOARD_X - 1 &&
+					b->tile[y][x + 1].type != TILE_NONE) {
+				return true;
+			}
+			if (y < BOARD_Y - 1 &&
+					b->tile[y + 1][x].type != TILE_NONE) {
+				return true;
+			}
+		}
+			
+	}
+	return false;
+}
 
 
-int cpy_rack_board(struct board *b, struct place *place, struct player *player)
+bool on_free_squares(struct board *b, struct place *place, struct player *player)
+{
+	int x, y, i, r;
+	for (i = 0; i < place->num; i++) {
+		r = place->rack_id[i];
+		y = place->coor[i].y;
+		x = place->coor[i].x;
+		if (player->tile[r].type != TILE_NONE &&
+				b->sq[y][x] == SQ_FREE) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+bool cpy_rack_board(struct board *b, struct place *place, struct player *player)
 {
 	int x, y, i, r;
 	for (i = 0; i < place->num; i++) {
@@ -360,17 +385,17 @@ int cpy_rack_board(struct board *b, struct place *place, struct player *player)
 		x = place->coor[i].x;
 		if (player->tile[r].type != TILE_NONE) {
 			if (b->tile[y][x].type != TILE_NONE) {
-				return 1;
+				return true;
 			}
-			memcpy(&b->tile[y][x], &player->tile[r],
+			cpy_mem(&b->tile[y][x], &player->tile[r],
 					sizeof(struct tile));
 		}
 	}
-	return 0;
+	return false;
 }
 
 
-int is_horz(struct action *a, struct move *m)
+bool is_horz(struct action *a, struct move *m)
 {
 	int i, min, max, y;
 	struct coor *coor;
@@ -380,12 +405,12 @@ int is_horz(struct action *a, struct move *m)
 	y = m->data.place.coor[0].y;
 	min = max = m->data.place.coor[0].x;
 	if (m->data.place.num < 2) {
-		return 0;
+		return false;
 	}
 	for (i = 1; i < m->data.place.num; i++) {
 		coor = &m->data.place.coor[i];
 		if (y != coor->y) {
-			return 0;
+			return false;
 		}
 		if (min < coor->x) {
 			min = coor->x;
@@ -396,14 +421,14 @@ int is_horz(struct action *a, struct move *m)
 	}
 	for (i = min; i <= max; i++) {
 		if (b->tile[y][i].type == TILE_NONE) {
-			return 0;
+			return false;
 		}
 	}
-	return 1;
+	return true;
 }
 
 
-int is_vert(struct action *a, struct move *m)
+bool is_vert(struct action *a, struct move *m)
 {
 	int i, min, max, x;
 	struct coor *coor;
@@ -411,12 +436,12 @@ int is_vert(struct action *a, struct move *m)
 	x = m->data.place.coor[0].x;
 	min = max = m->data.place.coor[0].y;
 	if (m->data.place.num < 2) {
-		return 0;
+		return false;
 	}
 	for (i = 1; i < m->data.place.num; i++) {
 		coor = &m->data.place.coor[i];
 		if (x != coor->x) {
-			return 0;
+			return false;
 		}
 		if (min > coor->y) {
 			min = coor->y;
@@ -427,10 +452,10 @@ int is_vert(struct action *a, struct move *m)
 	}
 	for (i = min; i <= max; i++) {
 		if (board->tile[i][x].type == TILE_NONE) {
-			return 0;
+			return false;
 		}
 	}
-	return 1;
+	return true;
 }
 
 
@@ -440,7 +465,7 @@ void mk_right(struct dir *d, int x, int y, struct board *b)
 	NOT(d), NOT(b);
 	d->type = DIR_RIGHT;
 	d->y = y;
-	memset(d->pos, 0, sizeof(int) * BOARD_SIZE);
+	set_mem(d->pos, 0, sizeof(int) * BOARD_SIZE);
 	d->pos[x] = 1;
 	for (i = x; i >= 0 && b->tile[y][i].type != TILE_NONE; i--) {
 		d->x = i;
@@ -461,7 +486,7 @@ void mk_down(struct dir *d, int x, int y, struct board *b)
 	NOT(d), NOT(b);
 	d->type = DIR_DOWN;
 	d->x = x;
-	memset(d->pos, 0, sizeof(int) * BOARD_SIZE);
+	set_mem(d->pos, 0, sizeof(int) * BOARD_SIZE);
 	d->pos[y] = 1;
 	for (i = y; i >= 0 && b->tile[i][x].type != TILE_NONE; i--) {
 		d->y = i;
@@ -557,8 +582,6 @@ void mk_vert(struct action *a, struct move *m)
 
 void mk_place(struct action *a, struct game *g, struct move *m)
 {
-	/* copy current board and recently placed tiles
-	 * note: not-TILE_NONE impiles TILE_WILD or TILE_LETTER */
 	int num;
 	struct path *path;
 	struct player *player;
@@ -567,7 +590,12 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	player = &g->player[m->player_id];
 	a->type = ACTION_PLACE;
 	a->data.place.num = m->data.place.num;
-	memcpy(&path->board, &g->board, sizeof(struct board));
+	if (!adjacent_tiles(&g->board, &m->data.place, player) &&
+	    !on_free_squares(&g->board, &m->data.place, player)) {
+		a->type = ACTION_INVALID;
+		return;
+	}
+	cpy_mem(&path->board, &g->board, sizeof(struct board));
 	if (cpy_rack_board(&path->board, &m->data.place, player)) {
 		a->type = ACTION_INVALID;
 		return;
@@ -588,7 +616,7 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 			return;
 		}
 	}
-	if (!valid_path(path, &g->dictionary)) {
+	if (!valid_path(path, &g->dict)) {
 		a->type = ACTION_INVALID;
 		return;
 	}
@@ -614,7 +642,7 @@ void mk_action(struct action *a, struct game *g, struct move *m)
 			a->type = ACTION_INVALID;
 			return;
 		}
-		memcpy(&a->data.swap, &m->data.swap,
+		cpy_mem(&a->data.swap, &m->data.swap,
 				sizeof(struct swap));
 		return;
 	}
@@ -632,7 +660,7 @@ void apply_action(struct game *g, struct action *a)
 	if (id != g->turn)
 		return;
 	if (a->type == ACTION_PLACE) {
-		memcpy(&g->board, &a->data.place.path.board,
+		cpy_mem(&g->board, &a->data.place.path.board,
 				sizeof(struct board));
 		g->player[id].score += a->data.place.score;
 		for (i = 0; i < a->data.place.num; i++) {
