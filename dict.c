@@ -110,3 +110,14 @@ bool load_dict(struct dict *dict, const char *filename)
 }
 
 
+void unload_dict(struct dict *dict)
+{
+	long i;
+	free_mem(dict->len);
+	for (i = 0; i < dict->num; i++) {
+		free_mem(dict->word[i]);
+	}
+	free_mem(dict->word);
+}
+
+

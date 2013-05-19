@@ -3,22 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include "dbg.h"
 #include "mem.h"
 
 #define RES_PATH		"data/"
-
-#ifdef LOGGING
-#define LOG(x)			printf("["x"]\n")
-#else
-#define LOG(x)			((void)NULL)
-#endif
-
-
-#define NOT(t)			assert((t) != NULL)
-#define RANGE(a,b,c)		assert((a) >= (b) && (a) <= (c))
-#define XRANGE(a,b,c)		assert((a) > (b) && (a) < (c))
-
 
 #define BOARD_X			15
 #define BOARD_Y			15
@@ -100,6 +88,7 @@ typedef enum
 	MOVE_SWAP,
 	MOVE_DISCARD,
 	MOVE_SKIP,
+	MOVE_QUIT,
 	MOVE_COUNT
 } move_t;
 
@@ -130,6 +119,7 @@ typedef enum
 	ACTION_SWAP,
 	ACTION_DISCARD,
 	ACTION_SKIP,
+	ACTION_QUIT,
 	ACTION_COUNT
 } action_t;
 
@@ -267,6 +257,11 @@ void mk_action(struct action*, struct game*, struct move*);
 void apply_action(struct game*, struct action*);
 void next_turn(struct game*);
 int cmp_word(letter_t*, int, letter_t*, int);
+void clr_move(struct move*);
+void clr_action(struct action*);
+void remove_from_rack(struct player*, int*, int);
+void shift_rack(struct player*);
+void refill_rack(struct player*, struct bag*);
 
 
 #endif

@@ -657,8 +657,9 @@ void apply_action(struct game *g, struct action *a)
 	int id, i, r;
 	struct tile *t;
 	id = a->player_id;
-	if (id != g->turn)
+	if (id != g->turn) {
 		return;
+	}
 	if (a->type == ACTION_PLACE) {
 		cpy_mem(&g->board, &a->data.place.path.board,
 				sizeof(struct board));
@@ -684,10 +685,70 @@ void apply_action(struct game *g, struct action *a)
 }
 
 
+void remove_from_rack(struct player *p, int *rack_id, int n)
+{
+	int i;
+	for (i = 0; i < n; i++) {
+		p->tile[rack_id[i]].type = TILE_NONE;
+	}
+}
+
+
 void next_turn(struct game *g)
 {
 	g->turn ++;
 	g->turn %= g->player_num;
+}
+
+
+void clr_move(struct move *m)
+{
+	set_mem(m, 0, sizeof(struct move));
+	m->type = MOVE_INVALID;
+}
+
+
+void clr_action(struct action *a)
+{
+	set_mem(a, 0, sizeof(struct action));
+	a->type = ACTION_INVALID;
+}
+
+
+void shift_rack(struct player *p)
+{
+	int i, j;
+	j = 0;
+	i = 0;
+	while (i < RACK_SIZE) {
+		while (p->tile[i].type == TILE_NONE && i < RACK_SIZE) {
+			i++;
+		}
+		if (i == RACK_SIZE) {
+			break;
+		}
+		cpy_mem(&p->tile[j], &p->tile[i], sizeof(struct tile));
+		i++;
+		j++;
+	}
+	while (j < RACK_SIZE) {
+		p->tile[j].type = TILE_NONE;
+		j++;
+	}
+}
+
+
+void refill_rack(struct player *p, struct bag *b)
+{
+	int i;
+	struct tile t;
+	for (i = 0; i < RACK_SIZE && bag_size(b) > 0; i++) {
+		if (p->tile[i].type == TILE_NONE) {
+			t = bag_peek(b);
+			bag_drop(b);
+			cpy_mem(&p->tile[i], &t, sizeof(struct tile));
+		}
+	}
 }
 
 
