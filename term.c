@@ -1,8 +1,9 @@
+#include <string.h>
+
 #include "core.h"
 #include "dict.h"
 #include "init.h"
 #include "term.h"
-#include <string.h>
 
 
 void print_word(letter_t *word, int len) {
@@ -31,25 +32,18 @@ void print_dict(struct dict *dict)
 void print_action(struct action *a)
 {
 	switch (a->type) {
-	case ACTION_INVALID:
-		printf("action invalid\n");
-		break;
-	case ACTION_PLACE:
+	case ACTION_INVALID: printf("action invalid\n"); break;
+	case ACTION_PLACE: {
 		printf("action place\n");
 		switch (a->data.place.path.type) {
-		case PATH_DOT:
-			printf("path_dot\n");
-			break;
-		case PATH_HORZ:
-			printf("path_horz\n");
-			break;
-		case PATH_VERT:
-			printf("path_vert\n");
-			break;
+		case PATH_DOT: printf("path_dot\n"); break;
+		case PATH_HORZ: printf("path_horz\n");break;
+		case PATH_VERT: printf("path_vert\n"); break;
 		default: break;
 		}
 		printf("score: %d\n", a->data.place.score);
 		break;
+	}
 	default: printf("action default?\n"); break;
 	}
 }
@@ -60,6 +54,9 @@ void print_board(struct board *b)
 	int x, y;
 	char c;
 	struct tile *t;
+
+	NOT(b);
+
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
 			t = &b->tile[y][x];
@@ -78,12 +75,14 @@ void print_board(struct board *b)
 
 void print_rack(struct player *p)
 {
+	NOT(p);
 }
 
 
 int get_line(char *line, size_t s)
 {
 	int c, len;
+
 	fgets(line, s, stdin);
 	line[strcspn(line, "\n")] = '\0';
 	len = strlen(line);
@@ -96,6 +95,8 @@ int get_line(char *line, size_t s)
 
 void term_init(struct game *g)
 {
+	NOT(g);
+
 	g->turn = 0;
 	g->player_num = 2;
 	load_dict(&g->dict, RES_PATH "dict.txt");
@@ -109,6 +110,9 @@ void term_init(struct game *g)
 void term_get_move_type(struct move *m)
 {
 	char line[256];
+
+	NOT(m);
+
 	clr_move(m);
 	printf("\n0: MOVE_PLACE\n1: MOVE_SKIP\n2: MOVE_DISCARD\n3: MOVE_QUIT\n");
 	do {
@@ -116,17 +120,12 @@ void term_get_move_type(struct move *m)
 		m->type = MOVE_INVALID;
 		get_line(line, sizeof(line));
 		if (sscanf(line, "%d", &i) == 1) {
-			if (i == 0) {
-				m->type = MOVE_PLACE;
-			}
-			if (i == 1) {
-				m->type = MOVE_SKIP;
-			}
-			if (i == 2) {
-				m->type = MOVE_DISCARD;
-			}
-			if (i == 3) {
-				m->type = MOVE_QUIT;
+			switch (i) {
+			case  0: m->type = MOVE_PLACE; break;
+			case  1: m->type = MOVE_SKIP; break;
+			case  2: m->type = MOVE_DISCARD; break;
+			case  3: m->type = MOVE_QUIT; break;
+			default: m->type = MOVE_INVALID; break;
 			}
 		}
 	} while (m->type == MOVE_INVALID);
@@ -136,24 +135,28 @@ void term_get_move_type(struct move *m)
 
 void term_move(struct move *m)
 {
-	if (m->type == MOVE_PLACE) {
+	NOT(m);
+
+	switch (m->type) {
+	case MOVE_PLACE: {
 		char line[256];
 		printf("Enter the rack index of tiles to discard:\n");
 		{
 			get_line(line, sizeof(line));
 			printf("[%s]\n",line);
 		} 
-		return;
+		break;
 	}
-
-	if (m->type == MOVE_SKIP) {
-		return;
+	case MOVE_SKIP: {
+		break;
 	}
-	if (m->type == MOVE_DISCARD) {
-		return;
+	case MOVE_DISCARD: {
+		break;
 	}
-	if (m->type == MOVE_QUIT) {
-		return;
+	case MOVE_QUIT: {
+		break;
+	}
+	default: break;
 	}
 }
 
@@ -163,6 +166,7 @@ int term_ui()
 	struct game g;
 	struct move m;
 	struct action a;
+
 	term_init(&g);
 	printf("\n==========\nSCABS\n==========\n");
 	do {
