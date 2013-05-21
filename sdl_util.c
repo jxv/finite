@@ -42,7 +42,7 @@ void delay(int st, int et, int fps)
 {
 	int ms;
 	
-	m = (1000 / fps) - (et - st);
+	ms = (1000 / fps) - (et - st);
 	if (ms > 0) {
 		SDL_Delay(ms);
 	}
