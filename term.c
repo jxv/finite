@@ -106,6 +106,58 @@ void term_init(struct game *g)
 	init_player(&g->player[1]);
 }
 
+int find_next_char(const char *str, int len, const char c)
+{
+	int i;
+
+	NOT(str);
+
+	for (i = 0; i < len; i++) {
+		if (str[i] == c) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+bool parse_to_place(struct place *p, const char *str, int len)
+{
+	int x, y, r;
+	int i, j, k;
+	size_t  n;
+
+	NOT(p), NOT(str);
+	
+	n = 0;
+	i = 0;
+	k = 0;
+	for (;;) {
+		if (k == RACK_SIZE) {
+			break;
+		}
+		j = find_next_char(str + i, len - i, '(');
+		if (j == -1) {
+			break;	/* n should be 3 */
+		} else {
+			i += j;
+		}
+		n = sscanf(str + i, "(%d,%d,%d)", &x, &y, &r);
+		if (n == 3) {
+			p->rack_id[k] = r;
+			p->coor[k].x  = x;
+			p->coor[k].y  = y;
+			k++;
+		} else {
+			break;	/* n should NOT be 3 */
+		}
+		i++;
+	}
+	p->num = k;
+	return n == 3 && k < RACK_SIZE;	/* n == 3 && k < RACK_SIZE, on success */
+}
+
+
 
 void term_get_move_type(struct move *m)
 {

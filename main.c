@@ -1,5 +1,3 @@
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
 #include "core.h"
 #include "dict.h"
 #include "init.h"
@@ -9,7 +7,8 @@
 
 int main()
 {
-	return term_ui();
+	term_ui();
+	return 0;
 }
 
 

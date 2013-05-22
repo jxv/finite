@@ -434,6 +434,81 @@ bool on_free_squares(struct board *b, struct place *place, struct player *player
 }
 
 
+bool place_in_range(struct place *p)
+{
+	int i;
+	
+	NOT(p);
+	
+	for (i = 0; i < p->num; i++) {
+		if (p->rack_id[i] < 0 || p->rack_id[i] >= RACK_SIZE) {
+			return false;
+		}
+		if (p->coor[i].x < 0 || p->coor[i].x >= BOARD_X) {
+			return false;
+		}
+		if (p->coor[i].y < 0 || p->coor[i].y >= BOARD_Y) {
+			return false;
+		}
+	}
+	return true;
+}
+
+
+bool place_overlap(struct place *p)
+{
+	int i, j;
+
+	NOT(p);
+	
+	for (i = 0; i < p->num; i++) {
+		for (j = i + 1; j < p->num; j++) {
+			if (p->rack_id[i] == p->rack_id[j]) {
+				return false;
+			}
+			if (p->coor[i].x == p->coor[j].x &&
+			    p->coor[i].y == p->coor[j].y) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
+bool place_overlap_board(struct place *p, struct board *b)
+{
+	int i, x, y;
+
+	NOT(p), NOT(b);
+	
+	for (i = 0; i < p->num; i++) {
+		x = p->coor[i].x;
+		y = p->coor[i].y;
+		if (b->tile[y][x].type != TILE_NONE) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+bool place_rack_exist(struct place *place, struct player *player)
+{
+	int i, r;
+
+	NOT(place), NOT(player);
+
+	for (i = 0; i < place->num; i++) {
+		r = place->rack_id[i];
+		if (player->tile[r].type == TILE_NONE) {
+			return false;
+		}
+	}
+	return true;
+}
+
+
 bool cpy_rack_board(struct board *b, struct place *place, struct player *player)
 {
 	int x, y, i, r;
@@ -657,6 +732,30 @@ void mk_vert(struct action *a, struct move *m)
 }
 
 
+bool valid_place(struct place *place, struct player *player, struct board *board)
+{
+	NOT(place), NOT(player), NOT(board);
+	
+	if (!place_in_range(place)) {
+		return false;
+	}
+	if (place_overlap(place)) {
+		return false;
+	}
+	if (place_overlap_board(place, board)) {
+		return false;
+	}
+	if (!place_rack_exist(place, player)) {
+		return false;
+	}
+	if (!adjacent_tiles(board, place, player) &&
+	    !on_free_squares(board, place, player)) {
+		return false;
+	}
+	return true;
+}
+
+
 void mk_place(struct action *a, struct game *g, struct move *m)
 {
 	int num;
@@ -670,8 +769,7 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	player = &g->player[m->player_id];
 	a->type = ACTION_PLACE;
 	a->data.place.num = m->data.place.num;
-	if (!adjacent_tiles(&g->board, &m->data.place, player) &&
-	    !on_free_squares(&g->board, &m->data.place, player)) {
+	if (!valid_place(&m->data.place, player, &g->board)) {
 		a->type = ACTION_INVALID;
 		return;
 	}
