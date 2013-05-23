@@ -86,12 +86,28 @@ typedef enum
 {
 	MOVE_INVALID = -1,
 	MOVE_PLACE = 0,
-	MOVE_SWAP,
+/*	MOVE_SWAP, */
 	MOVE_DISCARD,
 	MOVE_SKIP,
 	MOVE_QUIT,
 	MOVE_COUNT
 } move_t;
+
+
+typedef enum
+{
+	ACTION_ERROR_NONE = 0,
+	ACTION_ERROR_UKNOWN,
+	ACTION_ERROR_PLACE_OUT_OF_RANGE,
+	ACTION_ERROR_PLACE_SELF_OVERLAP,
+	ACTION_ERROR_PLACE_BOARD_OVERLAP,
+	ACTION_ERROR_PLACE_INVALID_RACK_ID,
+	ACTION_ERROR_PLACE_INVALID_SQ,
+	ACTION_ERROR_PLACE_NO_RACK,
+	ACTION_ERROR_PLACE_NO_DIR,
+	ACTION_ERROR_PLACE_INVALID_PATH,
+	ACTION_ERROR_COUNT
+} action_error_t;
 
 
 typedef enum
@@ -117,7 +133,7 @@ typedef enum
 {
 	ACTION_INVALID = -1,
 	ACTION_PLACE = 0,
-	ACTION_SWAP,
+/*	ACTION_SWAP, */
 	ACTION_DISCARD,
 	ACTION_SKIP,
 	ACTION_QUIT,
@@ -229,8 +245,8 @@ struct action
 			int			rack_id[RACK_SIZE];
 			struct path		path;
 		} place;
-		struct swap swap;
-		
+		struct swap	swap;
+		action_error_t	error;
 	} data;
 };
 
@@ -255,7 +271,7 @@ struct game
 
 
 void mk_action(struct action*, struct game*, struct move*);
-void apply_action(struct game*, struct action*);
+bool apply_action(struct game*, struct action*);
 void next_turn(struct game*);
 int cmp_word(letter_t*, int, letter_t*, int);
 void clr_move(struct move*);

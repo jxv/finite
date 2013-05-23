@@ -31,7 +31,7 @@ struct io
 {
 	SDL_Surface *screen;
 	SDL_Surface *back;
-	SDL_Surface *tile[2][26];
+	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT];
 	SDL_Surface *wild;
 	SDL_Surface *lockon;
 	struct font white_font;

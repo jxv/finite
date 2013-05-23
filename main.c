@@ -7,8 +7,7 @@
 
 int main()
 {
-	term_ui();
-	return 0;
+	return term_ui();
 }
 
 

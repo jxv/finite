@@ -10,7 +10,9 @@
 void draw_board(struct io *io, struct board *b)
 {
 	int off_x, off_y, x, y, w, h, letter, type;
+
 	NOT(io), NOT(b);
+
 	off_x = 106;
 	off_y = 6;
 	w = io->wild->w + TILE_SPACING_X;
@@ -39,7 +41,9 @@ void draw_rack(struct io *io, struct player *p)
 {
 	int off_x, off_y, w, i, letter, type;
 	SDL_Surface *t;
+
 	NOT(io), NOT(p), NOT(io->wild);
+
 	off_x = 162;
 	off_y = 222;
 	w = io->wild->w + TILE_SPACING_X;
@@ -62,9 +66,10 @@ void draw_rack(struct io *io, struct player *p)
 }
 
 
-int load_fontmap(struct font *f, int w, int h, const char *filename)
+bool load_fontmap(struct font *f, int w, int h, const char *filename)
 {
 	NOT(f), NOT(filename);
+
 	f->w = w;
 	f->h = h;
 	f->map = load_surface(filename);
@@ -75,6 +80,7 @@ int load_fontmap(struct font *f, int w, int h, const char *filename)
 void unload_fontmap(struct font *f)
 {
 	NOT(f), NOT(f->map);
+
 	free_surface(f->map);
 }
 
@@ -84,7 +90,9 @@ void draw_str(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 	int i;
 	char c;
 	SDL_Rect offset, clip;
+
 	NOT(s), NOT(f), NOT(f->map), NOT(str);
+
 	offset.x = x;
 	offset.y = y;
 	clip.y = 0;
@@ -101,21 +109,24 @@ void draw_str(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 }
 
 
-int init_io(struct io *io)
+bool init_io(struct io *io)
 {
 	NOT(io);
-	return 0;
+
+	return false;
 }
 
 
-int init(struct env *e)
+bool init(struct env *e)
 {
 	int i;
 	char str[32];
 	SDL_Surface *tile;
+
 	NOT(e);
+
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
-		return 0;
+		return false;
 	}
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("scabs", NULL);
@@ -123,70 +134,71 @@ int init(struct env *e)
 			SDL_SWSURFACE);
 
 	if (e->io.screen == NULL) {
-		return 0;
+		return false;
 	}
 
 	if (!load_dict(&e->game.dict, RES_PATH "dict.txt")) {
-		return 0;
+		return false;
 	}
 	
 	e->io.back = load_surface(RES_PATH "back.png");
 	if (!e->io.back) {
-		return 0;
+		return false;
 	}
 
 	e->io.lockon = load_surface(RES_PATH "lockon.png");
 	if (!e->io.lockon) {
-		return 0;
+		return false;
 	}
 
 	if (!load_fontmap(&e->io.white_font, 6, 12, RES_PATH "white_font.png")) {
-		return 0;
+		return false;
 	}
 
 	if (!load_fontmap(&e->io.black_font, 6, 12, RES_PATH "black_font.png")) {
-		return 0;
+		return false;
 	}
 	
 	tile = load_surface(RES_PATH "tile.png");
 	if (!tile) {
-		return 0;
+		return false;
 	}
-
 	e->io.wild = cpy_surface(tile);
-	for (i = 0; i < 26; i++) {
-		e->io.tile[0][i] = cpy_surface(tile);
-		if (!e->io.tile[0][i]) {
-			return 0;
+	for (i = 0; i < LETTER_COUNT; i++) {
+		e->io.tile[TILE_WILD][i] = cpy_surface(tile);
+		if (!e->io.tile[TILE_WILD][i]) {
+			return false;
 		}
-		e->io.tile[1][i] = cpy_surface(tile);
-		if (!e->io.tile[0][i]) {
-			return 0;
+		e->io.tile[TILE_LETTER][i] = cpy_surface(tile);
+		if (!e->io.tile[TILE_LETTER][i]) {
+			return false;
 		}
 		sprintf(str,"%c", i + 'a');
-		draw_str(e->io.tile[0][i], &e->io.black_font, str, 3, 0);
+		draw_str(e->io.tile[TILE_WILD][i], &e->io.black_font, str, 3, 0);
 		sprintf(str,"%c", i + 'A');
-		draw_str(e->io.tile[1][i], &e->io.black_font, str, 3, 0);
+		draw_str(e->io.tile[TILE_LETTER][i], &e->io.black_font, str, 3, 0);
 	}
 	free_surface(tile);
 	init_board(&e->game.board);
 	init_player(&e->game.player[0]);
-	return 1;
+	return true;
 }
 
 
 void quit(struct env *e)
 {
 	int i;
+
 	NOT(e);
+
 	unload_dict(&e->game.dict);
 	free_surface(e->io.screen);
 	free_surface(e->io.back);
 	free_surface(e->io.lockon);
 	free_surface(e->io.wild);
-	for (i = 0; i < 26; i++) {
-		free_surface(e->io.tile[0][i]);
-		free_surface(e->io.tile[1][i]);
+	for (i = 0; i < LETTER_COUNT; i++) {
+		free_surface(e->io.tile[TILE_WILD][i]);
+		free_surface(e->io.tile[TILE_LETTER][i]);
 	}
 	unload_fontmap(&e->io.white_font);
 	unload_fontmap(&e->io.black_font);
@@ -194,30 +206,30 @@ void quit(struct env *e)
 }
 
 
-int handle_event(struct env *e)
+bool handle_event(struct env *e)
 {
 	SDL_Event event;
 	Uint8 *ks;
+
 	NOT(e);
+
 	ks = SDL_GetKeyState(NULL);
 	NOT(ks);
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
-		case SDL_QUIT: 
-			return 1;
-		case SDL_KEYDOWN: 
-			if (event.key.keysym.sym == SDLK_ESCAPE)
-				return 1;
+		case SDL_QUIT: return true;
+		case SDL_KEYDOWN: {
+			if (event.key.keysym.sym == SDLK_ESCAPE) {
+				return true;
+			}
 			ks[event.key.keysym.sym] = 1;
 			break;
-		case SDL_KEYUP:
-			ks[event.key.keysym.sym] = 0;
-			break;
-		default:
-			break;
+		}
+		case SDL_KEYUP: ks[event.key.keysym.sym] = 0; break;
+		default: break;
 		}
 	}
-	return 0;
+	return false;
 }
 
 
@@ -225,7 +237,9 @@ void exec(struct env *e)
 {
 	int st, q = 0;
 	e->game.turn = 0;
+
 	NOT(e);
+
 	do {
 		st = SDL_GetTicks();
 		q = handle_event(e);

@@ -10,9 +10,12 @@ void init_board(struct board *b)
 		for (x = 0; x < BOARD_X; x++) {
 			b->tile[y][x].type = TILE_NONE;
 			b->sq[y][x] = SQ_NORMAL;
-			b->sq[y][x] = SQ_FREE;
+			if ((y % 7 == 0) && (x % 7 == 0)) {
+				b->sq[y][x] = SQ_TRP_WRD;
+			}
 		}
 	}
+	b->sq[7][7] = SQ_FREE;
 }
 
 
