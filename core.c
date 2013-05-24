@@ -285,7 +285,7 @@ bool valid_word(letter_t *word, int len, struct dict *dict)
 		case   CMP_EQUAL: return true;
 		case    CMP_LESS: min = mid + 1; break;
 		case CMP_GREATER: max = mid - 1; break;
-		default: return false; /* Should never arrive here via cmp_word*/
+		default: return false; /* Should never arrive here via cmp_word */
 		}
 		mid = (min + max) / 2;
 	}
@@ -723,28 +723,28 @@ void mk_vert(struct action *a, struct move *m)
 }
 
 
-action_error_t find_place_error
+action_err_t fd_place_err
 		(struct place *place, struct player *player, struct board *board)
 {
 	NOT(place), NOT(player), NOT(board);
 	
 	if (!place_in_range(place)) {
-		return ACTION_ERROR_PLACE_OUT_OF_RANGE;
+		return ACTION_ERR_PLACE_OUT_OF_RANGE;
 	}
 	if (place_overlap(place)) {
-		return ACTION_ERROR_PLACE_SELF_OVERLAP;
+		return ACTION_ERR_PLACE_SELF_OVERLAP;
 	}
 	if (place_overlap_board(place, board)) {
-		return ACTION_ERROR_PLACE_BOARD_OVERLAP;
+		return ACTION_ERR_PLACE_BOARD_OVERLAP;
 	}
 	if (!place_rack_exist(place, player)) {
-		return ACTION_ERROR_PLACE_INVALID_RACK_ID;
+		return ACTION_ERR_PLACE_INVALID_RACK_ID;
 	}
 	if (!adjacent_tiles(board, place, player) &&
 	    !on_free_squares(board, place, player)) {
-		return ACTION_ERROR_PLACE_INVALID_SQ;
+		return ACTION_ERR_PLACE_INVALID_SQ;
 	}
-	return ACTION_ERROR_NONE;
+	return ACTION_ERR_NONE;
 }
 
 
@@ -753,7 +753,7 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	int num;
 	struct path *path;
 	struct player *player;
-	action_error_t error;
+	action_err_t err;
 
 	NOT(a), NOT(g), NOT(m);
 
@@ -762,17 +762,17 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	player = &g->player[m->player_id];
 	a->type = ACTION_PLACE;
 	a->data.place.num = m->data.place.num;
-	error = find_place_error(&m->data.place, player, &g->board);
-	if (error != ACTION_ERROR_NONE) {
+	err = fd_place_err(&m->data.place, player, &g->board);
+	if (err != ACTION_ERR_NONE) {
 		a->type = ACTION_INVALID;
-		a->data.error = error;
+		a->data.err = err;
 		return;
 	}
 	cpy_mem(&path->board, &g->board, sizeof(struct board));
 	cpy_rack_board(&path->board, &m->data.place, player);
 	if (num <= 0) {
 		a->type = ACTION_INVALID;
-		a->data.error = ACTION_ERROR_PLACE_NO_RACK;
+		a->data.err = ACTION_ERR_PLACE_NO_RACK;
 		return;
 	}
 	if (num == 1) {
@@ -784,13 +784,13 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 			mk_vert(a, m);
 		} else {
 			a->type = ACTION_INVALID;
-			a->data.error = ACTION_ERROR_PLACE_NO_DIR;
+			a->data.err = ACTION_ERR_PLACE_NO_DIR;
 			return;
 		}
 	}
 	if (!valid_path(path, &g->dict)) {
 		a->type = ACTION_INVALID;
-		a->data.error = ACTION_ERROR_PLACE_INVALID_PATH;
+		a->data.err = ACTION_ERR_PLACE_INVALID_PATH;
 		return;
 	}
 	a->data.place.score = score_path(path);

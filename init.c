@@ -59,10 +59,74 @@ void init_board(struct board *b)
 	b->sq[8][6] = SQ_DBL_LET;
 }
 
+const int tile_letter_num[LETTER_COUNT] = 
+	{ 9	/* A */
+	, 2	/* B */
+	, 2	/* C */
+	, 4	/* D */
+	, 12	/* E */
+	, 2	/* F */
+	, 3	/* G */
+	, 2	/* H */
+	, 9	/* I */
+	, 1	/* J */
+	, 1	/* K */
+	, 4	/* L */
+	, 2	/* M */
+	, 6	/* N */
+	, 8	/* O */
+	, 2	/* P */
+	, 1	/* Q */
+	, 6	/* R */
+	, 4	/* S */
+	, 6	/* T */
+	, 4	/* U */
+	, 2	/* V */
+	, 2	/* W */
+	, 1	/* X */
+	, 2	/* Y */
+	, 1	/* Z */
+	};
+
+const int tile_wild_num = 2;
+
+void shake_bag(struct bag *b, int offset)
+{
+	int i, j;
+	int val[BAG_SIZE];
+
+	NOT(b);
+
+	srand(offset);
+	for (i = 0; i < BAG_SIZE; i++) {
+		val[i] = rand();
+	}
+	/* quick and dirty - bubble sort :P */
+	i = b->head;
+	while (i != b->tail) {
+		j = i;
+		while (j != b->tail) {
+			if (val[i] > val[j]) {
+				struct tile tmp = b->tile[i];
+				int tmp_v = val[i];
+				val[i] = val[j];
+				val[j] = tmp_v;
+				
+				b->tile[i] = b->tile[j];
+				b->tile[j] = tmp;
+			}
+			j++;
+			j %= BAG_SIZE;
+		}
+		i++;
+		i %= BAG_SIZE;
+	}
+	
+}
 
 void init_bag(struct bag *b)
 {
-	int i;
+	int i, j, k;
 
 	NOT(b);
 
@@ -70,8 +134,18 @@ void init_bag(struct bag *b)
 	b->tail = BAG_SIZE - 1;
 	for (i = 0; i < BAG_SIZE; i++) {
 		b->tile[i].type = TILE_LETTER;
-		b->tile[i].letter = LETTER_A;
 	}
+	i = 0;
+	for (k = 0; k < LETTER_COUNT; k++) {
+		for (j = 0; j < tile_letter_num[k]; j++) {
+			b->tile[i].letter = LETTER_A;
+			i++;
+		}
+	}
+	for (i = 0; i < tile_wild_num; i++) {
+		b->tile[i].type = TILE_WILD;
+	}
+	shake_bag(b, 0);
 }
 
 

@@ -139,18 +139,18 @@ void print_place(struct place *p)
 }
 
 
-void print_action_error(action_error_t error)
+void print_action_err(action_err_t err)
 {
-	switch(error) {
-	case ACTION_ERROR_PLACE_OUT_OF_RANGE: printf("[error: out of range]"); break;
-	case ACTION_ERROR_PLACE_SELF_OVERLAP: printf("[error: self overlap]"); break;
-	case ACTION_ERROR_PLACE_BOARD_OVERLAP: printf("[error: board overlap]"); break;
-	case ACTION_ERROR_PLACE_INVALID_RACK_ID: printf("[error: invalid rack id]"); break;
-	case ACTION_ERROR_PLACE_INVALID_SQ: printf("[error: place on free sq. or adjacent to a tile]");
-	case ACTION_ERROR_PLACE_NO_RACK: printf("[error: no tiles placed on the board]");
-	case ACTION_ERROR_PLACE_NO_DIR: printf("[error: tiles don't form a continuous line]");
-	case ACTION_ERROR_PLACE_INVALID_PATH: printf("[error: invalid path, misspelled words?]");
-	case ACTION_ERROR_NONE: /* fall through */
+	switch(err) {
+	case ACTION_ERR_PLACE_OUT_OF_RANGE: printf("[err: out of range]"); break;
+	case ACTION_ERR_PLACE_SELF_OVERLAP: printf("[err: self overlap]"); break;
+	case ACTION_ERR_PLACE_BOARD_OVERLAP: printf("[err: board overlap]"); break;
+	case ACTION_ERR_PLACE_INVALID_RACK_ID: printf("[err: invalid rack id]"); break;
+	case ACTION_ERR_PLACE_INVALID_SQ: printf("[err: place on free sq. or adjacent to a tile]");
+	case ACTION_ERR_PLACE_NO_RACK: printf("[err: no tiles placed on the board]");
+	case ACTION_ERR_PLACE_NO_DIR: printf("[err: tiles don't form a continuous line]");
+	case ACTION_ERR_PLACE_INVALID_PATH: printf("[err: invalid path, misspelled words?]");
+	case ACTION_ERR_NONE: /* fall through */
 	default: break;
 	}
 }
@@ -276,7 +276,7 @@ void term_move(struct move *m)
 		printf("Enter the rack index of tiles to place (x,y,rack-index):\n");
 		get_line(line, sizeof(line));
 		if (!parse_to_place(&m->data.place, line, strlen(line))) {
-			printf("[error: bad input format]\n");
+			printf("[err: bad input format]\n");
 			m->type = MOVE_INVALID;
 		} 
 		break;
@@ -324,7 +324,7 @@ int term_ui()
 			m.player_id = g.turn;
 			mk_action(&a, &g, &m);
 			if (a.type == ACTION_INVALID) {
-				print_action_error(a.data.error);
+				print_action_err(a.data.err);
 			}
 		} while(a.type == ACTION_INVALID);
 		a.player_id = g.turn;
