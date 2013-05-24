@@ -1,4 +1,5 @@
 #include <memory.h>
+
 #include "core.h"
 
 
@@ -18,8 +19,10 @@ void cpy_mem(void *dest, void *src, size_t s)
 
 void *alloc_mem(size_t s)
 {
-	void *m = malloc(s);
-	NOT(m), assert(s > 0);
+	void *m;
+	assert(s > 0);
+	m = malloc(s);
+	NOT(m);
 	return m;
 }
 

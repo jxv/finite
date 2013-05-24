@@ -84,7 +84,6 @@ int score_dir(struct board *b, struct dir *d)
 	x = d->x;
 	y = d->y;
 	score = 0;
-
 	switch (d->type) {
 	case DIR_RIGHT: {
 		for (p = 0, i = d->x; i < d->length + d->x; p++, i++) {
@@ -236,13 +235,7 @@ void bag_add(struct bag *b, struct tile t)
 }
 
 
-void shake_bag(struct bag *b)
-{
-	/* todo: implement TOMORROW! @ procrastinators conference */
-}
-
-
-int cmp_word(letter_t *w0, int len0, letter_t *w1, int len1) 
+cmp_t cmp_word(letter_t *w0, int len0, letter_t *w1, int len1) 
 {
 	/* w0 >  w1 -> -1
 	 * w0 <  w1 ->  1
@@ -254,45 +247,44 @@ int cmp_word(letter_t *w0, int len0, letter_t *w1, int len1)
 
 	for (i = 0; ; i++) {
 		if (len0 >  len1 && i == len1) {
-			return -1;
+			return CMP_LESS;
 		}
 		if (len0 <  len1 && i == len0) {
-			return  1;
+			return  CMP_GREATER;
 		}
 		if (len0 == len1 && i == len0) {
-			return  0;
+			return CMP_EQUAL;
 		}
 		if (w0[i] == w1[i]) {
 			continue;
 		}
 		if (w0[i] > w1[i]) {
-			return -1;
+			return CMP_LESS;
 		}
 		if (w0[i] < w1[i]) {
-			return  1;
+			return CMP_GREATER;
 		}
 	}
-	return 0;
+	return CMP_EQUAL;
 }
 
 
 bool valid_word(letter_t *word, int len, struct dict *dict)
 {
-	int res;
 	long min, max, mid;
+	cmp_t res;
 	
 	NOT(word), NOT(dict);
-
+	
 	min = 0;
 	max = dict->num;
 	mid = dict->num / 2;
-
 	while (min <= max) {
 		res = cmp_word(word, len, dict->word[mid], dict->len[mid]);
 		switch (res) {
-		case  0: return true;
-		case -1: min = mid + 1; break;
-		case  1: max = mid - 1; break;
+		case   CMP_EQUAL: return true;
+		case    CMP_LESS: min = mid + 1; break;
+		case CMP_GREATER: max = mid - 1; break;
 		default: return false; /* Should never arrive here via cmp_word*/
 		}
 		mid = (min + max) / 2;
@@ -303,8 +295,7 @@ bool valid_word(letter_t *word, int len, struct dict *dict)
 
 bool valid_dir(struct dir *dir, struct board *b, struct dict *dict)
 {
-	int x, y, len;
-	int i;
+	int x, y, len, i;
 	letter_t word[BOARD_SIZE];
 
 	NOT(dir), NOT(b), NOT(dict);
@@ -568,11 +559,13 @@ bool is_vert(struct action *a, struct move *m)
 {
 	int i, min, max, x;
 	struct coor *coor;
-	struct board *board = &a->data.place.path.board;
+	struct board *board;
+	
 
 	NOT(a), NOT(m);
 
 	x = m->data.place.coor[0].x;
+	board = &a->data.place.path.board;
 	min = max = m->data.place.coor[0].y;
 	if (m->data.place.num < 2) {
 		return false;
@@ -755,30 +748,6 @@ action_error_t find_place_error
 }
 
 
-bool valid_place(struct place *place, struct player *player, struct board *board)
-{
-	NOT(place), NOT(player), NOT(board);
-	
-	if (!place_in_range(place)) {
-		return false;
-	}
-	if (place_overlap(place)) {
-		return false;
-	}
-	if (place_overlap_board(place, board)) {
-		return false;
-	}
-	if (!place_rack_exist(place, player)) {
-		return false;
-	}
-	if (!adjacent_tiles(board, place, player) &&
-	    !on_free_squares(board, place, player)) {
-		return false;
-	}
-	return true;
-}
-
-
 void mk_place(struct action *a, struct game *g, struct move *m)
 {
 	int num;
@@ -801,14 +770,14 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	}
 	cpy_mem(&path->board, &g->board, sizeof(struct board));
 	cpy_rack_board(&path->board, &m->data.place, player);
-	if (num == 0) {
+	if (num <= 0) {
 		a->type = ACTION_INVALID;
 		a->data.error = ACTION_ERROR_PLACE_NO_RACK;
+		return;
 	}
 	if (num == 1) {
 		mk_dot(a, m);
-	}
-	if (num > 2) {
+	} else if (num >= 2) {
 		if (is_horz(a, m)) {
 			mk_horz(a, m);
 		} else if (is_vert(a, m)) {
@@ -827,24 +796,13 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	a->data.place.score = score_path(path);
 }
 
-/*
-void mk_swap(struct action *a, struct game *g, struct move *m)
-{
-	NOT(a), NOT(g), NOT(m);
-
-	a->type = ACTION_SWAP;
-	if (m->data.swap.num > bag_size(&g->bag)) {
-		a->type = ACTION_INVALID;
-		return;
-	}
-	cpy_mem(&a->data.swap, &m->data.swap, sizeof(struct swap));
-}
-*/
-
 
 void mk_discard(struct action *a, struct game *g, struct move *m)
 {
 	NOT(a), NOT(g), NOT(m);
+
+	a->type = ACTION_DISCARD;
+	cpy_mem(&a->data.discard, &m->data.discard, sizeof(struct discard));
 
 }
 
@@ -855,7 +813,6 @@ void mk_action(struct action *a, struct game *g, struct move *m)
 	a->player_id = m->player_id;
 	switch (m->type) {
 	case MOVE_PLACE: mk_place(a, g, m); break;
-	/*case MOVE_SWAP: mk_swap(a, g, m); break;*/
 	case MOVE_DISCARD: mk_discard(a, g, m); break;
 	case MOVE_SKIP: a->type = ACTION_SKIP; break;
 	case MOVE_INVALID: /* fall through */
@@ -910,7 +867,7 @@ void refill_rack(struct player *p, struct bag *b)
 bool apply_action(struct game *g, struct action *a)
 {
 	int id, i, r;
-	/*struct tile *t;*/
+	struct tile *t;
 
 	NOT(g), NOT(a);
 
@@ -931,27 +888,25 @@ bool apply_action(struct game *g, struct action *a)
 		shift_rack(&g->player[id]);
 		break;
 	}
-	/*
-	case ACTION_SWAP: {
-		for (i = 0; i < a->data.swap.num; i++) {
-			r = a->data.swap.rack_id[i];
-			t = &g->player[id].tile[r];
-			bag_add(&g->bag, *t);
-			*t = bag_peek(&g->bag);
-			bag_drop(&g->bag);
-		}
-		shake_bag(&g->bag);
-		break;
-	}
-	*/
 	case ACTION_DISCARD: {
+		for (i = 0; i < a->data.discard.num; i++) {
+			r = a->data.discard.rack_id[i];
+			t = &g->player[id].tile[r];
+			if (!bag_empty(&g->bag)) {
+				bag_add(&g->bag, *t);
+				*t = bag_peek(&g->bag);
+				bag_drop(&g->bag);
+			} else {
+				t->type = TILE_NONE;
+			}
+		}
 		break;
 	}
 	case ACTION_SKIP: {
 		break;
 	}
 	case ACTION_INVALID: /* fall through */
-	default: break;
+	default: return false;
 	}
 	return true;
 }

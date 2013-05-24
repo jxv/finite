@@ -17,7 +17,7 @@ void print_word(letter_t *word, int len)
 		str[j] = 'A' + word[j] - LETTER_A;
 	}
 	str[j] = '\0';
-	puts(str);
+	printf("[%s]\n", str);
 }
 
 
@@ -307,7 +307,7 @@ int term_ui()
 	puts("======");
 	puts("SCBAS");
 	puts("======");
-	do {
+	for (;;) {
 		print_score(&g);
 		puts("===============");
 		printf("Turn: PLAYER_%d\n", g.turn);
@@ -331,7 +331,7 @@ int term_ui()
 		if (apply_action(&g, &a)) {
 			next_turn(&g);
 		}
-	} while (1);
+	}
 	unload_dict(&g.dict);
 	return 0;
 }

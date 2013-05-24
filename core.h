@@ -131,6 +131,14 @@ typedef enum
 
 typedef enum
 {
+	CMP_LESS = -1,
+	CMP_EQUAL = 0,
+	CMP_GREATER = 1
+} cmp_t;
+
+
+typedef enum
+{
 	ACTION_INVALID = -1,
 	ACTION_PLACE = 0,
 /*	ACTION_SWAP, */
@@ -177,7 +185,7 @@ struct place
 };
 
 
-struct swap
+struct discard
 {
 	int		num;
 	int		rack_id[RACK_SIZE];
@@ -190,7 +198,7 @@ struct move
 	int		player_id;
 	union {
 		struct place			place;
-		struct swap			swap;
+		struct discard			discard;
 	} data;
 };
 
@@ -245,7 +253,7 @@ struct action
 			int			rack_id[RACK_SIZE];
 			struct path		path;
 		} place;
-		struct swap	swap;
+		struct discard discard;
 		action_error_t	error;
 	} data;
 };
