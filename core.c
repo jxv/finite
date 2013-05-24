@@ -750,7 +750,7 @@ action_err_t fd_place_err
 
 void mk_place(struct action *a, struct game *g, struct move *m)
 {
-	int num;
+	int num, i;
 	struct path *path;
 	struct player *player;
 	action_err_t err;
@@ -761,7 +761,12 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 	path = &a->data.place.path;
 	player = &g->player[m->player_id];
 	a->type = ACTION_PLACE;
+
 	a->data.place.num = m->data.place.num;
+	for (i = 0; i < num; i++) {
+		a->data.place.rack_id[i] = m->data.place.rack_id[i];
+	}
+
 	err = fd_place_err(&m->data.place, player, &g->board);
 	if (err != ACTION_ERR_NONE) {
 		a->type = ACTION_INVALID;
@@ -850,15 +855,13 @@ void shift_rack(struct player *p)
 void refill_rack(struct player *p, struct bag *b)
 {
 	int i;
-	struct tile t;
 	
 	NOT(p), NOT(b);
 	
-	for (i = 0; i < RACK_SIZE && bag_size(b) > 0; i++) {
+	for (i = 0; i < RACK_SIZE && !bag_empty(b); i++) {
 		if (p->tile[i].type == TILE_NONE) {
-			t = bag_peek(b);
+			p->tile[i] = bag_peek(b);
 			bag_drop(b);
-			cpy_mem(&p->tile[i], &t, sizeof(struct tile));
 		}
 	}
 }
@@ -883,6 +886,7 @@ bool apply_action(struct game *g, struct action *a)
 		for (i = 0; i < a->data.place.num; i++) {
 			r = a->data.place.rack_id[i];
 			g->player[id].tile[r].type = TILE_NONE;
+			printf("(((((%d)))))\n", r);
 		}
 		refill_rack(&g->player[id], &g->bag);
 		shift_rack(&g->player[id]);

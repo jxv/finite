@@ -34,6 +34,37 @@ void print_dict(struct dict *dict)
 }
 
 
+void print_tile(struct tile *t)
+{
+	char c;
+	
+	NOT(t);
+
+	switch (t->type) {
+	case TILE_WILD: c = 'a' + t->letter; break;
+	case TILE_LETTER: c = 'A' + t->letter; break;
+	default: return;
+	}
+	putchar(c);
+}
+
+
+void print_bag(struct bag *b)
+{
+	int i;
+
+	NOT(b);
+
+	i = b->head;
+	while (i != b->tail) {
+		print_tile(&b->tile[i]);
+		i++;
+		i %= BAG_SIZE;
+	}
+	putchar('\n');
+}
+
+
 void print_action(struct action *a)
 {
 	NOT(a);
@@ -81,11 +112,9 @@ void print_board(struct board *b)
 		for (x = 0; x < BOARD_X; x++) {
 			t = &b->tile[y][x];
 			sq = b->sq[y][x];
-			switch (t->type) {
-			case TILE_WILD: c = 'a' + t->letter; break;
-			case TILE_LETTER: c = 'A' + t->letter; break;
-			case TILE_NONE: /* fall through */
-			default: {
+			if (t->type != TILE_NONE) {
+				print_tile(t);
+			} else {
 				switch (sq) {
 				case SQ_DBL_LET: c = '-'; break;
 				case SQ_TRP_LET: c = '='; break;
@@ -95,9 +124,8 @@ void print_board(struct board *b)
 				case SQ_NORMAL: /* fall through */
 				default: c = '.'; break;
 				}
+				putchar(c);
 			}
-			}
-			printf("%c",c);
 		}
 		printf("\n");
 	}
@@ -302,7 +330,7 @@ int term_ui()
 	struct action a;
 
 	if (!term_init(&g)) {
-		return 1;
+		return EXIT_FAILURE;
 	}
 	puts("======");
 	puts("SCBAS");
@@ -316,24 +344,22 @@ int term_ui()
 		print_rack(&g.player[g.turn]);
 		do {
 			do {
-				m.player_id = g.turn;
 				term_get_move_type(&m);
 				term_move(&m);
+				m.player_id = g.turn;
 			} while (m.type == MOVE_INVALID);
 			clr_action(&a);
-			m.player_id = g.turn;
 			mk_action(&a, &g, &m);
 			if (a.type == ACTION_INVALID) {
 				print_action_err(a.data.err);
 			}
 		} while(a.type == ACTION_INVALID);
-		a.player_id = g.turn;
 		if (apply_action(&g, &a)) {
 			next_turn(&g);
 		}
 	}
 	unload_dict(&g.dict);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 

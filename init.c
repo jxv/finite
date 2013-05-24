@@ -138,7 +138,7 @@ void init_bag(struct bag *b)
 	i = 0;
 	for (k = 0; k < LETTER_COUNT; k++) {
 		for (j = 0; j < tile_letter_num[k]; j++) {
-			b->tile[i].letter = LETTER_A;
+			b->tile[i].letter = LETTER_A + k;
 			i++;
 		}
 	}
