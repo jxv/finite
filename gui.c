@@ -180,7 +180,8 @@ bool init(struct env *e)
 	}
 	free_surface(tile);
 	init_board(&e->game.board);
-	init_player(&e->game.player[0]);
+	init_bag(&e->game.bag);
+	init_player(&e->game.player[0], &e->game.bag);
 	return true;
 }
 

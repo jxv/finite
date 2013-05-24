@@ -804,11 +804,18 @@ void mk_place(struct action *a, struct game *g, struct move *m)
 
 void mk_discard(struct action *a, struct game *g, struct move *m)
 {
+	int i;
+
 	NOT(a), NOT(g), NOT(m);
 
 	a->type = ACTION_DISCARD;
-	cpy_mem(&a->data.discard, &m->data.discard, sizeof(struct discard));
-
+	a->data.discard.num = m->data.discard.num;
+	printf("[[%d]]\n", m->data.discard.num);
+	for (i = 0; i < a->data.discard.num; i++) {
+		printf("[%d]\n", a->data.discard.rack_id[i]);
+		a->data.discard.rack_id[i] = m->data.discard.rack_id[i];
+	}
+	/* cpy_mem(&a->data.discard, &m->data.discard, sizeof(struct discard)); */
 }
 
 
@@ -820,6 +827,7 @@ void mk_action(struct action *a, struct game *g, struct move *m)
 	case MOVE_PLACE: mk_place(a, g, m); break;
 	case MOVE_DISCARD: mk_discard(a, g, m); break;
 	case MOVE_SKIP: a->type = ACTION_SKIP; break;
+	case MOVE_QUIT: a->type = ACTION_QUIT; break;
 	case MOVE_INVALID: /* fall through */
 	default: a->type = ACTION_INVALID; break;
 	}
@@ -870,7 +878,6 @@ void refill_rack(struct player *p, struct bag *b)
 bool apply_action(struct game *g, struct action *a)
 {
 	int id, i, r;
-	struct tile *t;
 
 	NOT(g), NOT(a);
 
@@ -886,7 +893,6 @@ bool apply_action(struct game *g, struct action *a)
 		for (i = 0; i < a->data.place.num; i++) {
 			r = a->data.place.rack_id[i];
 			g->player[id].tile[r].type = TILE_NONE;
-			printf("(((((%d)))))\n", r);
 		}
 		refill_rack(&g->player[id], &g->bag);
 		shift_rack(&g->player[id]);
@@ -895,18 +901,17 @@ bool apply_action(struct game *g, struct action *a)
 	case ACTION_DISCARD: {
 		for (i = 0; i < a->data.discard.num; i++) {
 			r = a->data.discard.rack_id[i];
-			t = &g->player[id].tile[r];
-			if (!bag_empty(&g->bag)) {
-				bag_add(&g->bag, *t);
-				*t = bag_peek(&g->bag);
-				bag_drop(&g->bag);
-			} else {
-				t->type = TILE_NONE;
-			}
+			g->player[id].tile[r].type = TILE_NONE;
 		}
+		refill_rack(&g->player[id], &g->bag);
+		shift_rack(&g->player[id]);
 		break;
 	}
 	case ACTION_SKIP: {
+		break;
+	}
+	case ACTION_QUIT: {
+		g->player[id].active = false;
 		break;
 	}
 	case ACTION_INVALID: /* fall through */
@@ -932,8 +937,10 @@ void next_turn(struct game *g)
 {
 	NOT(g);
 
-	g->turn ++;
-	g->turn %= g->player_num;
+	do {
+		g->turn ++;
+		g->turn %= g->player_num;
+	} while (!g->player[g->turn].active);
 }
 
 
@@ -952,6 +959,78 @@ void clr_action(struct action *a)
 
 	set_mem(a, 0, sizeof(struct action));
 	a->type = ACTION_INVALID;
+}
+
+
+bool end_game(struct game *g)
+{
+	int i, j, k;
+
+	NOT(g);
+
+	/* at least 2 players are active */	
+	j = 0;
+	if (bag_empty(&g->bag)) {
+		for (i = 0; i < g->player_num; i++) {
+			if (g->player[i].active) {
+				j++;
+			}
+		}
+	}
+	if (j < 2) {
+		return true;
+	}
+
+
+	/* at least 1 player has tiles on the rack */
+	j = 0;
+	k = 0;
+	for (i = 0; i < g->player_num; i++) {
+		if (g->player[i].active) {
+			for (k = 0; k < RACK_SIZE; k++) {
+				if (g->player[i].tile[k].type != TILE_NONE) {
+					j++;
+				}
+			}
+		}
+	}
+	if (j == 0) {
+		return false;
+	}
+	
+	return false;
+}
+
+
+int fd_winner(struct game *g)
+{
+	int max, id, i, j;
+
+	NOT(g);
+
+	id = -1;
+	j = 0;
+	for (i = 0; i < g->player_num; i++) {
+		if (g->player[i].active) {
+			id = i;
+			j++;
+		}
+	} 
+	if (j == 1) {
+		return id;
+	}
+	
+	max = 0;
+	for (i = 0; i < g->player_num; i++) {
+		if (g->player[i].active) {
+			if (max < g->player[i].score) {
+				id = i;
+				max = g->player[i].score;
+			}
+		}
+	} 
+	
+	return max ? id : -1;
 }
 
 

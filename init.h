@@ -7,7 +7,7 @@
 
 void init_board(struct board *b);
 void init_bag(struct bag *b);
-void init_player(struct player *p);
+void init_player(struct player *p, struct bag *b);
 void init_move(struct move *m);
 
 

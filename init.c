@@ -132,6 +132,7 @@ void init_bag(struct bag *b)
 
 	b->head = 0;
 	b->tail = BAG_SIZE - 1;
+	b->tail = 14;
 	for (i = 0; i < BAG_SIZE; i++) {
 		b->tile[i].type = TILE_LETTER;
 	}
@@ -149,20 +150,18 @@ void init_bag(struct bag *b)
 }
 
 
-void init_player(struct player *p)
+void init_player(struct player *p, struct bag *b)
 {
 	int i;
 
 	NOT(p);
 
 	for (i = 0; i < RACK_SIZE; i++) {
-		p->tile[i].type = TILE_LETTER;
-		p->tile[i].letter = LETTER_A;
+		p->tile[i].type = TILE_NONE;
 	}
-	p->tile[0].letter = LETTER_C;
-	p->tile[1].letter = LETTER_R;
-	p->tile[2].letter = LETTER_A;
-	p->tile[3].letter = LETTER_P;
+	refill_rack(p, b);
+
+	p->active = true;
 }
 
 

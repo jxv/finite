@@ -211,8 +211,8 @@ bool term_init(struct game *g)
 	}
 	init_board(&g->board);
 	init_bag(&g->bag);
-	init_player(&g->player[0]);
-	init_player(&g->player[1]);
+	init_player(&g->player[0], &g->bag);
+	init_player(&g->player[1], &g->bag);
 	return true;
 }
 
@@ -249,7 +249,7 @@ bool parse_to_place(struct place *p, const char *str, int len)
 		}
 		j = find_next_char(str + i, len - i, '(');
 		if (j == -1) {
-			break;	/* n should be 3 */
+			break;
 		} else {
 			i += j;
 		}
@@ -260,12 +260,46 @@ bool parse_to_place(struct place *p, const char *str, int len)
 			p->coor[k].y  = y;
 			k++;
 		} else {
-			break;	/* n should NOT be 3 */
+			break;
 		}
 		i++;
 	}
 	p->num = k;
 	return n == 3 && k < RACK_SIZE;	/* n == 3 && k < RACK_SIZE, on success */
+}
+
+
+bool parse_to_discard(struct discard *d, const char *str, int len)
+{
+	int r, k, i, j;
+	size_t n;
+	
+	NOT(d), NOT(str);
+
+	i = 0;
+	n = 0;
+	k = 0;
+	for (;;) {
+		if (k == RACK_SIZE) {
+			break;
+		}
+		j = find_next_char(str + i, len - i, '(');
+		if (j == -1) {
+			break;
+		} else {
+			i += j;
+		}
+		n = sscanf(str + i, "(%d)", &r);
+		if (n == 1) {
+			d->rack_id[k] = r;
+			k++;
+		} else {
+			break;
+		}
+		i++;
+	}
+	d->num = k;
+	return n == 1 && k < RACK_SIZE;
 }
 
 
@@ -296,11 +330,12 @@ void term_get_move_type(struct move *m)
 
 void term_move(struct move *m)
 {
+	char line[256];
+
 	NOT(m);
 
 	switch (m->type) {
 	case MOVE_PLACE: {
-		char line[256];
 		printf("Enter the rack index of tiles to place (x,y,rack-index):\n");
 		get_line(line, sizeof(line));
 		if (!parse_to_place(&m->data.place, line, strlen(line))) {
@@ -313,6 +348,12 @@ void term_move(struct move *m)
 		break;
 	}
 	case MOVE_DISCARD: {
+		printf("Enter the rack index of tiles to place (rack-index) ... (rack-index):\n");
+		get_line(line, sizeof(line));
+		if (!parse_to_discard(&m->data.discard, line, strlen(line))) {
+			printf("[err: bad input format]\n");
+			m->type = MOVE_INVALID;
+		}
 		break;
 	}
 	case MOVE_QUIT: {
@@ -328,6 +369,7 @@ int term_ui()
 	struct game g;
 	struct move m;
 	struct action a;
+	int winner_id;
 
 	if (!term_init(&g)) {
 		return EXIT_FAILURE;
@@ -335,7 +377,7 @@ int term_ui()
 	puts("======");
 	puts("SCBAS");
 	puts("======");
-	for (;;) {
+	do {
 		print_score(&g);
 		puts("===============");
 		printf("Turn: PLAYER_%d\n", g.turn);
@@ -357,6 +399,12 @@ int term_ui()
 		if (apply_action(&g, &a)) {
 			next_turn(&g);
 		}
+	} while (!end_game(&g));
+	winner_id = fd_winner(&g);
+	if (winner_id != -1) {
+		printf("\nPLAYER_%d WON!\n", winner_id);
+	} else {
+		printf("\nTIE!\n");
 	}
 	unload_dict(&g.dict);
 	return EXIT_SUCCESS;

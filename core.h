@@ -171,6 +171,7 @@ struct board
 
 struct player
 {
+	bool		active;
 	int		score;
 	struct tile	tile[RACK_SIZE];
 };
@@ -293,7 +294,8 @@ void clr_action(struct action*);
 void remove_from_rack(struct player*, int*, int);
 void shift_rack(struct player*);
 void refill_rack(struct player*, struct bag*);
-
+bool end_game(struct game *g);
+int fd_winner(struct game *g);
 
 #endif
 
