@@ -265,7 +265,7 @@ bool parse_to_place(struct place *p, const char *str, int len)
 		i++;
 	}
 	p->num = k;
-	return n == 3 && k < RACK_SIZE;	/* n == 3 && k < RACK_SIZE, on success */
+	return n == 3 && k <= RACK_SIZE;	/* n == 3 && k <= RACK_SIZE, on success */
 }
 
 
@@ -299,7 +299,7 @@ bool parse_to_discard(struct discard *d, const char *str, int len)
 		i++;
 	}
 	d->num = k;
-	return n == 1 && k < RACK_SIZE;
+	return n == 1 && k <= RACK_SIZE;
 }
 
 

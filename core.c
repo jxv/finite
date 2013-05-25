@@ -995,7 +995,7 @@ bool end_game(struct game *g)
 		}
 	}
 	if (j == 0) {
-		return false;
+		return true;
 	}
 	
 	return false;
