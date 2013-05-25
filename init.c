@@ -132,7 +132,6 @@ void init_bag(struct bag *b)
 
 	b->head = 0;
 	b->tail = BAG_SIZE - 1;
-	b->tail = 14;
 	for (i = 0; i < BAG_SIZE; i++) {
 		b->tile[i].type = TILE_LETTER;
 	}
