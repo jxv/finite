@@ -374,7 +374,6 @@ int term_ui()
 	if (!term_init(&g)) {
 		return EXIT_FAILURE;
 	}
-	printf("[[[%d|||\n", g.player[1].active);
 	puts("======");
 	puts("SCBAS");
 	puts("======");
@@ -401,7 +400,6 @@ int term_ui()
 			next_turn(&g);
 		}
 	} while (!end_game(&g));
-	printf("[[[%d|||\n", g.player[1].active);
 	winner_id = fd_winner(&g);
 	if (winner_id != -1) {
 		printf("\nPLAYER_%d WON!\n", winner_id);
