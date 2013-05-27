@@ -7,7 +7,7 @@
 #include "dbg.h"
 #include "mem.h"
 
-#define RES_PATH		"data/"
+#define RES_PATH		"res/"
 
 #define BOARD_X			15
 #define BOARD_Y			15
@@ -151,6 +151,7 @@ typedef enum
 
 struct word
 {
+	int 		len;
 	letter_t	letter[BOARD_SIZE];
 };
 
@@ -271,6 +272,7 @@ struct dict
 	long		num;
 	letter_t 	**word;
 	int		*len;
+	struct word	*words;
 };
 
 
