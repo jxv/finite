@@ -127,7 +127,6 @@ int score_meta_path(struct dir *d, struct dir *adj, int n, struct board *b)
 	NOT(d), NOT(adj), NOT(b);
 
 	s = 0;
-
 	if (d->type != DIR_INVALID) {
 		s = score_dir(b, d);
 		for (i = 0; i < n; i++) {
@@ -970,21 +969,17 @@ bool end_game(struct game *g)
 
 	/* at least 2 players are active */	
 	j = 0;
-	if (bag_empty(&g->bag)) {
-		for (i = 0; i < g->player_num; i++) {
-			if (g->player[i].active) {
-				j++;
-			}
+	for (i = 0; i < g->player_num; i++) {
+		if (g->player[i].active) {
+			j++;
 		}
 	}
 	if (j < 2) {
-		return true;
+			return true;
 	}
-
 
 	/* at least 1 player has tiles on the rack */
 	j = 0;
-	k = 0;
 	for (i = 0; i < g->player_num; i++) {
 		if (g->player[i].active) {
 			for (k = 0; k < RACK_SIZE; k++) {
@@ -1019,7 +1014,6 @@ int fd_winner(struct game *g)
 	if (j == 1) {
 		return id;
 	}
-	
 	max = 0;
 	for (i = 0; i < g->player_num; i++) {
 		if (g->player[i].active) {
@@ -1029,7 +1023,6 @@ int fd_winner(struct game *g)
 			}
 		}
 	} 
-	
 	return max ? id : -1;
 }
 

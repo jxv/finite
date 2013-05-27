@@ -160,6 +160,7 @@ void init_player(struct player *p, struct bag *b)
 	}
 	refill_rack(p, b);
 
+	p->score = 0;
 	p->active = true;
 }
 
