@@ -1,5 +1,5 @@
-#ifndef SCABS_DBG_H
-#define SCABS_DBG_H
+#ifndef FINITE_UTIL_DBG_H
+#define FINITE_UTIL_DBG_H
 
 #include <assert.h>
 

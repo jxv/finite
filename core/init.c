@@ -1,6 +1,7 @@
-#include "core.h"
-#include "dict.h"
-#include "init.h"
+#include <stdio.h>
+#include <ctype.h>
+
+#include "common.h"
 
 
 void init_board(struct board *b)
@@ -182,6 +183,102 @@ void init_move(struct move *m)
 	m->data.place.coor[1].y = 1;
 	m->data.place.coor[2].y = 2;
 	m->data.place.coor[3].y = 3;
+}
+
+
+void cons_word(struct word *w, const char *str)
+{
+	int i;
+	char c;
+	
+	NOT(w), NOT(str);
+	
+	for (i = 0, w->len = 0; str[i] != '\0' && w->len < BOARD_SIZE; i++) {
+		c = toupper(str[i]);
+		if (c >= 'A' && c <= 'Z') {
+			w->letter[w->len] = LETTER_A + c - 'A';
+			w->len++;
+		}
+	}
+}
+
+
+void swap_word(struct word *w0, struct word *w1)
+{
+	struct word tmp;
+
+	NOT(w0), NOT(w1);
+	
+	tmp = *w0;
+	*w0 = *w1;
+	*w1 = tmp;
+}
+
+
+int cmp_word_wrapper(const void *p0, const void *p1)
+{
+	NOT(p0), NOT(p1);
+
+	return cmp_word((struct word*)p0, (struct word*)p1);
+}
+
+
+bool init_dict(struct dict *d, const char *name)
+{
+	long i;
+	FILE *f = NULL;
+	struct word w;
+	char buf[BOARD_SIZE + 1];
+	
+	NOT(d), NOT(name);
+	
+	f = fopen(name, "r");
+	if (f == NULL) {
+		return false;
+	}
+	/* count */
+	d->num = 0;
+	while (fgets(buf, BOARD_SIZE + 1, f)) {
+		cons_word(&w, buf);
+		if (w.len > 1) {
+			d->num++;
+		}
+	}
+	/* error check */
+	if (ferror(f)) {
+		fclose(f);
+		return false;
+	}
+	rewind(f);
+	assert(d->num > 0);
+	/* alloc */
+	d->words = alloc_mem(sizeof(struct word) * d->num);
+	NOT(d->words);
+	i = 0;
+	for (i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
+		cons_word(&w, buf);
+		if (w.len > 1) {
+			d->words[i] = w;
+		} else {
+			i--;
+		}
+	}
+	/* error check */
+	if (ferror(f)) {
+		fclose(f);
+		return false;
+	}
+	fclose(f);
+	/* sort */
+	qsort(d->words, d->num, sizeof(struct word), cmp_word_wrapper);
+	return true;
+}
+
+
+void quit_dict(struct dict *dict)
+{
+	NOT(dict);
+	free_mem(dict->words);
 }
 
 

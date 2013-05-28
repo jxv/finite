@@ -1,5 +1,5 @@
-#ifndef	SCABS_SDL_UTIL_H
-#define	SCABS_SDL_UTIL_H
+#ifndef	FINITE_SDL_UTIL_H
+#define	FINITE_SDL_UTIL_H
 
 
 #include <SDL.h>

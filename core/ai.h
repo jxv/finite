@@ -1,5 +1,5 @@
-#ifndef SCABS_AI_H
-#define SCABS_AI_H
+#ifndef FINITE_AI_H
+#define FINITE_AI_H
 
 #include "core.h"
 

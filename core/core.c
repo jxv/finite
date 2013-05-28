@@ -1,5 +1,6 @@
-#include "core.h"
+#include "common.h"
 
+void print_word(struct word *w);
 
 int tile_score(struct tile *t)
 {
@@ -86,7 +87,7 @@ int score_dir(struct board *b, struct dir *d)
 	score = 0;
 	switch (d->type) {
 	case DIR_RIGHT: {
-		for (p = 0, i = d->x; i < d->length + d->x; p++, i++) {
+		for (p = 0, i = d->x; i < d->len + d->x; p++, i++) {
 			t   = tile_score(&b->tile[y][i]);
 			t  *= can_use_dbl_let(b, d, p, i, y) ? 2 : 1;
 			t  *= can_use_trp_let(b, d, p, i, y) ? 3 : 1;
@@ -97,7 +98,7 @@ int score_dir(struct board *b, struct dir *d)
 		break;
 	}
 	case DIR_DOWN: {
-		for (p = 0, i = d->y; i < d->length + d->y; p++, i++) {
+		for (p = 0, i = d->y; i < d->len + d->y; p++, i++) {
 			t   = tile_score(&b->tile[i][x]);
 			t  *= can_use_dbl_let(b, d, p, x, i) ? 2 : 1;
 			t  *= can_use_trp_let(b, d, p, x, i) ? 3 : 1;
@@ -234,7 +235,7 @@ void bag_add(struct bag *b, struct tile t)
 }
 
 
-cmp_t cmp_word(letter_t *w0, int len0, letter_t *w1, int len1) 
+cmp_t cmp_word(struct word *w0, struct word *w1) 
 {
 	/* w0 >  w1 -> -1
 	 * w0 <  w1 ->  1
@@ -245,45 +246,45 @@ cmp_t cmp_word(letter_t *w0, int len0, letter_t *w1, int len1)
 	NOT(w0), NOT(w1);
 
 	for (i = 0; ; i++) {
-		if (len0 >  len1 && i == len1) {
-			return CMP_LESS;
+		if (w0->len  > w1->len && i == w1->len) {
+			return CMP_GREATER;
 		}
-		if (len0 <  len1 && i == len0) {
-			return  CMP_GREATER;
+		if (w0->len  < w1->len && i == w0->len) {
+			return  CMP_LESS;
 		}
-		if (len0 == len1 && i == len0) {
+		if (w0->len == w1->len && i == w1->len) {
 			return CMP_EQUAL;
 		}
-		if (w0[i] == w1[i]) {
+		if (w0->letter[i] == w1->letter[i]) {
 			continue;
 		}
-		if (w0[i] > w1[i]) {
-			return CMP_LESS;
-		}
-		if (w0[i] < w1[i]) {
+		if (w0->letter[i]  > w1->letter[i]) {
 			return CMP_GREATER;
+		}
+		if (w0->letter[i]  < w1->letter[i]) {
+			return CMP_LESS;
 		}
 	}
 	return CMP_EQUAL;
 }
 
 
-bool valid_word(letter_t *word, int len, struct dict *dict)
+bool valid_word(struct word *w, struct dict *d)
 {
 	long min, max, mid;
 	cmp_t res;
 	
-	NOT(word), NOT(dict);
+	NOT(w), NOT(d);
 	
 	min = 0;
-	max = dict->num;
-	mid = dict->num / 2;
+	max = d->num;
+	mid = d->num / 2;
 	while (min <= max) {
-		res = cmp_word(word, len, dict->word[mid], dict->len[mid]);
+		res = cmp_word(w, &d->words[mid]);
 		switch (res) {
 		case   CMP_EQUAL: return true;
-		case    CMP_LESS: min = mid + 1; break;
-		case CMP_GREATER: max = mid - 1; break;
+		case CMP_GREATER: min = mid + 1; break;
+		case    CMP_LESS: max = mid - 1; break;
 		default: return false; /* Should never arrive here via cmp_word */
 		}
 		mid = (min + max) / 2;
@@ -294,19 +295,19 @@ bool valid_word(letter_t *word, int len, struct dict *dict)
 
 bool valid_dir(struct dir *dir, struct board *b, struct dict *dict)
 {
-	int x, y, len, i;
-	letter_t word[BOARD_SIZE];
+	int x, y, i;
+	struct word w;
 
 	NOT(dir), NOT(b), NOT(dict);
 
 	x = dir->x;
 	y = dir->y;
-	len = dir->length;
+	w.len = dir->len;
 	switch (dir->type) {
 	case DIR_RIGHT: {
-		for (i = 0; i < len; i++) {
-			if (b->tile[y][x+i].type != TILE_NONE) {
-				word[i] = b->tile[y][x+i].letter;
+		for (i = 0; i < w.len; i++) {
+			if (b->tile[y][x + i].type != TILE_NONE) {
+				w.letter[i] = b->tile[y][x + i].letter;
 			} else {
 				return false;
 			}
@@ -314,9 +315,9 @@ bool valid_dir(struct dir *dir, struct board *b, struct dict *dict)
 		break;
 	}
 	case DIR_DOWN: {
-		for (i = 0; i < len; i++) {
-			if (b->tile[y+i][x].type != TILE_NONE) {
-				word[i] = b->tile[y+i][x].letter;
+		for (i = 0; i < w.len; i++) {
+			if (b->tile[y + i][x].type != TILE_NONE) {
+				w.letter[i] = b->tile[y + i][x].letter;
 			} else {
 				return false;
 			}
@@ -326,7 +327,7 @@ bool valid_dir(struct dir *dir, struct board *b, struct dict *dict)
 	case DIR_INVALID: /* fall through */
 	default: return false;
 	}
-	return valid_word(word, len, dict);
+	return valid_word(&w, dict);
 }
 
 
@@ -604,10 +605,10 @@ void mk_right(struct dir *d, int x, int y, struct board *b)
 		d->x = i;
 	}
 	for (i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++) {
-		d->length = i;
+		d->len = i;
 	}
-	d->length -= d->x - 1;
-	if (d->length == 1) {
+	d->len -= d->x - 1;
+	if (d->len == 1) {
 		 d->type = DIR_INVALID;
 	}
 }
@@ -627,10 +628,10 @@ void mk_down(struct dir *d, int x, int y, struct board *b)
 		d->y = i;
 	}
 	for (i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++) {
-		d->length = i;
+		d->len = i;
 	}
-	d->length -= d->y - 1;
-	if (d->length == 1) {
+	d->len -= d->y - 1;
+	if (d->len == 1) {
 		 d->type = DIR_INVALID;
 	}
 }
@@ -977,7 +978,6 @@ bool end_game(struct game *g)
 	if (j < 2) {
 			return true;
 	}
-
 	/* at least 1 player has tiles on the rack */
 	j = 0;
 	for (i = 0; i < g->player_num; i++) {
@@ -992,7 +992,6 @@ bool end_game(struct game *g)
 	if (j == 0) {
 		return true;
 	}
-	
 	return false;
 }
 

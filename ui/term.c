@@ -1,20 +1,19 @@
 #include <string.h>
 
 #include "core.h"
-#include "dict.h"
 #include "init.h"
 #include "term.h"
 
 
-void print_word(letter_t *word, int len)
+void print_word(struct word *w)
 {
 	char str[BOARD_SIZE];
 	int j;
 
-	NOT(word);
+	NOT(w);
 
-	for (j = 0; j < len; j++) {
-		str[j] = 'A' + word[j] - LETTER_A;
+	for (j = 0; j < w->len; j++) {
+		str[j] = 'A' + w->letter[j] - LETTER_A;
 	}
 	str[j] = '\0';
 	printf("[%s]\n", str);
@@ -29,7 +28,7 @@ void print_dict(struct dict *dict)
 
 	printf("== Size:%ld\n", dict->num);
 	for (i = 0; i < dict->num; i++) {
-		print_word(dict->word[i], dict->len[i]);
+		print_word(&dict->words[i]);
 	}
 }
 
@@ -194,7 +193,7 @@ int get_line(char *line, size_t s)
 	line[strcspn(line, "\n")] = '\0';
 	len = strlen(line);
 	if (len == s - 1) {
-	        while ((c = getchar()) != '\n' && c != EOF);
+		while ((c = getchar()) != '\n' && c != EOF);
 	}
 	return len;
 }
@@ -206,7 +205,7 @@ bool term_init(struct game *g)
 
 	g->turn = 0;
 	g->player_num = 2;
-	if (!load_dict(&g->dict, RES_PATH "dict.txt")) {
+	if (!init_dict(&g->dict, RES_PATH "dict.txt")) {
 		return false;
 	}
 	init_board(&g->board);
@@ -374,9 +373,9 @@ int term_ui()
 	if (!term_init(&g)) {
 		return EXIT_FAILURE;
 	}
-	puts("======");
-	puts("SCBAS");
-	puts("======");
+	puts("=======");
+	puts("FINITE");
+	puts("=======");
 	do {
 		print_score(&g);
 		puts("===============");
@@ -406,7 +405,7 @@ int term_ui()
 	} else {
 		printf("\nTIE!\n");
 	}
-	unload_dict(&g.dict);
+	quit_dict(&g.dict);
 	return EXIT_SUCCESS;
 }
 

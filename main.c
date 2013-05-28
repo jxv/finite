@@ -1,6 +1,4 @@
-#include "core.h"
-#include "dict.h"
-#include "init.h"
+#include "common.h"
 #include "term.h"
 #include "gui.h"
 

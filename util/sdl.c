@@ -1,5 +1,5 @@
 #include "dbg.h"
-#include "sdl_util.h"
+#include "sdl.h"
 
 
 #define ALPHA_R	0xff

@@ -1,5 +1,5 @@
-#ifndef SCABS_MEM_H
-#define SCABS_MEM_H
+#ifndef FINITE_MEM_H
+#define FINITE_MEM_H
 
 void *alloc_mem(size_t);
 void free_mem(void*);

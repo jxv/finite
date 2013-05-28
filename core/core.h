@@ -1,13 +1,17 @@
-#ifndef SCABS_CORE_H
-#define SCABS_CORE_H
+#ifndef FINITE_CORE_H
+#define FINITE_CORE_H
+
 
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #include "dbg.h"
 #include "mem.h"
 
+
 #define RES_PATH		"res/"
+
 
 #define BOARD_X			15
 #define BOARD_Y			15
@@ -15,6 +19,7 @@
 #define RACK_SIZE		7
 #define BAG_SIZE		(100+1)	/* needs extra element for size check */
 #define MAX_PLAYER		4
+
 
 #define VALID_BOARD_X(x)	RANGE(x,0,BOARD_X-1)
 #define VALID_BOARD_Y(y)	RANGE(y,0,BOARD_Y-1)
@@ -224,7 +229,7 @@ struct dir
 	dir_t		type;
 	int		x;
 	int		y;
-	int		length;
+	int		len;
 	int		pos[BOARD_SIZE];
 };
 
@@ -270,8 +275,8 @@ struct action
 struct dict
 {
 	long		num;
-	letter_t 	**word;
-	int		*len;
+	/*letter_t 	**word;
+	int		*len;*/
 	struct word	*words;
 };
 
@@ -290,7 +295,7 @@ struct game
 void mk_action(struct action*, struct game*, struct move*);
 bool apply_action(struct game*, struct action*);
 void next_turn(struct game*);
-int cmp_word(letter_t*, int, letter_t*, int);
+cmp_t cmp_word(struct word*, struct word*);
 void clr_move(struct move*);
 void clr_action(struct action*);
 void remove_from_rack(struct player*, int*, int);
@@ -298,6 +303,7 @@ void shift_rack(struct player*);
 void refill_rack(struct player*, struct bag*);
 bool end_game(struct game *g);
 int fd_winner(struct game *g);
+
 
 #endif
 

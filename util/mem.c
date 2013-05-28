@@ -1,6 +1,8 @@
 #include <memory.h>
 
-#include "core.h"
+
+#include "mem.h"
+#include "common.h"
 
 
 void set_mem(void *dest, int val, size_t s)

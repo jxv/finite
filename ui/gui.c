@@ -1,6 +1,5 @@
 #include "gui.h"
 #include "init.h"
-#include "dict.h"
 
 
 #define TILE_SPACING_X	2
@@ -137,7 +136,7 @@ bool init(struct env *e)
 		return false;
 	}
 
-	if (!load_dict(&e->game.dict, RES_PATH "dict.txt")) {
+	if (!init_dict(&e->game.dict, RES_PATH "dict.txt")) {
 		return false;
 	}
 	
@@ -192,7 +191,7 @@ void quit(struct env *e)
 
 	NOT(e);
 
-	unload_dict(&e->game.dict);
+	quit_dict(&e->game.dict);
 	free_surface(e->io.screen);
 	free_surface(e->io.back);
 	free_surface(e->io.lockon);

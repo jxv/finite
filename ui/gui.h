@@ -1,8 +1,8 @@
-#ifndef SCABS_GUI_H
-#define SCABS_GUI_H
+#ifndef FINITE_GUI_H
+#define FINITE_GUI_H
 
-#include "sdl_util.h"
-#include "core.h"
+#include "sdl.h"
+#include "common.h"
 
 
 #define SCREEN_WIDTH	320
