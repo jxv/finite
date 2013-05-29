@@ -58,16 +58,23 @@ struct io
 };
 
 
+struct keystate
+{
+	keystate_t		type;
+	float			time;
+};
+
+
 struct controls
 {
-	keystate_t		up;
-	keystate_t		down;
-	keystate_t		left;
-	keystate_t		right;
-	keystate_t		a;
-	keystate_t		b;
-	keystate_t		x;
-	keystate_t		y;
+	struct keystate		up;
+	struct keystate		down;
+	struct keystate		left;
+	struct keystate		right;
+	struct keystate		a;
+	struct keystate		b;
+	struct keystate		x;
+	struct keystate		y;
 };
 
 

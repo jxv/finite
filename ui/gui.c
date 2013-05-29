@@ -116,6 +116,30 @@ bool init_io(struct io *io)
 }
 
 
+void init_keystate(struct keystate *ks)
+{
+	NOT(ks);
+	
+	ks->type = KEYSTATE_UNTOUCHED;
+	ks->time = 0.0f;
+}
+
+
+void init_controls(struct controls *c)
+{
+	NOT(c);
+	
+	init_keystate(&c->up);
+	init_keystate(&c->down);
+	init_keystate(&c->right);
+	init_keystate(&c->left);
+	init_keystate(&c->a);
+	init_keystate(&c->b);
+	init_keystate(&c->x);
+	init_keystate(&c->y);
+}
+
+
 bool init(struct env *e)
 {
 	int i;
@@ -181,6 +205,7 @@ bool init(struct env *e)
 	init_board(&e->game.board);
 	init_bag(&e->game.bag);
 	init_player(&e->game.player[0], &e->game.bag);
+	init_controls(&e->controls);
 	e->selection.type = SELECTION_BOARD;
 	return true;
 }
@@ -207,6 +232,60 @@ void quit(struct env *e)
 }
 
 
+void update_keystate(struct keystate *ks, bool touched)
+{
+	NOT(ks);
+
+	if (touched) {
+		switch(ks->type) {
+		case KEYSTATE_UNTOUCHED: {
+			ks->type = KEYSTATE_PRESSED;
+			ks->time = 0.0f;
+			break;
+		}
+		case KEYSTATE_PRESSED: {
+			ks->type = KEYSTATE_HELD;
+			ks->time = 0.0f;
+			break;
+		}
+		case KEYSTATE_HELD: {
+			ks->time += 1.0f / 60.0f;
+			break;
+		}
+		case KEYSTATE_RELEASED: {
+			ks->type = KEYSTATE_PRESSED;
+			ks->time = 0.0f;
+			break;
+		}
+		default: break;
+		}
+	} else {
+		switch(ks->type) {
+		case KEYSTATE_UNTOUCHED: {
+			ks->time += 1.0f / 60.0f;
+			break;
+		}
+		case KEYSTATE_PRESSED: {
+			ks->type = KEYSTATE_RELEASED;
+			ks->time = 0.0f;
+			break;
+		}
+		case KEYSTATE_HELD: {
+			ks->type = KEYSTATE_RELEASED;
+			ks->time = 0.0f;
+			break;
+		}
+		case KEYSTATE_RELEASED: {
+			ks->type = KEYSTATE_UNTOUCHED;
+			ks->time = 0.0f;
+			break;
+		}
+		default: break;
+		}
+	}
+}
+
+
 bool handle_event(struct controls *c)
 {
 	SDL_Event event;
@@ -230,15 +309,23 @@ bool handle_event(struct controls *c)
 		default: break;
 		}
 	}
-	c->up    = ks[SDLK_UP];
-	c->down  = ks[SDLK_DOWN];
-	c->left  = ks[SDLK_LEFT];
-	c->right = ks[SDLK_RIGHT];
-	c->a = ks[SDLK_a];
-	c->b = ks[SDLK_b];
-	c->x = ks[SDLK_x];
-	c->y = ks[SDLK_y];
+	update_keystate(&c->up,    ks[SDLK_UP]);
+	update_keystate(&c->down,  ks[SDLK_DOWN]);
+	update_keystate(&c->left,  ks[SDLK_LEFT]);
+	update_keystate(&c->right, ks[SDLK_RIGHT]);
+	update_keystate(&c->a, ks[SDLK_a]);
+	update_keystate(&c->b, ks[SDLK_b]);
+	update_keystate(&c->x, ks[SDLK_x]);
+	update_keystate(&c->y, ks[SDLK_y]);
 	return false;
+}
+
+
+bool solid_move(struct keystate *ks)
+{
+	NOT(ks);
+
+	return ks->type == KEYSTATE_PRESSED || (ks->type == KEYSTATE_HELD && ks->time >= 0.3f);
 }
 
 
@@ -247,18 +334,18 @@ void selection_board(struct selection *s, struct controls *c)
 	NOT(s), NOT(c);
 	assert(s->type == SELECTION_BOARD);
 
-	if (c->up == KEYSTATE_PRESSED) {
+	if (solid_move(&c->up)) {
 		s->data.board.y--;
 	}
-	if (c->down == KEYSTATE_PRESSED) {
+	if (solid_move(&c->down)) {
 		s->data.board.y++;
 	}
-	if (c->left == KEYSTATE_PRESSED) {
+	if (solid_move(&c->left)) {
 		s->data.board.x--;
 		s->data.board.x += BOARD_X;
 		s->data.board.x %= BOARD_X; 
 	}
-	if (c->right == KEYSTATE_PRESSED) {
+	if (solid_move(&c->right)) {
 		s->data.board.x++;
 		s->data.board.x %= BOARD_X; 
 	}
@@ -298,17 +385,17 @@ void selection_rack(struct selection *s, struct controls *c)
 	NOT(s), NOT(c);
 	assert(s->type == SELECTION_RACK);
 
-	if (c->up == KEYSTATE_PRESSED) {
+	if (solid_move(&c->up)) {
 		int x = s->data.rack + 7;
 		s->type = SELECTION_BOARD;
 		s->data.board.y = BOARD_Y - 1;
 		s->data.board.x = x;
 		return;
 	}
-	if (c->left == KEYSTATE_PRESSED) {
+	if (solid_move(&c->left)) {
 		s->data.rack --;
 	}
-	if (c->right == KEYSTATE_PRESSED) {
+	if (solid_move(&c->right)) {
 		s->data.rack ++;
 	}
 	if (s->data.rack < 0) {
@@ -328,17 +415,17 @@ void selection_choice(struct selection *s, struct controls *c)
 	NOT(s), NOT(c);
 	assert(s->type == SELECTION_CHOICE);
 
-	if (c->up == KEYSTATE_PRESSED) {
+	if (solid_move(&c->up)) {
 		int x = s->data.choice + 1;
 		s->type = SELECTION_BOARD;
 		s->data.board.y = BOARD_Y - 1;
 		s->data.board.x = x;
 		return;
 	}
-	if (c->left == KEYSTATE_PRESSED) {
+	if (solid_move(&c->left)) {
 		s->data.choice --;
 	}
-	if (c->right == KEYSTATE_PRESSED) {
+	if (solid_move(&c->right)) {
 		s->data.choice ++;
 	}
 	if (s->data.choice < 0) {
