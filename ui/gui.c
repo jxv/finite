@@ -426,7 +426,7 @@ void exec(struct env *e)
 }
 
 
-int scabs()
+int gui()
 {
 	int exit_status = EXIT_FAILURE;
 	struct env e;

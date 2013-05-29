@@ -91,7 +91,7 @@ struct env
 };
 
 
-int scabs();
+int gui();
 
 
 #endif

@@ -91,7 +91,6 @@ typedef enum
 {
 	MOVE_INVALID = -1,
 	MOVE_PLACE = 0,
-/*	MOVE_SWAP, */
 	MOVE_DISCARD,
 	MOVE_SKIP,
 	MOVE_QUIT,
@@ -275,8 +274,6 @@ struct action
 struct dict
 {
 	long		num;
-	/*letter_t 	**word;
-	int		*len;*/
 	struct word	*words;
 };
 
