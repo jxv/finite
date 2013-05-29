@@ -5,7 +5,6 @@ INC=-I .
 INC+=-I core
 INC+=-I ui
 INC+=-I util
-INC+=`sdl-config --include`
 
 SRC=$(wildcard *.c)
 SRC+=$(wildcard core/*.c)
