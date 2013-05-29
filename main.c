@@ -5,7 +5,7 @@
 
 int main()
 {
-	return term_ui();
+	return scabs();
 }
 
 

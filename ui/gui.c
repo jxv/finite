@@ -181,6 +181,7 @@ bool init(struct env *e)
 	init_board(&e->game.board);
 	init_bag(&e->game.bag);
 	init_player(&e->game.player[0], &e->game.bag);
+	e->selection.type = SELECTION_BOARD;
 	return true;
 }
 
@@ -206,12 +207,12 @@ void quit(struct env *e)
 }
 
 
-bool handle_event(struct env *e)
+bool handle_event(struct controls *c)
 {
 	SDL_Event event;
 	Uint8 *ks;
 
-	NOT(e);
+	NOT(c);
 
 	ks = SDL_GetKeyState(NULL);
 	NOT(ks);
@@ -222,14 +223,189 @@ bool handle_event(struct env *e)
 			if (event.key.keysym.sym == SDLK_ESCAPE) {
 				return true;
 			}
-			ks[event.key.keysym.sym] = 1;
+			ks[event.key.keysym.sym] = true;
 			break;
 		}
-		case SDL_KEYUP: ks[event.key.keysym.sym] = 0; break;
+		case SDL_KEYUP: ks[event.key.keysym.sym] = false; break;
 		default: break;
 		}
 	}
+	c->up    = ks[SDLK_UP];
+	c->down  = ks[SDLK_DOWN];
+	c->left  = ks[SDLK_LEFT];
+	c->right = ks[SDLK_RIGHT];
+	c->a = ks[SDLK_a];
+	c->b = ks[SDLK_b];
+	c->x = ks[SDLK_x];
+	c->y = ks[SDLK_y];
 	return false;
+}
+
+
+void selection_board(struct selection *s, struct controls *c)
+{	
+	NOT(s), NOT(c);
+	assert(s->type == SELECTION_BOARD);
+
+	if (c->up == KEYSTATE_PRESSED) {
+		s->data.board.y--;
+	}
+	if (c->down == KEYSTATE_PRESSED) {
+		s->data.board.y++;
+	}
+	if (c->left == KEYSTATE_PRESSED) {
+		s->data.board.x--;
+		s->data.board.x += BOARD_X;
+		s->data.board.x %= BOARD_X; 
+	}
+	if (c->right == KEYSTATE_PRESSED) {
+		s->data.board.x++;
+		s->data.board.x %= BOARD_X; 
+	}
+	if (s->data.board.y < 0) {
+		s->data.board.y = 0;
+	}
+	if (s->data.board.y >= BOARD_Y) {
+		/* note: find constants for 0, 5, 6, 14? */
+		if (s->data.board.x <=  5) {
+			int choice = s->data.board.x - (0+1);
+			s->type = SELECTION_CHOICE;
+			if (choice < 0) {
+				choice = 0;
+			}
+			if (choice >= CHOICE_COUNT) {
+				choice = CHOICE_COUNT - 1;
+			}
+			s->data.choice = choice;
+		}
+		if (s->data.board.x >= 6) {
+			int rack = s->data.board.x - (6+1);
+			s->type = SELECTION_RACK;
+			if (rack < 0) {
+				rack = 0;
+			}
+			if (rack >= RACK_SIZE) {
+				rack = RACK_SIZE - 1;
+			}
+			s->data.rack = rack;
+		}
+	}
+}
+
+
+void selection_rack(struct selection *s, struct controls *c)
+{
+	NOT(s), NOT(c);
+	assert(s->type == SELECTION_RACK);
+
+	if (c->up == KEYSTATE_PRESSED) {
+		int x = s->data.rack + 7;
+		s->type = SELECTION_BOARD;
+		s->data.board.y = BOARD_Y - 1;
+		s->data.board.x = x;
+		return;
+	}
+	if (c->left == KEYSTATE_PRESSED) {
+		s->data.rack --;
+	}
+	if (c->right == KEYSTATE_PRESSED) {
+		s->data.rack ++;
+	}
+	if (s->data.rack < 0) {
+		s->type = SELECTION_CHOICE;
+		s->data.choice = CHOICE_COUNT - 1;
+		return;
+	}
+	if (s->data.rack >= RACK_SIZE) {
+		s->data.rack = RACK_SIZE - 1;
+		return;
+	}
+}
+
+
+void selection_choice(struct selection *s, struct controls *c)
+{
+	NOT(s), NOT(c);
+	assert(s->type == SELECTION_CHOICE);
+
+	if (c->up == KEYSTATE_PRESSED) {
+		int x = s->data.choice + 1;
+		s->type = SELECTION_BOARD;
+		s->data.board.y = BOARD_Y - 1;
+		s->data.board.x = x;
+		return;
+	}
+	if (c->left == KEYSTATE_PRESSED) {
+		s->data.choice --;
+	}
+	if (c->right == KEYSTATE_PRESSED) {
+		s->data.choice ++;
+	}
+	if (s->data.choice < 0) {
+		s->data.choice = 0;
+		return;
+	}
+	if (s->data.choice >= CHOICE_COUNT) {
+		s->type = SELECTION_RACK;
+		s->data.rack = 0;
+		return;
+	}
+}
+
+
+void update(struct env *e)
+{
+	NOT(e);
+
+	switch (e->selection.type) {
+	case SELECTION_BOARD : selection_board(&e->selection, &e->controls); break;
+	case SELECTION_RACK:   selection_rack(&e->selection, &e->controls); break;
+	case SELECTION_CHOICE: selection_choice(&e->selection, &e->controls); break;
+	default: break;
+	}
+}
+
+
+void draw_selection(struct io *io, struct selection *s)
+{
+	int x, y;
+
+	NOT(io), NOT(s);
+
+	x = 0;
+	y = 0;
+	switch (s->type) {
+	case SELECTION_BOARD: {
+		x = 106 + 14 * s->data.board.x;
+		y = 6 + 14 * s->data.board.y;
+		break;
+	}
+	case SELECTION_RACK: {
+		x = 162 + 14 * s->data.rack;
+		y = 222;
+		break;
+	}
+	case SELECTION_CHOICE: {
+		x = 80 + 14 * s->data.choice;
+		y = 222;
+		break;
+	}
+	default: break;
+	}
+	draw_surface(io->screen, io->lockon, x + -2, y + -2);
+}
+
+
+void draw(struct env *e)
+{
+	NOT(e);
+
+	SDL_FillRect(e->io.screen, NULL, 0);
+	draw_surface(e->io.screen, e->io.back, 0, 0);
+	draw_board(&e->io, &e->game.board);
+	draw_rack(&e->io, e->game.player + e->game.turn);
+	draw_selection(&e->io, &e->selection);
+	SDL_Flip(e->io.screen);
 }
 
 
@@ -242,12 +418,9 @@ void exec(struct env *e)
 
 	do {
 		st = SDL_GetTicks();
-		q = handle_event(e);
-		SDL_FillRect(e->io.screen, NULL, 0);
-		draw_surface(e->io.screen, e->io.back, 0, 0);
-		draw_board(&e->io, &e->game.board);
-		draw_rack(&e->io, e->game.player + e->game.turn);
-		SDL_Flip(e->io.screen);
+		q = handle_event(&e->controls);
+		update(e);
+		draw(e);
 		delay(st, SDL_GetTicks(), 60);
 	} while (!q);
 }
