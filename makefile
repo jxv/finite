@@ -1,6 +1,30 @@
+CC=cc
+RM=rm
 
+INC=-I .
+INC+=-I core
+INC+=-I ui
+INC+=-I util
+INC+=`sdl-config --include`
+
+SRC=$(wildcard *.c)
+SRC+=$(wildcard core/*.c)
+SRC+=$(wildcard ui/*.c)
+SRC+=$(wildcard util/*.c)
+
+CFLAG= -ansi
+CFLAG+= -Werror
+CFLAG+= -Wall
+CFLAG+= -pedantic
+CFLAG+= -O2
+
+LIB=-lc
+LIB+=`sdl-config --libs`
+LIB+=-lSDL_image
+
+OUT=-o finite
 
 all:
-	cc -ansi -Werror -Wall -pedantic -O2 -lc `sdl-config --cflags` `sdl-config --libs` -lSDL_image -o finite main.c core/core.c core/ai.c core/init.c ui/term.c ui/gui.c util/mem.c util/sdl.c -I core -I ui -I util
+	$(CC) $(CFLAG) `sdl-config --cflags` $(LIB) $(OUT) $(SRC) $(INC)
 clean:
-	rm finite
+	$(RM) $(OUT)

@@ -5,7 +5,7 @@
 
 int main()
 {
-	return scabs();
+	return gui();
 }
 
 
