@@ -21,9 +21,9 @@ LIB=-lc
 LIB+=`sdl-config --libs`
 LIB+=-lSDL_image
 
-OUT=-o finite
+OUT=finite
 
 all:
-	$(CC) $(CFLAG) `sdl-config --cflags` $(LIB) $(OUT) $(SRC) $(INC)
+	$(CC) $(SRC) -o $(OUT) $(CFLAG) `sdl-config --cflags` $(INC) $(LIB) 
 clean:
 	$(RM) $(OUT)

@@ -189,7 +189,7 @@ int get_line(char *line, size_t s)
 
 	NOT(line);
 
-	fgets(line, s, stdin);
+	line = fgets(line, s, stdin);
 	line[strcspn(line, "\n")] = '\0';
 	len = strlen(line);
 	if (len == s - 1) {
