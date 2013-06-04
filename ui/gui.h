@@ -40,15 +40,15 @@ typedef enum
 
 typedef enum
 {
-	GUI_CMD_INVALID = -1,
-	GUI_CMD_COUNT
-} gui_cmd_t;
+	CMD_INVALID = -1,
+	CMD_COUNT
+} cmd_t;
 
 
 struct font
 {
-	int			w;
-	int			h;
+	int			width;
+	int			height;
 	SDL_Surface		*map;
 };
 
@@ -84,11 +84,19 @@ struct controls
 	struct keystate		y;
 };
 
+
 struct locWidget
 {
 	bool			enabled;
 	struct tile		tile;
 	sq_t			sq;
+};
+
+
+struct tileWidget
+{
+	bool			enabled;
+	struct tile		tile;
 };
 
 
@@ -102,14 +110,14 @@ struct boardWidget
 struct rackWidget
 {
 	int			focus;
-	bool			disabled[RACK_SIZE];
+	struct tileWidget	tileWidget[RACK_SIZE];
 };
 
 
 struct choiceWidget
 {
 	int			focus;
-	bool			disabled[CHOICE_COUNT];
+	bool			enabled[CHOICE_COUNT];
 };
 
 
@@ -128,20 +136,19 @@ struct gui
 };
 
 
-struct guiCmd
+struct cmd
 {
-	gui_cmd_t		type;
+	cmd_t			type;
 };
 
 
-#define GUI_CMD_QUEUE_SIZE	16		
+#define CMD_QUEUE_SIZE	16		
 
 
-struct guiCmdQueue
+struct cmdQueue
 {
 	int			size;
-	struct guiCmd		cmd[GUI_CMD_QUEUE_SIZE];
-	
+	struct cmd		cmd[CMD_QUEUE_SIZE];
 };
 
 

@@ -6,35 +6,29 @@
 #define TILE_SPACING_Y	0
 
 
-void boardDraw(struct io *io, struct board *b)
+void initBoardWidget(struct boardWidget *bw)
 {
-	int xOffset, yOffset, x, y, w, h, letter, type;
+	int y, x;
 
-	NOT(io), NOT(b);
+	NOT(bw);
+	
+	bw->focus.x = 0;
+	bw->focus.y = 0;
 
-	xOffset = 106;
-	yOffset = 6;
-	w = io->wild->w + TILE_SPACING_X;
-	h = io->wild->h + TILE_SPACING_Y;
 	for (y = 0; y < BOARD_Y; y++) {
-		for (x = 0; x < BOARD_X; x++) {
-			type = 1;
-			switch (b->tile[y][x].type) {
-			case TILE_WILD: 
-				type = 0;
-			case TILE_LETTER:
-				letter = (int)b->tile[y][x].letter;
-				surfaceDraw(io->screen,
-					     io->tile[type][letter],
-					     xOffset + x * w,
-					     yOffset + y * h);
-				break;
-			default: break;
-			}
+		for (x = 0; x < BOARD_X; x++) {	
+			bw->locWidget[y][x].tile.type = TILE_NONE;
 		}
 	}
 }
 
+
+void guiInit(struct gui *g)
+{
+	NOT(g);
+	
+	initBoardWidget(&g->gameWidget.boardWidget);
+}
 
 void rackDraw(struct io *io, struct player *p)
 {
@@ -66,8 +60,8 @@ bool fontmapInit(struct font *f, int w, int h, const char *filename)
 {
 	NOT(f), NOT(filename);
 
-	f->w = w;
-	f->h = h;
+	f->width = w;
+	f->height = h;
 	f->map = surfaceLoad(filename);
 	return f->map != NULL;
 }
@@ -92,20 +86,21 @@ void strDraw(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 	offset.x = x;
 	offset.y = y;
 	clip.y = 0;
-	clip.h = f->h;
-	clip.w = f->w;
+	clip.h = f->height;
+	clip.w = f->width;
 	for (i = 0; str[i] != '\0'; i++) {
 		c = str[i];
+		/* [32..126] are drawable ASCII chars */
 		if (c >= 32 && c <= 126) {
-			clip.x = f->w * (c - 32);
+			clip.x = f->width * (c - 32);
 			SDL_BlitSurface(f->map, &clip, s, &offset);
 		}
-		offset.x += f->w;
+		offset.x += f->width;
 	}
 }
 
 
-bool init_io(struct io *io)
+bool ioInit(struct io *io)
 {
 	NOT(io);
 
@@ -201,8 +196,10 @@ bool init(struct env *e)
 	surfaceFree(tile);
 	boardInit(&e->game.board);
 	bagInit(&e->game.bag);
+	guiInit(&e->gui);
 	playerInit(&e->game.player[0], &e->game.bag);
 	controlsInit(&e->controls);
+	guiInit(&e->gui);
 	return true;
 }
 
@@ -437,26 +434,88 @@ void selection_choice(struct selection *s, struct controls *c)
 */
 
 
-void guiCmdQueuePush(struct guiCmdQueue *gcq, struct gui *g)
+void cmdQueuePush(struct cmdQueue *cq, struct gui *g)
 {
-	NOT(gcq);
+	NOT(cq);
+}
+
+
+void gameWidgetSyncGame(struct gameWidget *gw, struct game *g)
+{
+	int x, y;
+	struct boardWidget *bw;
+
+	NOT(gw), NOT(g);
+	
+	bw = &gw->boardWidget;
+
+	for (y = 0; y < BOARD_Y; y++) {
+		for (x = 0; x < BOARD_X; x++) {
+			bw->locWidget[y][x].sq = g->board.sq[y][x];
+			if (g->board.tile[y][x].type == TILE_NONE) {
+				bw->locWidget[y][x].enabled = true;
+				bw->locWidget[y][x].tile.type = TILE_NONE;
+			} else {
+				bw->locWidget[y][x].enabled = false;
+				bw->locWidget[y][x].tile = g->board.tile[y][x];
+			}
+		}
+	}
+}
+
+
+void gameWidgetSyncControls(struct gameWidget *gw, struct controls *c)
+{
+}
+
+
+void gameSyncGameWidget(struct game *g, struct gameWidget *gw)
+{
+}
+
+
+void guiSyncGame(struct gui *gu, struct game *ga)
+{
+	NOT(gu), NOT(ga);
+	
+	gameWidgetSyncGame(&gu->gameWidget, ga);
+}
+
+
+void guiSyncControls(struct gui *g, struct controls *c)
+{
+	NOT(g), NOT(c);
+	
+	gameWidgetSyncControls(&g->gameWidget, c);
+}
+
+
+void gameSyncGui(struct game *ga, struct gui *gu)
+{
+	NOT(ga), NOT(gu);
+	
+	gameSyncGameWidget(ga, &gu->gameWidget);
 }
 
 
 void update(struct env *e)
 {
+	/*/
+	 * Follows a MVC pattern:
+	 * Game           -> Model
+	 * GUI + IO       -> View
+	 * GUI + Controls -> Controller
+	/*/
 	NOT(e);
-/*
-	switch (e->selection.type) {
-	case SELECTioN_BOARD : selection_board(&e->selection, &e->controls); break;
-	case SELECTioN_RACK:   selection_rack(&e->selection, &e->controls); break;
-	case SELECTioN_CHOICE: selection_choice(&e->selection, &e->controls); break;
-	default: break;
-	}
-*/
+
+	guiSyncGame(&e->gui, &e->game);
+	guiSyncControls(&e->gui, &e->controls);
+	gameSyncGui(&e->game, &e->gui);
 }
 
+
 /*
+
 void draw_selection(struct io *io, struct selection *s)
 {
 	int x, y;
@@ -466,17 +525,17 @@ void draw_selection(struct io *io, struct selection *s)
 	x = 0;
 	y = 0;
 	switch (s->type) {
-	case SELECTioN_BOARD: {
+	case SELECTION_BOARD: {
 		x = 106 + 14 * s->data.board.x;
 		y = 6 + 14 * s->data.board.y;
 		break;
 	}
-	case SELECTioN_RACK: {
+	case SELECTION_RACK: {
 		x = 162 + 14 * s->data.rack;
 		y = 222;
 		break;
 	}
-	case SELECTioN_CHOICE: {
+	case SELECTION_CHOICE: {
 		x = 80 + 14 * s->data.choice;
 		y = 222;
 		break;
@@ -485,20 +544,53 @@ void draw_selection(struct io *io, struct selection *s)
 	}
 	surfaceDraw(io->screen, io->lockon, x + -2, y + -2);
 }
+
 */
 
 
-void gameWidgetDraw(struct gameWidget *gw)
+void boardWidgetDraw(struct io *io, struct boardWidget *bw)
 {
-	NOT(gw);
+	int xOffset, yOffset, x, y, w, h, letter, type;
+	
+	NOT(io), NOT(bw);
+	
+	xOffset = 106;
+	yOffset = 6;
+	w = io->wild->w + TILE_SPACING_X;
+	h = io->wild->h + TILE_SPACING_Y;
+	for (y = 0; y < BOARD_Y; y++) {
+		for (x = 0; x < BOARD_X; x++) {
+			type = 1;
+			switch (bw->locWidget[y][x].tile.type) {
+			case TILE_WILD: 
+				type = 0;
+			case TILE_LETTER:
+				letter = (int)bw->locWidget[y][x].tile.letter;
+				surfaceDraw(io->screen,
+					     io->tile[type][letter],
+					     xOffset + x * w,
+					     yOffset + y * h);
+				break;
+			default: break;
+			}
+		}
+	}
 }
 
 
-void guiDraw(struct gui *g)
+void gameWidgetDraw(struct io *io, struct gameWidget *gw)
 {
-	NOT(g);
+	NOT(io), NOT(gw);
 
-	gameWidgetDraw(&g->gameWidget);
+	boardWidgetDraw(io, &gw->boardWidget);
+}
+
+
+void guiDraw(struct io *io, struct gui *g)
+{
+	NOT(io), NOT(g);
+
+	gameWidgetDraw(io, &g->gameWidget);
 }
 
 
@@ -508,8 +600,7 @@ void draw(struct env *e)
 
 	SDL_FillRect(e->io.screen, NULL, 0);
 	surfaceDraw(e->io.screen, e->io.back, 0, 0);
-	guiDraw(&e->gui);
-	boardDraw(&e->io, &e->game.board);
+	guiDraw(&e->io, &e->gui);
 	rackDraw(&e->io, e->game.player + e->game.turn);
 	SDL_Flip(e->io.screen);
 }

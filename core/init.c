@@ -58,6 +58,9 @@ void boardInit(struct board *b)
 	b->sq[6][6] = SQ_DBL_LET;
 	b->sq[6][8] = SQ_DBL_LET;
 	b->sq[8][6] = SQ_DBL_LET;
+	
+	b->tile[7][7].type = TILE_LETTER;
+	b->tile[7][7].letter = LETTER_A;
 }
 
 
