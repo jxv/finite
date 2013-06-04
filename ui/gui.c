@@ -320,55 +320,6 @@ bool solid_move(struct keystate *ks)
 
 	return ks->type == KEYSTATE_PRESSED || (ks->type == KEYSTATE_HELD && ks->time >= 0.3f);
 }
-
-void selection_board(struct selection *s, struct controls *c)
-{	
-	NOT(s), NOT(c);
-	assert(s->type == SELECTioN_BOARD);
-
-	if (solid_move(&c->up)) {
-		s->data.board.y--;
-	}
-	if (solid_move(&c->down)) {
-		s->data.board.y++;
-	}
-	if (solid_move(&c->left)) {
-		s->data.board.x--;
-		s->data.board.x += BOARD_X;
-		s->data.board.x %= BOARD_X; 
-	}
-	if (solid_move(&c->right)) {
-		s->data.board.x++;
-		s->data.board.x %= BOARD_X; 
-	}
-	if (s->data.board.y < 0) {
-		s->data.board.y = 0;
-	}
-	if (s->data.board.y >= BOARD_Y) {
-		if (s->data.board.x <=  5) {
-			int choice = s->data.board.x - (0+1);
-			s->type = SELECTioN_CHOICE;
-			if (choice < 0) {
-				choice = 0;
-			}
-			if (choice >= CHOICE_COUNT) {
-				choice = CHOICE_COUNT - 1;
-			}
-			s->data.choice = choice;
-		}
-		if (s->data.board.x >= 6) {
-			int rack = s->data.board.x - (6+1);
-			s->type = SELECTioN_RACK;
-			if (rack < 0) {
-				rack = 0;
-			}
-			if (rack >= RACK_SIZE) {
-				rack = RACK_SIZE - 1;
-			}
-			s->data.rack = rack;
-		}
-	}
-}
 */
 
 /*
@@ -463,9 +414,64 @@ void gameWidgetSyncGame(struct gameWidget *gw, struct game *g)
 	}
 }
 
+void boardWidgetSyncControls(struct gameWidget *gw, struct controls *c)
+{	
+	struct boardWidget *bw;
+	NOT(gw), NOT(c);
+	assert(gw->focus == FOCUS_BOARD);
+
+	bw = &gw->boardWidget;
+	
+	if (c->up.type == KEYSTATE_PRESSED) {
+		bw->focus.y--;
+	}
+	if (c->down.type == KEYSTATE_PRESSED) {
+		bw->focus.y++;
+	}
+	if (c->left.type == KEYSTATE_PRESSED) {
+		bw->focus.x--;
+		bw->focus.x += BOARD_X;
+		bw->focus.x %= BOARD_X;
+	}
+	if (c->right.type == KEYSTATE_PRESSED) {
+		bw->focus.x++;
+		bw->focus.x %= BOARD_X;
+	}
+	if (bw->focus.y < 0) {
+		bw->focus.y = 0;
+	}
+	if (bw->focus.y >= BOARD_Y) {
+		if (bw->focus.x <=  5) {
+			int choice = bw->focus.x - (0+1);
+			gw->focus = FOCUS_CHOICE;
+			if (choice < 0) {
+				choice = 0;
+			}
+			if (choice >= CHOICE_COUNT) {
+				choice = CHOICE_COUNT - 1;
+			}
+			gw->choiceWidget.focus = choice;
+		}
+		if (bw->focus.x >= 6) {
+			int rack = bw->focus.x - (6+1);
+			gw->focus = FOCUS_RACK;
+			if (rack < 0) {
+				rack = 0;
+			}
+			if (rack >= RACK_SIZE) {
+				rack = RACK_SIZE - 1;
+			}
+			gw->rackWidget.focus = rack;
+		}
+		bw->focus.y = BOARD_Y - 1;
+	}
+}
 
 void gameWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 {
+	gw->focus = FOCUS_BOARD;
+	boardWidgetSyncControls(gw, c);
+	gw->focus = FOCUS_BOARD;
 }
 
 
