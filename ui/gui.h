@@ -21,11 +21,11 @@ typedef enum
 
 typedef enum
 {
-	SELECTION_BOARD = 0,
-	SELECTION_RACK,
-	SELECTION_CHOICE,
-	SELECTION_COUNT
-} selection_t;
+	FOCUS_BOARD = 0,
+	FOCUS_RACK,
+	FOCUS_CHOICE,
+	FOCUS_COUNT
+} focus_t;
 
 
 typedef enum
@@ -36,6 +36,13 @@ typedef enum
 	CHOICE_QUIT,
 	CHOICE_COUNT
 } choice_t;
+
+
+typedef enum
+{
+	GUI_CMD_INVALID = -1,
+	GUI_CMD_COUNT
+} gui_cmd_t;
 
 
 struct font
@@ -77,15 +84,64 @@ struct controls
 	struct keystate		y;
 };
 
-
-struct selection
+struct locWidget
 {
-	selection_t		type;
-	union {
-		struct coor			board;
-		int				rack;
-		choice_t			choice;
-	} data;
+	bool			enabled;
+	struct tile		tile;
+	sq_t			sq;
+};
+
+
+struct boardWidget
+{
+	struct coor		focus;
+	struct locWidget	locWidget[BOARD_Y][BOARD_X];
+};
+
+
+struct rackWidget
+{
+	int			focus;
+	bool			disabled[RACK_SIZE];
+};
+
+
+struct choiceWidget
+{
+	int			focus;
+	bool			disabled[CHOICE_COUNT];
+};
+
+
+struct gameWidget
+{
+	focus_t			focus;
+	struct boardWidget	boardWidget;
+	struct rackWidget	rackWidget;
+	struct choiceWidget	choiceWidget;
+};
+
+
+struct gui
+{
+	struct gameWidget	gameWidget;
+};
+
+
+struct guiCmd
+{
+	gui_cmd_t		type;
+};
+
+
+#define GUI_CMD_QUEUE_SIZE	16		
+
+
+struct guiCmdQueue
+{
+	int			size;
+	struct guiCmd		cmd[GUI_CMD_QUEUE_SIZE];
+	
 };
 
 
@@ -94,7 +150,7 @@ struct env
 	struct io		io;
 	struct game		game;
 	struct controls		controls;
-	struct selection	selection;
+	struct gui		gui;
 };
 
 

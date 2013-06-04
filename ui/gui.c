@@ -6,14 +6,14 @@
 #define TILE_SPACING_Y	0
 
 
-void draw_board(struct io *io, struct board *b)
+void boardDraw(struct io *io, struct board *b)
 {
-	int off_x, off_y, x, y, w, h, letter, type;
+	int xOffset, yOffset, x, y, w, h, letter, type;
 
 	NOT(io), NOT(b);
 
-	off_x = 106;
-	off_y = 6;
+	xOffset = 106;
+	yOffset = 6;
 	w = io->wild->w + TILE_SPACING_X;
 	h = io->wild->h + TILE_SPACING_Y;
 	for (y = 0; y < BOARD_Y; y++) {
@@ -24,10 +24,10 @@ void draw_board(struct io *io, struct board *b)
 				type = 0;
 			case TILE_LETTER:
 				letter = (int)b->tile[y][x].letter;
-				draw_surface(io->screen,
+				surfaceDraw(io->screen,
 					     io->tile[type][letter],
-					     off_x + x * w,
-					     off_y + y * h);
+					     xOffset + x * w,
+					     yOffset + y * h);
 				break;
 			default: break;
 			}
@@ -36,55 +36,52 @@ void draw_board(struct io *io, struct board *b)
 }
 
 
-void draw_rack(struct io *io, struct player *p)
+void rackDraw(struct io *io, struct player *p)
 {
-	int off_x, off_y, w, i, letter, type;
+	int xOffset, yOffset, w, i, letter, type;
 	SDL_Surface *t;
 
 	NOT(io), NOT(p), NOT(io->wild);
 
-	off_x = 162;
-	off_y = 222;
+	xOffset = 162;
+	yOffset = 222;
 	w = io->wild->w + TILE_SPACING_X;
 	for (i = 0; i < RACK_SIZE; i++) {
 		type = p->tile[i].type;
-		t = NULL;
+		t = io->wild;
 		if (type == TILE_NONE) {
 			continue;
 		}
-		letter = p->tile[i].letter;
 		if (type == TILE_LETTER) {
+			letter = p->tile[i].letter;
 			assert(letter > LETTER_INVALID && letter < LETTER_COUNT);
-			t = io->tile[1][letter];
+			t = io->tile[TILE_LETTER][letter];
 		}
-		if (type == TILE_WILD) {
-			t = io->wild;
-		}
-		draw_surface(io->screen, t, off_x + i * w, off_y);
+		surfaceDraw(io->screen, t, xOffset + i * w, yOffset);
 	}
 }
 
 
-bool load_fontmap(struct font *f, int w, int h, const char *filename)
+bool fontmapInit(struct font *f, int w, int h, const char *filename)
 {
 	NOT(f), NOT(filename);
 
 	f->w = w;
 	f->h = h;
-	f->map = load_surface(filename);
+	f->map = surfaceLoad(filename);
 	return f->map != NULL;
 }
 
 
-void unload_fontmap(struct font *f)
+void fontmapQuit(struct font *f)
 {
 	NOT(f), NOT(f->map);
 
-	free_surface(f->map);
+	surfaceFree(f->map);
 }
 
 
-void draw_str(SDL_Surface *s, struct font *f, const char *str, int x, int y)
+void strDraw(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 {
 	int i;
 	char c;
@@ -116,7 +113,7 @@ bool init_io(struct io *io)
 }
 
 
-void init_keystate(struct keystate *ks)
+void keystateInit(struct keystate *ks)
 {
 	NOT(ks);
 	
@@ -125,18 +122,18 @@ void init_keystate(struct keystate *ks)
 }
 
 
-void init_controls(struct controls *c)
+void controlsInit(struct controls *c)
 {
 	NOT(c);
 	
-	init_keystate(&c->up);
-	init_keystate(&c->down);
-	init_keystate(&c->right);
-	init_keystate(&c->left);
-	init_keystate(&c->a);
-	init_keystate(&c->b);
-	init_keystate(&c->x);
-	init_keystate(&c->y);
+	keystateInit(&c->up);
+	keystateInit(&c->down);
+	keystateInit(&c->right);
+	keystateInit(&c->left);
+	keystateInit(&c->a);
+	keystateInit(&c->b);
+	keystateInit(&c->x);
+	keystateInit(&c->y);
 }
 
 
@@ -152,7 +149,7 @@ bool init(struct env *e)
 		return false;
 	}
 	SDL_ShowCursor(SDL_DISABLE);
-	SDL_WM_SetCaption("scabs", NULL);
+	SDL_WM_SetCaption("finite", NULL);
 	e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP,
 			SDL_SWSURFACE);
 
@@ -160,53 +157,52 @@ bool init(struct env *e)
 		return false;
 	}
 
-	if (!init_dict(&e->game.dict, RES_PATH "dict.txt")) {
+	if (!dictInit(&e->game.dict, RES_PATH "dict.txt")) {
 		return false;
 	}
 	
-	e->io.back = load_surface(RES_PATH "back.png");
+	e->io.back = surfaceLoad(RES_PATH "back.png");
 	if (!e->io.back) {
 		return false;
 	}
 
-	e->io.lockon = load_surface(RES_PATH "lockon.png");
+	e->io.lockon = surfaceLoad(RES_PATH "lockon.png");
 	if (!e->io.lockon) {
 		return false;
 	}
 
-	if (!load_fontmap(&e->io.white_font, 6, 12, RES_PATH "white_font.png")) {
+	if (!fontmapInit(&e->io.white_font, 6, 12, RES_PATH "white_font.png")) {
 		return false;
 	}
 
-	if (!load_fontmap(&e->io.black_font, 6, 12, RES_PATH "black_font.png")) {
+	if (!fontmapInit(&e->io.black_font, 6, 12, RES_PATH "black_font.png")) {
 		return false;
 	}
 	
-	tile = load_surface(RES_PATH "tile.png");
+	tile = surfaceLoad(RES_PATH "tile.png");
 	if (!tile) {
 		return false;
 	}
-	e->io.wild = cpy_surface(tile);
+	e->io.wild = surfaceCpy(tile);
 	for (i = 0; i < LETTER_COUNT; i++) {
-		e->io.tile[TILE_WILD][i] = cpy_surface(tile);
+		e->io.tile[TILE_WILD][i] = surfaceCpy(tile);
 		if (!e->io.tile[TILE_WILD][i]) {
 			return false;
 		}
-		e->io.tile[TILE_LETTER][i] = cpy_surface(tile);
+		e->io.tile[TILE_LETTER][i] = surfaceCpy(tile);
 		if (!e->io.tile[TILE_LETTER][i]) {
 			return false;
 		}
 		sprintf(str,"%c", i + 'a');
-		draw_str(e->io.tile[TILE_WILD][i], &e->io.black_font, str, 3, 0);
+		strDraw(e->io.tile[TILE_WILD][i], &e->io.black_font, str, 3, 0);
 		sprintf(str,"%c", i + 'A');
-		draw_str(e->io.tile[TILE_LETTER][i], &e->io.black_font, str, 3, 0);
+		strDraw(e->io.tile[TILE_LETTER][i], &e->io.black_font, str, 3, 0);
 	}
-	free_surface(tile);
-	init_board(&e->game.board);
-	init_bag(&e->game.bag);
-	init_player(&e->game.player[0], &e->game.bag);
-	init_controls(&e->controls);
-	e->selection.type = SELECTION_BOARD;
+	surfaceFree(tile);
+	boardInit(&e->game.board);
+	bagInit(&e->game.bag);
+	playerInit(&e->game.player[0], &e->game.bag);
+	controlsInit(&e->controls);
 	return true;
 }
 
@@ -217,22 +213,22 @@ void quit(struct env *e)
 
 	NOT(e);
 
-	quit_dict(&e->game.dict);
-	free_surface(e->io.screen);
-	free_surface(e->io.back);
-	free_surface(e->io.lockon);
-	free_surface(e->io.wild);
+	dictQuit(&e->game.dict);
+	surfaceFree(e->io.screen);
+	surfaceFree(e->io.back);
+	surfaceFree(e->io.lockon);
+	surfaceFree(e->io.wild);
 	for (i = 0; i < LETTER_COUNT; i++) {
-		free_surface(e->io.tile[TILE_WILD][i]);
-		free_surface(e->io.tile[TILE_LETTER][i]);
+		surfaceFree(e->io.tile[TILE_WILD][i]);
+		surfaceFree(e->io.tile[TILE_LETTER][i]);
 	}
-	unload_fontmap(&e->io.white_font);
-	unload_fontmap(&e->io.black_font);
+	fontmapQuit(&e->io.white_font);
+	fontmapQuit(&e->io.black_font);
 	SDL_Quit();
 }
 
 
-void update_keystate(struct keystate *ks, bool touched)
+void keystateUpdate(struct keystate *ks, bool touched)
 {
 	NOT(ks);
 
@@ -286,7 +282,7 @@ void update_keystate(struct keystate *ks, bool touched)
 }
 
 
-bool handle_event(struct controls *c)
+bool handleEvent(struct controls *c)
 {
 	SDL_Event event;
 	Uint8 *ks;
@@ -309,18 +305,18 @@ bool handle_event(struct controls *c)
 		default: break;
 		}
 	}
-	update_keystate(&c->up,    ks[SDLK_UP]);
-	update_keystate(&c->down,  ks[SDLK_DOWN]);
-	update_keystate(&c->left,  ks[SDLK_LEFT]);
-	update_keystate(&c->right, ks[SDLK_RIGHT]);
-	update_keystate(&c->a, ks[SDLK_a]);
-	update_keystate(&c->b, ks[SDLK_b]);
-	update_keystate(&c->x, ks[SDLK_x]);
-	update_keystate(&c->y, ks[SDLK_y]);
+	keystateUpdate(&c->up,    ks[SDLK_UP]);
+	keystateUpdate(&c->down,  ks[SDLK_DOWN]);
+	keystateUpdate(&c->left,  ks[SDLK_LEFT]);
+	keystateUpdate(&c->right, ks[SDLK_RIGHT]);
+	keystateUpdate(&c->a, ks[SDLK_a]);
+	keystateUpdate(&c->b, ks[SDLK_b]);
+	keystateUpdate(&c->x, ks[SDLK_x]);
+	keystateUpdate(&c->y, ks[SDLK_y]);
 	return false;
 }
 
-
+/*
 bool solid_move(struct keystate *ks)
 {
 	NOT(ks);
@@ -328,11 +324,10 @@ bool solid_move(struct keystate *ks)
 	return ks->type == KEYSTATE_PRESSED || (ks->type == KEYSTATE_HELD && ks->time >= 0.3f);
 }
 
-
 void selection_board(struct selection *s, struct controls *c)
 {	
 	NOT(s), NOT(c);
-	assert(s->type == SELECTION_BOARD);
+	assert(s->type == SELECTioN_BOARD);
 
 	if (solid_move(&c->up)) {
 		s->data.board.y--;
@@ -353,10 +348,9 @@ void selection_board(struct selection *s, struct controls *c)
 		s->data.board.y = 0;
 	}
 	if (s->data.board.y >= BOARD_Y) {
-		/* note: find constants for 0, 5, 6, 14? */
 		if (s->data.board.x <=  5) {
 			int choice = s->data.board.x - (0+1);
-			s->type = SELECTION_CHOICE;
+			s->type = SELECTioN_CHOICE;
 			if (choice < 0) {
 				choice = 0;
 			}
@@ -367,7 +361,7 @@ void selection_board(struct selection *s, struct controls *c)
 		}
 		if (s->data.board.x >= 6) {
 			int rack = s->data.board.x - (6+1);
-			s->type = SELECTION_RACK;
+			s->type = SELECTioN_RACK;
 			if (rack < 0) {
 				rack = 0;
 			}
@@ -378,16 +372,17 @@ void selection_board(struct selection *s, struct controls *c)
 		}
 	}
 }
+*/
 
-
+/*
 void selection_rack(struct selection *s, struct controls *c)
 {
 	NOT(s), NOT(c);
-	assert(s->type == SELECTION_RACK);
+	assert(s->type == SELECTioN_RACK);
 
 	if (solid_move(&c->up)) {
 		int x = s->data.rack + 7;
-		s->type = SELECTION_BOARD;
+		s->type = SELECTioN_BOARD;
 		s->data.board.y = BOARD_Y - 1;
 		s->data.board.x = x;
 		return;
@@ -399,7 +394,7 @@ void selection_rack(struct selection *s, struct controls *c)
 		s->data.rack ++;
 	}
 	if (s->data.rack < 0) {
-		s->type = SELECTION_CHOICE;
+		s->type = SELECTioN_CHOICE;
 		s->data.choice = CHOICE_COUNT - 1;
 		return;
 	}
@@ -413,11 +408,11 @@ void selection_rack(struct selection *s, struct controls *c)
 void selection_choice(struct selection *s, struct controls *c)
 {
 	NOT(s), NOT(c);
-	assert(s->type == SELECTION_CHOICE);
+	assert(s->type == SELECTioN_CHOICE);
 
 	if (solid_move(&c->up)) {
 		int x = s->data.choice + 1;
-		s->type = SELECTION_BOARD;
+		s->type = SELECTioN_BOARD;
 		s->data.board.y = BOARD_Y - 1;
 		s->data.board.x = x;
 		return;
@@ -433,26 +428,35 @@ void selection_choice(struct selection *s, struct controls *c)
 		return;
 	}
 	if (s->data.choice >= CHOICE_COUNT) {
-		s->type = SELECTION_RACK;
+		s->type = SELECTioN_RACK;
 		s->data.rack = 0;
 		return;
 	}
+}
+
+*/
+
+
+void guiCmdQueuePush(struct guiCmdQueue *gcq, struct gui *g)
+{
+	NOT(gcq);
 }
 
 
 void update(struct env *e)
 {
 	NOT(e);
-
+/*
 	switch (e->selection.type) {
-	case SELECTION_BOARD : selection_board(&e->selection, &e->controls); break;
-	case SELECTION_RACK:   selection_rack(&e->selection, &e->controls); break;
-	case SELECTION_CHOICE: selection_choice(&e->selection, &e->controls); break;
+	case SELECTioN_BOARD : selection_board(&e->selection, &e->controls); break;
+	case SELECTioN_RACK:   selection_rack(&e->selection, &e->controls); break;
+	case SELECTioN_CHOICE: selection_choice(&e->selection, &e->controls); break;
 	default: break;
 	}
+*/
 }
 
-
+/*
 void draw_selection(struct io *io, struct selection *s)
 {
 	int x, y;
@@ -462,24 +466,39 @@ void draw_selection(struct io *io, struct selection *s)
 	x = 0;
 	y = 0;
 	switch (s->type) {
-	case SELECTION_BOARD: {
+	case SELECTioN_BOARD: {
 		x = 106 + 14 * s->data.board.x;
 		y = 6 + 14 * s->data.board.y;
 		break;
 	}
-	case SELECTION_RACK: {
+	case SELECTioN_RACK: {
 		x = 162 + 14 * s->data.rack;
 		y = 222;
 		break;
 	}
-	case SELECTION_CHOICE: {
+	case SELECTioN_CHOICE: {
 		x = 80 + 14 * s->data.choice;
 		y = 222;
 		break;
 	}
 	default: break;
 	}
-	draw_surface(io->screen, io->lockon, x + -2, y + -2);
+	surfaceDraw(io->screen, io->lockon, x + -2, y + -2);
+}
+*/
+
+
+void gameWidgetDraw(struct gameWidget *gw)
+{
+	NOT(gw);
+}
+
+
+void guiDraw(struct gui *g)
+{
+	NOT(g);
+
+	gameWidgetDraw(&g->gameWidget);
 }
 
 
@@ -488,10 +507,10 @@ void draw(struct env *e)
 	NOT(e);
 
 	SDL_FillRect(e->io.screen, NULL, 0);
-	draw_surface(e->io.screen, e->io.back, 0, 0);
-	draw_board(&e->io, &e->game.board);
-	draw_rack(&e->io, e->game.player + e->game.turn);
-	draw_selection(&e->io, &e->selection);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDraw(&e->gui);
+	boardDraw(&e->io, &e->game.board);
+	rackDraw(&e->io, e->game.player + e->game.turn);
 	SDL_Flip(e->io.screen);
 }
 
@@ -505,7 +524,7 @@ void exec(struct env *e)
 
 	do {
 		st = SDL_GetTicks();
-		q = handle_event(&e->controls);
+		q = handleEvent(&e->controls);
 		update(e);
 		draw(e);
 		delay(st, SDL_GetTicks(), 60);

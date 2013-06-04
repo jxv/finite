@@ -205,13 +205,13 @@ bool term_init(struct game *g)
 
 	g->turn = 0;
 	g->player_num = 2;
-	if (!init_dict(&g->dict, RES_PATH "dict.txt")) {
+	if (!dictInit(&g->dict, RES_PATH "dict.txt")) {
 		return false;
 	}
-	init_board(&g->board);
-	init_bag(&g->bag);
-	init_player(&g->player[0], &g->bag);
-	init_player(&g->player[1], &g->bag);
+	boardInit(&g->board);
+	bagInit(&g->bag);
+	playerInit(&g->player[0], &g->bag);
+	playerInit(&g->player[1], &g->bag);
 	return true;
 }
 
@@ -308,7 +308,7 @@ void term_get_move_type(struct move *m)
 
 	NOT(m);
 
-	clr_move(m);
+	moveClr(m);
 	printf("\n0: MOVE_PLACE\n1: MOVE_SKIP\n2: MOVE_DISCARD\n3: MOVE_QUIT\n");
 	do {
 		int i;
@@ -368,7 +368,7 @@ int term_ui()
 	struct game g;
 	struct move m;
 	struct action a;
-	int winner_id;
+	int winnerId;
 
 	if (!term_init(&g)) {
 		return EXIT_FAILURE;
@@ -389,24 +389,30 @@ int term_ui()
 				term_move(&m);
 				m.player_id = g.turn;
 			} while (m.type == MOVE_INVALID);
-			clr_action(&a);
-			mk_action(&a, &g, &m);
+			actionClr(&a);
+			mkAction(&a, &g, &m);
 			if (a.type == ACTION_INVALID) {
 				print_action_err(a.data.err);
 			}
 		} while(a.type == ACTION_INVALID);
-		if (apply_action(&g, &a)) {
-			next_turn(&g);
+		if (applyAction(&g, &a)) {
+			nextTurn(&g);
 		}
-	} while (!end_game(&g));
-	winner_id = fd_winner(&g);
-	if (winner_id != -1) {
-		printf("\nPLAYER_%d WON!\n", winner_id);
+	} while (!endGame(&g));
+	winnerId = fdWinner(&g);
+	if (winnerId != -1) {
+		printf("\nPLAYER_%d WON!\n", winnerId);
 	} else {
 		printf("\nTIE!\n");
 	}
-	quit_dict(&g.dict);
+	dictQuit(&g.dict);
 	return EXIT_SUCCESS;
+}
+
+
+int term()
+{
+	return term_ui();
 }
 
 

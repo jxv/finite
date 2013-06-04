@@ -4,7 +4,7 @@
 #include "common.h"
 
 
-void init_board(struct board *b)
+void boardInit(struct board *b)
 {
 	int x, y;
 
@@ -60,38 +60,8 @@ void init_board(struct board *b)
 	b->sq[8][6] = SQ_DBL_LET;
 }
 
-const int tile_letter_num[LETTER_COUNT] = 
-	{ 9	/* A */
-	, 2	/* B */
-	, 2	/* C */
-	, 4	/* D */
-	, 12	/* E */
-	, 2	/* F */
-	, 3	/* G */
-	, 2	/* H */
-	, 9	/* I */
-	, 1	/* J */
-	, 1	/* K */
-	, 4	/* L */
-	, 2	/* M */
-	, 6	/* N */
-	, 8	/* O */
-	, 2	/* P */
-	, 1	/* Q */
-	, 6	/* R */
-	, 4	/* S */
-	, 6	/* T */
-	, 4	/* U */
-	, 2	/* V */
-	, 2	/* W */
-	, 1	/* X */
-	, 2	/* Y */
-	, 1	/* Z */
-	};
 
-const int tile_wild_num = 2;
-
-void shake_bag(struct bag *b, int offset)
+void bagShake(struct bag *b, int offset)
 {
 	int i, j;
 	int val[BAG_SIZE];
@@ -125,32 +95,60 @@ void shake_bag(struct bag *b, int offset)
 	
 }
 
-void init_bag(struct bag *b)
+void bagInit(struct bag *b)
 {
 	int i, j, k;
+
+	static const int tileLetterNum[LETTER_COUNT] = 
+		{ 9	/* A */
+		, 2	/* B */
+		, 2	/* C */
+		, 4	/* D */
+		, 12	/* E */
+		, 2	/* F */
+		, 3	/* G */
+		, 2	/* H */
+		, 9	/* I */
+		, 1	/* J */
+		, 1	/* K */
+		, 4	/* L */
+		, 2	/* M */
+		, 6	/* N */
+		, 8	/* O */
+		, 2	/* P */
+		, 1	/* Q */
+		, 6	/* R */
+		, 4	/* S */
+		, 6	/* T */
+		, 4	/* U */
+		, 2	/* V */
+		, 2	/* W */
+		, 1	/* X */
+		, 2	/* Y */
+		, 1	/* Z */
+		};
+
+	static const int tileWildNum = 2;
+
 
 	NOT(b);
 
 	b->head = 0;
 	b->tail = BAG_SIZE - 1;
-	for (i = 0; i < BAG_SIZE; i++) {
-		b->tile[i].type = TILE_LETTER;
-	}
-	i = 0;
-	for (k = 0; k < LETTER_COUNT; k++) {
-		for (j = 0; j < tile_letter_num[k]; j++) {
+	for (k = 0, i = 0; k < LETTER_COUNT; k++) {
+		for (j = 0; j < tileLetterNum[k]; j++, i++) {
+			b->tile[i].type = TILE_LETTER;
 			b->tile[i].letter = LETTER_A + k;
-			i++;
 		}
 	}
-	for (i = 0; i < tile_wild_num; i++) {
+	for (i = 0; i < tileWildNum; i++) {
 		b->tile[i].type = TILE_WILD;
 	}
-	shake_bag(b, 0);
+	bagShake(b, 0);
 }
 
 
-void init_player(struct player *p, struct bag *b)
+void playerInit(struct player *p, struct bag *b)
 {
 	int i;
 
@@ -159,14 +157,14 @@ void init_player(struct player *p, struct bag *b)
 	for (i = 0; i < RACK_SIZE; i++) {
 		p->tile[i].type = TILE_NONE;
 	}
-	refill_rack(p, b);
+	rackRefill(p, b);
 
 	p->score = 0;
 	p->active = true;
 }
 
 
-void init_move(struct move *m)
+void moveInit(struct move *m)
 {
 	int i;
 	
@@ -186,7 +184,7 @@ void init_move(struct move *m)
 }
 
 
-void cons_word(struct word *w, const char *str)
+void wordCons(struct word *w, const char *str)
 {
 	int i;
 	char c;
@@ -203,7 +201,7 @@ void cons_word(struct word *w, const char *str)
 }
 
 
-void swap_word(struct word *w0, struct word *w1)
+void swapWord(struct word *w0, struct word *w1)
 {
 	struct word tmp;
 
@@ -215,15 +213,15 @@ void swap_word(struct word *w0, struct word *w1)
 }
 
 
-int cmp_word_wrapper(const void *p0, const void *p1)
+int cmpWordWrapper(const void *p0, const void *p1)
 {
 	NOT(p0), NOT(p1);
 
-	return cmp_word((struct word*)p0, (struct word*)p1);
+	return cmpWord((struct word*)p0, (struct word*)p1);
 }
 
 
-bool init_dict(struct dict *d, const char *name)
+bool dictInit(struct dict *d, const char *name)
 {
 	long i;
 	FILE *f = NULL;
@@ -239,7 +237,7 @@ bool init_dict(struct dict *d, const char *name)
 	/* count */
 	d->num = 0;
 	while (fgets(buf, BOARD_SIZE + 1, f)) {
-		cons_word(&w, buf);
+		wordCons(&w, buf);
 		if (w.len > 1) {
 			d->num++;
 		}
@@ -252,11 +250,11 @@ bool init_dict(struct dict *d, const char *name)
 	rewind(f);
 	assert(d->num > 0);
 	/* alloc */
-	d->words = alloc_mem(sizeof(struct word) * d->num);
+	d->words = memAlloc(sizeof(struct word) * d->num);
 	NOT(d->words);
 	i = 0;
 	for (i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
-		cons_word(&w, buf);
+		wordCons(&w, buf);
 		if (w.len > 1) {
 			d->words[i] = w;
 		} else {
@@ -270,15 +268,15 @@ bool init_dict(struct dict *d, const char *name)
 	}
 	fclose(f);
 	/* sort */
-	qsort(d->words, d->num, sizeof(struct word), cmp_word_wrapper);
+	qsort(d->words, d->num, sizeof(struct word), cmpWordWrapper);
 	return true;
 }
 
 
-void quit_dict(struct dict *dict)
+void dictQuit(struct dict *dict)
 {
 	NOT(dict);
-	free_mem(dict->words);
+	memFree(dict->words);
 }
 
 

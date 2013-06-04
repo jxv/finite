@@ -7,7 +7,7 @@
 #define ALPHA_B	0xff
 
 
-void free_surface(SDL_Surface *s)
+void surfaceFree(SDL_Surface *s)
 {
 	if (s) {
 		 SDL_FreeSurface(s);
@@ -15,7 +15,7 @@ void free_surface(SDL_Surface *s)
 }
 
 
-SDL_Surface *load_surface(const char *filename)
+SDL_Surface *surfaceLoad(const char *filename)
 {
 	SDL_Surface *s, *tmp;
 	Uint32 a;
@@ -49,7 +49,7 @@ void delay(int st, int et, int fps)
 }
 
 
-void draw_surface(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
+void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
 {
 	SDL_Rect offset;
 
@@ -61,14 +61,14 @@ void draw_surface(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
 }
 
 
-SDL_Surface *cpy_surface(SDL_Surface *s)
+SDL_Surface *surfaceCpy(SDL_Surface *s)
 {
 	SDL_Surface *cpy;
 
 	NOT(s);	
 
 	cpy = SDL_CreateRGBSurface(0, s->w, s->h, SCREEN_BPP, 0, 0, 0, 0);
-	draw_surface(cpy,s,0,0);
+	surfaceDraw(cpy,s,0,0);
 	return cpy;
 }
 

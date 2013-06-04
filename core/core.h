@@ -12,12 +12,13 @@
 
 #define RES_PATH		"res/"
 
-
+#define MAX(x, y)		(((x) > (y)) ? (x) : (y))
+#define MIN(x, y)		(((x) < (y)) ? (x) : (y))
 #define BOARD_X			15
 #define BOARD_Y			15
-#define BOARD_SIZE		BOARD_Y	/* Max among BOARD_X and BOARD_Y */
+#define BOARD_SIZE		MAX(BOARD_Y,BOARD_X)
 #define RACK_SIZE		7
-#define BAG_SIZE		(100+1)	/* needs extra element for size check */
+#define BAG_SIZE		(100+1)	/* needs a dummy element for impl. */
 #define MAX_PLAYER		4
 
 
@@ -145,7 +146,6 @@ typedef enum
 {
 	ACTION_INVALID = -1,
 	ACTION_PLACE = 0,
-/*	ACTION_SWAP, */
 	ACTION_DISCARD,
 	ACTION_SKIP,
 	ACTION_QUIT,
@@ -167,10 +167,18 @@ struct tile
 };
 
 
+struct loc
+{
+	struct tile	tile;
+	sq_t		sq;
+};
+
+
 struct board
 {
 	struct tile	tile[BOARD_Y][BOARD_X];
 	sq_t		sq[BOARD_Y][BOARD_X];
+	/* struct loc	loc[BOARD_Y][BOARD_X]; */
 };
 
 
@@ -289,17 +297,17 @@ struct game
 };
 
 
-void mk_action(struct action*, struct game*, struct move*);
-bool apply_action(struct game*, struct action*);
-void next_turn(struct game*);
-cmp_t cmp_word(struct word*, struct word*);
-void clr_move(struct move*);
-void clr_action(struct action*);
-void remove_from_rack(struct player*, int*, int);
-void shift_rack(struct player*);
-void refill_rack(struct player*, struct bag*);
-bool end_game(struct game *g);
-int fd_winner(struct game *g);
+void mkAction(struct action*, struct game*, struct move*);
+bool applyAction(struct game*, struct action*);
+void nextTurn(struct game*);
+cmp_t cmpWord(struct word*, struct word*);
+void moveClr(struct move*);
+void actionClr(struct action*);
+void rmRackTile(struct player*, int*, int);
+void rackShift(struct player*);
+void rackRefill(struct player*, struct bag*);
+bool endGame(struct game *g);
+int fdWinner(struct game *g);
 
 
 #endif
