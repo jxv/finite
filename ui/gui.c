@@ -421,6 +421,9 @@ void boardWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 	assert(gw->focus == FOCUS_BOARD);
 
 	bw = &gw->boardWidget;
+
+	bw->select = c->a.type == KEYSTATE_PRESSED;
+	bw->cancel = c->b.type == KEYSTATE_PRESSED;
 	
 	if (c->up.type == KEYSTATE_PRESSED) {
 		bw->focus.y--;
