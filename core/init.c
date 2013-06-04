@@ -9,6 +9,7 @@ void boardInit(struct board *b)
 	int x, y;
 
 	NOT(b);
+	assert(BOARD_X == 15), assert(BOARD_Y == 15);
 
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
@@ -58,9 +59,6 @@ void boardInit(struct board *b)
 	b->sq[6][6] = SQ_DBL_LET;
 	b->sq[6][8] = SQ_DBL_LET;
 	b->sq[8][6] = SQ_DBL_LET;
-	
-	b->tile[7][7].type = TILE_LETTER;
-	b->tile[7][7].letter = LETTER_A;
 }
 
 

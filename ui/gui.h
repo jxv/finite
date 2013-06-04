@@ -103,6 +103,8 @@ struct tileWidget
 struct boardWidget
 {
 	struct coor		focus;
+	bool			select;
+	bool 			cancel;
 	struct locWidget	locWidget[BOARD_Y][BOARD_X];
 };
 

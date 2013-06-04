@@ -318,72 +318,80 @@ bool solid_move(struct keystate *ks)
 {
 	NOT(ks);
 
-	return ks->type == KEYSTATE_PRESSED || (ks->type == KEYSTATE_HELD && ks->time >= 0.3f);
+	return ks->type == KEYSTATE_PRESSED ||
+			(ks->type == KEYSTATE_HELD && ks->time >= 0.3f);
 }
 */
 
-/*
-void selection_rack(struct selection *s, struct controls *c)
-{
-	NOT(s), NOT(c);
-	assert(s->type == SELECTioN_RACK);
 
-	if (solid_move(&c->up)) {
-		int x = s->data.rack + 7;
-		s->type = SELECTioN_BOARD;
-		s->data.board.y = BOARD_Y - 1;
-		s->data.board.x = x;
+void rackWidgetSyncControls(struct gameWidget *gw, struct controls *c)
+{
+	struct rackWidget *rw;
+
+	NOT(gw), NOT(c);
+	assert(gw->focus == FOCUS_RACK);
+
+	rw = &gw->rackWidget;
+
+	if (c->up.type == KEYSTATE_PRESSED) {
+		int x = rw->focus + 7;
+		gw->focus = FOCUS_BOARD;
+		gw->boardWidget.focus.y = BOARD_Y - 1;
+		gw->boardWidget.focus.x = x;
 		return;
 	}
-	if (solid_move(&c->left)) {
-		s->data.rack --;
+	if (c->left.type == KEYSTATE_PRESSED) {
+		rw->focus--;
 	}
-	if (solid_move(&c->right)) {
-		s->data.rack ++;
+	if (c->right.type == KEYSTATE_PRESSED) {
+		rw->focus++;
 	}
-	if (s->data.rack < 0) {
-		s->type = SELECTioN_CHOICE;
-		s->data.choice = CHOICE_COUNT - 1;
+	if (rw->focus < 0) {
+		gw->focus = FOCUS_CHOICE;
+		gw->choiceWidget.focus = CHOICE_COUNT - 1;
+		rw->focus = 0;
 		return;
 	}
-	if (s->data.rack >= RACK_SIZE) {
-		s->data.rack = RACK_SIZE - 1;
+	if (rw->focus >= RACK_SIZE) {
+		rw->focus = RACK_SIZE - 1;
 		return;
 	}
 }
 
 
-void selection_choice(struct selection *s, struct controls *c)
+void choiceWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 {
-	NOT(s), NOT(c);
-	assert(s->type == SELECTioN_CHOICE);
+	struct choiceWidget *cw;
 
-	if (solid_move(&c->up)) {
-		int x = s->data.choice + 1;
-		s->type = SELECTioN_BOARD;
-		s->data.board.y = BOARD_Y - 1;
-		s->data.board.x = x;
+	NOT(gw), NOT(c);
+	assert(gw->focus == FOCUS_CHOICE);
+
+	cw = &gw->choiceWidget;
+
+	if (c->up.type == KEYSTATE_PRESSED) {
+		int x = cw->focus + 1;	/* 1 is an offset, must change */
+		gw->focus = FOCUS_BOARD;
+		gw->boardWidget.focus.y = BOARD_Y - 1;
+		gw->boardWidget.focus.x = x;
 		return;
 	}
-	if (solid_move(&c->left)) {
-		s->data.choice --;
+	if (c->left.type == KEYSTATE_PRESSED) {
+		cw->focus--;
 	}
-	if (solid_move(&c->right)) {
-		s->data.choice ++;
+	if (c->right.type == KEYSTATE_PRESSED) {
+		cw->focus++;
 	}
-	if (s->data.choice < 0) {
-		s->data.choice = 0;
+	if (cw->focus < 0) {
+		cw->focus = 0;
 		return;
 	}
-	if (s->data.choice >= CHOICE_COUNT) {
-		s->type = SELECTioN_RACK;
-		s->data.rack = 0;
+	if (cw->focus >= CHOICE_COUNT) {
+		gw->focus = FOCUS_RACK;
+		gw->rackWidget.focus = 0;
+		cw->focus = CHOICE_COUNT - 1;
 		return;
 	}
 }
-
-*/
-
 
 void cmdQueuePush(struct cmdQueue *cq, struct gui *g)
 {
