@@ -26,33 +26,8 @@ void initBoardWidget(struct boardWidget *bw)
 void guiInit(struct gui *g)
 {
 	NOT(g);
-	
+	g->gameWidget.focus = FOCUS_BOARD;
 	initBoardWidget(&g->gameWidget.boardWidget);
-}
-
-void rackDraw(struct io *io, struct player *p)
-{
-	int xOffset, yOffset, w, i, letter, type;
-	SDL_Surface *t;
-
-	NOT(io), NOT(p), NOT(io->wild);
-
-	xOffset = 162;
-	yOffset = 222;
-	w = io->wild->w + TILE_SPACING_X;
-	for (i = 0; i < RACK_SIZE; i++) {
-		type = p->tile[i].type;
-		t = io->wild;
-		if (type == TILE_NONE) {
-			continue;
-		}
-		if (type == TILE_LETTER) {
-			letter = p->tile[i].letter;
-			assert(letter > LETTER_INVALID && letter < LETTER_COUNT);
-			t = io->tile[TILE_LETTER][letter];
-		}
-		surfaceDraw(io->screen, t, xOffset + i * w, yOffset);
-	}
 }
 
 
@@ -401,8 +376,9 @@ void cmdQueuePush(struct cmdQueue *cq, struct gui *g)
 
 void gameWidgetSyncGame(struct gameWidget *gw, struct game *g)
 {
-	int x, y;
+	int y, x, i;
 	struct boardWidget *bw;
+	struct rackWidget *rw;
 
 	NOT(gw), NOT(g);
 	
@@ -419,6 +395,13 @@ void gameWidgetSyncGame(struct gameWidget *gw, struct game *g)
 				bw->locWidget[y][x].tile = g->board.tile[y][x];
 			}
 		}
+	}
+
+	rw = &gw->rackWidget;
+
+	for (i = 0; i < RACK_SIZE; i++) {
+		rw->tileWidget[i].tile.type = g->player[g->turn].tile[i].type;
+		rw->tileWidget[i].tile.letter = g->player[g->turn].tile[i].letter;
 	}
 }
 
@@ -480,9 +463,21 @@ void boardWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 
 void gameWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 {
-	gw->focus = FOCUS_BOARD;
-	boardWidgetSyncControls(gw, c);
-	gw->focus = FOCUS_BOARD;
+	switch (gw->focus) {
+	case FOCUS_BOARD: {
+		boardWidgetSyncControls(gw, c);
+		break;
+	}
+	case FOCUS_RACK: {
+		rackWidgetSyncControls(gw, c);
+		break;
+	}
+	case FOCUS_CHOICE: {
+		choiceWidgetSyncControls(gw, c);
+		break;
+	}
+	default: break;
+	}
 }
 
 
@@ -531,40 +526,6 @@ void update(struct env *e)
 }
 
 
-/*
-
-void draw_selection(struct io *io, struct selection *s)
-{
-	int x, y;
-
-	NOT(io), NOT(s);
-
-	x = 0;
-	y = 0;
-	switch (s->type) {
-	case SELECTION_BOARD: {
-		x = 106 + 14 * s->data.board.x;
-		y = 6 + 14 * s->data.board.y;
-		break;
-	}
-	case SELECTION_RACK: {
-		x = 162 + 14 * s->data.rack;
-		y = 222;
-		break;
-	}
-	case SELECTION_CHOICE: {
-		x = 80 + 14 * s->data.choice;
-		y = 222;
-		break;
-	}
-	default: break;
-	}
-	surfaceDraw(io->screen, io->lockon, x + -2, y + -2);
-}
-
-*/
-
-
 void boardWidgetDraw(struct io *io, struct boardWidget *bw)
 {
 	int xOffset, yOffset, x, y, w, h, letter, type;
@@ -595,11 +556,63 @@ void boardWidgetDraw(struct io *io, struct boardWidget *bw)
 }
 
 
+void rackWidgetDraw(struct io *io, struct rackWidget *rw)
+{
+	int xOffset, yOffset, w, i, letter, type;
+	SDL_Surface *t;
+
+	NOT(io), NOT(rw), NOT(io->wild);
+
+	xOffset = 162;
+	yOffset = 222;
+	w = io->wild->w + TILE_SPACING_X;
+	for (i = 0; i < RACK_SIZE; i++) {
+		type = rw->tileWidget[i].tile.type;
+		t = io->wild;
+		if (type == TILE_NONE) {
+			continue;
+		}
+		if (type == TILE_LETTER) {
+			letter = rw->tileWidget[i].tile.letter;
+			assert(letter > LETTER_INVALID && letter < LETTER_COUNT);
+			t = io->tile[TILE_LETTER][letter];
+		}
+		surfaceDraw(io->screen, t, xOffset + i * w, yOffset);
+	}
+	
+}
+
+
 void gameWidgetDraw(struct io *io, struct gameWidget *gw)
 {
+	int x, y;
+
 	NOT(io), NOT(gw);
 
 	boardWidgetDraw(io, &gw->boardWidget);
+	rackWidgetDraw(io, &gw->rackWidget);
+
+	x = 0;
+	y = 0;
+	switch (gw->focus) {
+	case FOCUS_BOARD: {
+		x = 106 + 14 * gw->boardWidget.focus.x;
+		y = 6 + 14 * gw->boardWidget.focus.y;
+		break;
+	}
+	case FOCUS_RACK: {
+		x = 162 + 14 * gw->rackWidget.focus;
+		y = 222;
+		break;
+	}
+	case FOCUS_CHOICE: {
+		x = 80 + 14 * gw->choiceWidget.focus;
+		y = 222;
+		break;
+	}
+	default: break;
+	}
+	surfaceDraw(io->screen, io->lockon, x + -2, y + -2);
 }
 
 
@@ -618,7 +631,6 @@ void draw(struct env *e)
 	SDL_FillRect(e->io.screen, NULL, 0);
 	surfaceDraw(e->io.screen, e->io.back, 0, 0);
 	guiDraw(&e->io, &e->gui);
-	rackDraw(&e->io, e->game.player + e->game.turn);
 	SDL_Flip(e->io.screen);
 }
 
