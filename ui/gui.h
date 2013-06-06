@@ -41,8 +41,30 @@ typedef enum
 typedef enum
 {
 	CMD_INVALID = -1,
+	CMD_MOVE,
 	CMD_COUNT
 } cmd_t;
+
+
+typedef enum
+{
+	WIDGET_EVENT_INVALID = -1,
+	WIDGET_EVENT_SET = 0,
+	WIDGET_EVENT_GET,
+	WIDGET_EVENT_COUT
+} widget_event_t;
+
+
+typedef enum
+{
+	TRANS_MOVE_INVALID = -1,
+	TRANS_MOVE_NONE = 0,
+	TRANS_MOVE_PLACE, 
+	TRANS_MOVE_DISCARD,
+	TRANS_MOVE_SKIP,
+	TRANS_MOVE_QUIT,
+	TRANS_MOVE_COUNT
+} trans_move_t;
 
 
 struct font
@@ -132,9 +154,66 @@ struct gameWidget
 };
 
 
+struct boardWidgetEvent
+{
+	struct coor		coor;
+	widget_event_t		event;
+};
+
+
+struct rackWidgetEvent
+{
+	int			index;
+	widget_event_t		event;
+};
+
+
+struct choiceWidgetEvent
+{
+	int			index;
+};
+
+
+struct widgetEvent
+{
+	focus_t			focus;
+	union {
+		struct boardWidgetEvent		board;
+		struct rackWidgetEvent		rack;
+		struct choiceWidgetEvent	choice; 
+	} data;
+};
+
+
+struct transMovePlace
+{
+	int 			num;
+	int 			rackId[BOARD_Y][BOARD_X];
+	struct coor		gridId[RACK_SIZE];
+};
+
+
+struct transMoveDiscard
+{
+	bool			tile[RACK_SIZE];
+};
+
+
+struct transMove
+{
+	trans_move_t		type;
+	int			player_id;
+	union {
+		struct transMovePlace	place;
+		struct transMoveDiscard discard;
+	} data;
+};
+
+
 struct gui
 {
 	struct gameWidget	gameWidget;
+	struct move		move;
 };
 
 

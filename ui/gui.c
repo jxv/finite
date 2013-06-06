@@ -447,7 +447,7 @@ void boardWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 			gw->choiceWidget.focus = choice;
 		}
 		if (bw->focus.x >= 6) {
-			int rack = bw->focus.x - (6+1);
+			int rack = bw->focus.x - (6 + 1);
 			gw->focus = FOCUS_RACK;
 			if (rack < 0) {
 				rack = 0;
@@ -460,6 +460,7 @@ void boardWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 		bw->focus.y = BOARD_Y - 1;
 	}
 }
+
 
 void gameWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 {
@@ -481,8 +482,90 @@ void gameWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 }
 
 
+
+void widgetToWidgetEvent(struct widgetEvent *we, struct gameWidget *gw)
+{
+	NOT(we), NOT(gw);
+
+	we->focus = gw->focus;
+	switch (gw->focus) {
+	case FOCUS_BOARD: {
+	/*
+		we->board.coor.x = 0 through (BOARD_X - 1)
+		we->board.coor.y = 0 through (BOARD_Y - 1)
+		we->board.event = WIDGET_EVENT_SET/GET
+	*/
+		break;
+	}
+	case FOCUS_RACK: {
+	/*
+		we->rack.index = 0 through (RACK_SIZE - 1)
+		we->rack.event = WIDGET_EVENT_SET/GET
+	*/
+		break;
+	}
+	case FOCUS_CHOICE: {
+	/*
+		we->choice.index = 0 through (CHOICE_COUNT - 1)
+	*/
+		break;
+	}
+	default: break;
+	}
+}
+
+
+void transMoveToMove(struct move *m, struct transMove *tm)
+{
+	int i;
+	
+	NOT(m), NOT(tm);
+
+	moveClr(m);
+	m->player_id = tm->player_id;
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE: {
+		m->type = MOVE_PLACE;
+		assert(tm->data.place.num > 0 && tm->data.place.num < RACK_SIZE);
+		for (i = 0; i < tm->data.place.num; i++) {
+			struct coor coor = tm->data.place.gridId[i];
+			m->data.place.coor[i] = coor;
+			m->data.place.rack_id[i] = tm->data.place.rackId[coor.y][coor.x];
+		}
+		break;
+	}
+	case TRANS_MOVE_DISCARD: {
+		m->type = MOVE_DISCARD;
+		m->data.discard.num = 0;
+		for (i = 0; i < RACK_SIZE; i++) {
+			if (tm->data.discard.tile[i]) {
+				m->data.discard.rack_id[m->data.discard.num] = i;
+				m->data.discard.num++;
+			}
+		}
+		break;
+	}
+	case TRANS_MOVE_SKIP: {
+		m->type = MOVE_SKIP;
+		break;
+	}
+	case TRANS_MOVE_QUIT: {
+		m->type = MOVE_QUIT;
+		break;
+	}
+	case TRANS_MOVE_NONE:
+	case TRANS_MOVE_INVALID:
+	default: {
+		m->type = MOVE_INVALID;
+		break;
+	}
+	}
+}
+
+
 void gameSyncGameWidget(struct game *g, struct gameWidget *gw)
 {
+	NOT(g), NOT(gw);
 }
 
 
@@ -512,12 +595,12 @@ void gameSyncGui(struct game *ga, struct gui *gu)
 
 void update(struct env *e)
 {
-	/*/
+	/*
 	 * Follows a MVC pattern:
 	 * Game           -> Model
 	 * GUI + IO       -> View
 	 * GUI + Controls -> Controller
-	/*/
+	 */
 	NOT(e);
 
 	guiSyncGame(&e->gui, &e->game);
