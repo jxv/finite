@@ -21,6 +21,7 @@ typedef enum
 
 typedef enum
 {
+	FOCUS_INVALID = -1,
 	FOCUS_BOARD = 0,
 	FOCUS_RACK,
 	FOCUS_CHOICE,
@@ -41,18 +42,13 @@ typedef enum
 typedef enum
 {
 	CMD_INVALID = -1,
-	CMD_MOVE,
+	CMD_DROP,
+	CMD_PLACE,
+	CMD_GRAB,
+	CMD_SWAP,
+	CMD_CHOICE,
 	CMD_COUNT
 } cmd_t;
-
-
-typedef enum
-{
-	WIDGET_EVENT_INVALID = -1,
-	WIDGET_EVENT_SET = 0,
-	WIDGET_EVENT_GET,
-	WIDGET_EVENT_COUT
-} widget_event_t;
 
 
 typedef enum
@@ -125,9 +121,9 @@ struct tileWidget
 struct boardWidget
 {
 	struct coor		focus;
-	bool			select;
-	bool 			cancel;
 	struct locWidget	locWidget[BOARD_Y][BOARD_X];
+	bool			select;
+	bool			cancel;
 };
 
 
@@ -135,6 +131,8 @@ struct rackWidget
 {
 	int			focus;
 	struct tileWidget	tileWidget[RACK_SIZE];
+	bool			select;
+	bool			cancel;
 };
 
 
@@ -142,51 +140,43 @@ struct choiceWidget
 {
 	int			focus;
 	bool			enabled[CHOICE_COUNT];
+	bool			select;
+	bool			cancel;
 };
 
 
 struct gameWidget
 {
 	focus_t			focus;
+	bool			select;
+	bool 			cancel;
 	struct boardWidget	boardWidget;
 	struct rackWidget	rackWidget;
 	struct choiceWidget	choiceWidget;
 };
 
 
-struct boardWidgetEvent
+struct cmd
 {
-	struct coor		coor;
-	widget_event_t		event;
-};
-
-
-struct rackWidgetEvent
-{
-	int			index;
-	widget_event_t		event;
-};
-
-
-struct choiceWidgetEvent
-{
-	int			index;
-};
-
-
-struct widgetEvent
-{
+	cmd_t			type;
 	focus_t			focus;
 	union {
-		struct boardWidgetEvent		board;
-		struct rackWidgetEvent		rack;
-		struct choiceWidgetEvent	choice; 
+		struct coor		board;
+		int			rack;
+		int			choice; 
 	} data;
 };
 
 
+struct transTile
+{
+	bool 			has;
+	int			rackId;
+};
+
 struct transMovePlace
 {
+	struct transTile	transTile;
 	int 			num;
 	int 			rackId[BOARD_Y][BOARD_X];
 	struct coor		gridId[RACK_SIZE];
@@ -214,22 +204,6 @@ struct gui
 {
 	struct gameWidget	gameWidget;
 	struct move		move;
-};
-
-
-struct cmd
-{
-	cmd_t			type;
-};
-
-
-#define CMD_QUEUE_SIZE	16		
-
-
-struct cmdQueue
-{
-	int			size;
-	struct cmd		cmd[CMD_QUEUE_SIZE];
 };
 
 

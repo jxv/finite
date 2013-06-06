@@ -368,11 +368,6 @@ void choiceWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 	}
 }
 
-void cmdQueuePush(struct cmdQueue *cq, struct gui *g)
-{
-	NOT(cq);
-}
-
 
 void gameWidgetSyncGame(struct gameWidget *gw, struct game *g)
 {
@@ -482,32 +477,142 @@ void gameWidgetSyncControls(struct gameWidget *gw, struct controls *c)
 }
 
 
-
-void widgetToWidgetEvent(struct widgetEvent *we, struct gameWidget *gw)
+bool validRackId(int id)
 {
-	NOT(we), NOT(gw);
+	return id >= 0 && id < RACK_SIZE;
+}
 
-	we->focus = gw->focus;
+
+bool validGridId(struct coor c)
+{
+	return c.x >= 0 && c.y >= 0 && c.x < BOARD_X && c.y < BOARD_Y;
+}
+
+
+bool isSwappable(int rackId, struct rackWidget *rw)
+{
+	return		rackId != rw->focus &&
+			rw->tileWidget[rw->focus].enabled &&
+			rw->tileWidget[rw->focus].tile.type != TILE_NONE;
+}
+
+
+void gameWidgetToCmdMovePlace(struct cmd *c, struct gameWidget *gw, struct transMovePlace *tmp)
+{
+	struct boardWidget *bw;
+	struct rackWidget *rw;
+	struct choiceWidget *cw;
+
+	NOT(c), NOT(gw), NOT(tmp);
+		
+	bw = &gw->boardWidget;
+	rw = &gw->rackWidget;
+	cw = &gw->choiceWidget;
+
+	c->focus = gw->focus;
 	switch (gw->focus) {
 	case FOCUS_BOARD: {
-	/*
-		we->board.coor.x = 0 through (BOARD_X - 1)
-		we->board.coor.y = 0 through (BOARD_Y - 1)
-		we->board.event = WIDGET_EVENT_SET/GET
-	*/
+		c->data.board = bw->focus;	
+		if (tmp->transTile.has) {
+			if (bw->select) {
+				c->type = CMD_PLACE;
+			} else if (bw->cancel) {
+				c->type = CMD_DROP;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		} else {
+			c->focus = FOCUS_INVALID;
+			if (bw->select && validRackId(tmp->rackId[bw->focus.y][bw->focus.x])) {
+				c->type = CMD_GRAB;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		}
 		break;
 	}
 	case FOCUS_RACK: {
-	/*
-		we->rack.index = 0 through (RACK_SIZE - 1)
-		we->rack.event = WIDGET_EVENT_SET/GET
-	*/
+		c->data.rack = rw->focus;
+		if (tmp->transTile.has) {
+			if (rw->select && isSwappable(tmp->transTile.rackId, rw)) {
+				c->type = CMD_SWAP;
+			} else if (rw->cancel) {
+				c->type = CMD_DROP;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		} else {
+			if (rw->select && !validGridId(tmp->gridId[rw->focus])) {
+				c->type = CMD_GRAB;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		}
 		break;
 	}
 	case FOCUS_CHOICE: {
-	/*
-		we->choice.index = 0 through (CHOICE_COUNT - 1)
-	*/
+		c->data.choice = cw->focus;
+		if (tmp->transTile.has) {
+			if (cw->select) {
+				c->type = CMD_CHOICE;	/* are you sure, window? maybe? */
+			} else if (cw->cancel) {
+				c->type = CMD_DROP;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		} else {
+			if (cw->select) {
+				c->type = CMD_CHOICE;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		}
+		break;
+	}
+	default: break;
+	}
+}
+
+
+void gameWidgetToCmdMoveDiscard(struct cmd *c, struct gameWidget *gw, struct transMoveDiscard *tmd)
+{
+	struct rackWidget *rw;
+	struct choiceWidget *cw;
+
+	NOT(c), NOT(gw), NOT(tmd);
+
+	rw = &gw->rackWidget;
+	cw = &gw->choiceWidget;
+
+	c->focus = gw->focus;
+	switch (gw->focus) {
+	case FOCUS_RACK: {
+		c->data.rack = rw->focus;
+		break;
+	}
+	case FOCUS_CHOICE: {
+		c->data.choice = cw->focus;
+		break;
+	}
+	default: {
+		c->type = CMD_INVALID;
+		break;
+	}
+	}
+}
+
+
+void gameWidgetToCmd(struct cmd *c, struct gameWidget *gw, struct transMove *tm)
+{
+	NOT(c), NOT(gw), NOT(tm);
+
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE: {
+		gameWidgetToCmdMovePlace(c, gw, &tm->data.place);
+		break;
+	}
+	case TRANS_MOVE_DISCARD: {
+		gameWidgetToCmdMoveDiscard(c, gw, &tm->data.discard);
 		break;
 	}
 	default: break;
@@ -559,6 +664,73 @@ void transMoveToMove(struct move *m, struct transMove *tm)
 		m->type = MOVE_INVALID;
 		break;
 	}
+	}
+}
+
+
+void cmdIntoTransMovePlace(struct transMovePlace *tmp, struct cmd *c)
+{
+	struct coor *bc;
+	const struct coor invalidCoor = {-1, -1};
+	const int invalidId = -1;
+
+	NOT(tmp), NOT(c);
+
+	bc = &c->data.board;
+
+	switch (c->focus) {
+	case FOCUS_BOARD: {
+		switch (c->type) {
+		case CMD_DROP: {
+			tmp->transTile.has = false;
+			break;
+		}
+		case CMD_PLACE: {
+			tmp->transTile.has = false;
+			tmp->rackId[bc->y][bc->x] = tmp->transTile.rackId;
+			tmp->gridId[tmp->transTile.rackId] = *bc;
+			tmp->num++;
+			break;
+		}
+		case CMD_GRAB: {
+			tmp->transTile.has = true;
+			tmp->transTile.rackId = tmp->rackId[bc->y][bc->x];
+			tmp->rackId[bc->y][bc->x] = invalidId;
+			tmp->gridId[tmp->transTile.rackId] = invalidCoor;
+			tmp->num--;
+			break;
+		}
+		default: break;
+		}
+		break;
+	}
+	case FOCUS_RACK: {
+		break;
+	}
+	case FOCUS_CHOICE: {
+		break;
+	}
+	default: break;
+	}
+}
+
+
+void cmdIntoTransMove(struct transMove *tm, struct cmd *c)
+{
+	
+	NOT(tm), NOT(c);
+	
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE: {
+		cmdIntoTransMovePlace(&tm->data.place, c);
+		break;
+	}
+	case TRANS_MOVE_DISCARD: {
+		break;
+	}
+	case TRANS_MOVE_NONE:
+	case TRANS_MOVE_INVALID:
+	default: break;
 	}
 }
 
