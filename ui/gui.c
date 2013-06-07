@@ -397,6 +397,7 @@ void gameWidgetSyncGame(struct gameWidget *gw, struct game *g)
 	for (i = 0; i < RACK_SIZE; i++) {
 		rw->tileWidget[i].tile.type = g->player[g->turn].tile[i].type;
 		rw->tileWidget[i].tile.letter = g->player[g->turn].tile[i].letter;
+		rw->tileWidget[i].enabled = rw->tileWidget[i].tile.type == TILE_NONE;
 	}
 }
 
@@ -496,6 +497,20 @@ bool isSwappable(int rackId, struct rackWidget *rw)
 			rw->tileWidget[rw->focus].tile.type != TILE_NONE;
 }
 
+void fdChoiceCmd(struct cmd *c, struct choiceWidget *cw)
+{
+
+	NOT(c), NOT(cw);
+
+	switch (cw->focus) {
+	case CHOICE_MODE:   c->type = CMD_MODE;   break;
+	case CHOICE_PLAY:   c->type = CMD_PLAY;   break;
+	case CHOICE_RECALL: c->type = CMD_RECALL; break;
+	case CHOICE_QUIT:   c->type = CMD_QUIT;   break;
+	default: break;
+	}
+}
+
 
 void gameWidgetToCmdMovePlace(struct cmd *c, struct gameWidget *gw, struct transMovePlace *tmp)
 {
@@ -510,6 +525,7 @@ void gameWidgetToCmdMovePlace(struct cmd *c, struct gameWidget *gw, struct trans
 	cw = &gw->choiceWidget;
 
 	c->focus = gw->focus;
+	c->type = CMD_INVALID;
 	switch (gw->focus) {
 	case FOCUS_BOARD: {
 		c->data.board = bw->focus;	
@@ -535,7 +551,8 @@ void gameWidgetToCmdMovePlace(struct cmd *c, struct gameWidget *gw, struct trans
 		c->data.rack = rw->focus;
 		if (tmp->transTile.has) {
 			if (rw->select && isSwappable(tmp->transTile.rackId, rw)) {
-				c->type = CMD_SWAP;
+				/* c->type = CMD_SWAP; */
+				c->focus = FOCUS_INVALID;
 			} else if (rw->cancel) {
 				c->type = CMD_DROP;
 			} else {
@@ -554,7 +571,7 @@ void gameWidgetToCmdMovePlace(struct cmd *c, struct gameWidget *gw, struct trans
 		c->data.choice = cw->focus;
 		if (tmp->transTile.has) {
 			if (cw->select) {
-				c->type = CMD_CHOICE;	/* are you sure, window? maybe? */
+				fdChoiceCmd(c, cw);
 			} else if (cw->cancel) {
 				c->type = CMD_DROP;
 			} else {
@@ -562,7 +579,7 @@ void gameWidgetToCmdMovePlace(struct cmd *c, struct gameWidget *gw, struct trans
 			}
 		} else {
 			if (cw->select) {
-				c->type = CMD_CHOICE;
+				fdChoiceCmd(c, cw);
 			} else {
 				c->focus = FOCUS_INVALID;
 			}
@@ -585,17 +602,37 @@ void gameWidgetToCmdMoveDiscard(struct cmd *c, struct gameWidget *gw, struct tra
 	cw = &gw->choiceWidget;
 
 	c->focus = gw->focus;
+	c->type = CMD_INVALID;
 	switch (gw->focus) {
 	case FOCUS_RACK: {
 		c->data.rack = rw->focus;
+		if (!tmd->tile[rw->focus]) {
+			if (rw->select || rw->cancel) {
+				c->type = CMD_DISCARD;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		} else {
+			if (rw->select) {
+				c->type = CMD_KEEP;
+			} else {
+				c->focus = FOCUS_INVALID;
+			}
+		}
 		break;
 	}
 	case FOCUS_CHOICE: {
 		c->data.choice = cw->focus;
+		if (cw->select) {
+			fdChoiceCmd(c, cw);
+		} else {
+			c->focus = FOCUS_INVALID;
+		}
 		break;
 	}
 	default: {
 		c->type = CMD_INVALID;
+		c->focus = FOCUS_INVALID;
 		break;
 	}
 	}
@@ -627,7 +664,7 @@ void transMoveToMove(struct move *m, struct transMove *tm)
 	NOT(m), NOT(tm);
 
 	moveClr(m);
-	m->player_id = tm->player_id;
+	m->player_id = tm->playerId;
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE: {
 		m->type = MOVE_PLACE;
@@ -668,15 +705,15 @@ void transMoveToMove(struct move *m, struct transMove *tm)
 }
 
 
-void cmdIntoTransMovePlace(struct transMovePlace *tmp, struct cmd *c)
+void cmdIntoTransMovePlace(struct transMove *tm, struct cmd *c)
 {
-	struct coor *bc;
 	const struct coor invalidCoor = {-1, -1};
 	const int invalidId = -1;
+	struct transMovePlace *tmp;
 
-	NOT(tmp), NOT(c);
+	NOT(tm), NOT(c), assert(tm->type == TRANS_MOVE_PLACE);
 
-	bc = &c->data.board;
+	tmp = &tm->data.place;
 
 	switch (c->focus) {
 	case FOCUS_BOARD: {
@@ -687,15 +724,15 @@ void cmdIntoTransMovePlace(struct transMovePlace *tmp, struct cmd *c)
 		}
 		case CMD_PLACE: {
 			tmp->transTile.has = false;
-			tmp->rackId[bc->y][bc->x] = tmp->transTile.rackId;
-			tmp->gridId[tmp->transTile.rackId] = *bc;
+			tmp->rackId[c->data.board.y][c->data.board.x] = tmp->transTile.rackId;
+			tmp->gridId[tmp->transTile.rackId] = c->data.board;
 			tmp->num++;
 			break;
 		}
 		case CMD_GRAB: {
 			tmp->transTile.has = true;
-			tmp->transTile.rackId = tmp->rackId[bc->y][bc->x];
-			tmp->rackId[bc->y][bc->x] = invalidId;
+			tmp->transTile.rackId = tmp->rackId[c->data.board.y][c->data.board.x];
+			tmp->rackId[c->data.board.y][c->data.board.x] = invalidId;
 			tmp->gridId[tmp->transTile.rackId] = invalidCoor;
 			tmp->num--;
 			break;
@@ -705,9 +742,86 @@ void cmdIntoTransMovePlace(struct transMovePlace *tmp, struct cmd *c)
 		break;
 	}
 	case FOCUS_RACK: {
+		switch (c->type) {
+		case CMD_DROP: {
+			tmp->transTile.has = false;
+			break;
+		}
+		case CMD_GRAB: {
+			tmp->transTile.has = true;
+			tmp->transTile.rackId = c->data.rack;
+			break;
+		}
+		/*
+		case CMD_SWAP: {
+			tmp->transTile.has = true;
+			break;
+		}
+		*/
+		default: break;
+		}
 		break;
 	}
 	case FOCUS_CHOICE: {
+		switch (c->type) {
+		case CMD_MODE: {
+			/* clear tmp */
+			tm->type = TRANS_MOVE_DISCARD;
+			break;
+		}
+		case CMD_PLAY: {
+			tm->act = true;
+			break;
+		}
+		case CMD_RECALL: {
+			/* clear tmp */
+			break;
+		}
+		case CMD_QUIT: {
+			tm->type = TRANS_MOVE_QUIT;
+			tm->act = true;
+			break;
+		}
+		default: break;
+		}
+		break;
+	}
+	default: break;
+	}
+}
+
+
+void cmdIntoTransMoveDiscard(struct transMove *tm, struct cmd *c)
+{
+	struct transMoveDiscard *tmd;
+	
+	NOT(tm), NOT(c), assert(tm->type == TRANS_MOVE_DISCARD);
+
+	tmd = &tm->data.discard;
+	
+	switch (c->focus) {
+	case FOCUS_RACK: {
+		switch (c->type) {
+		case CMD_DISCARD: {
+			tmd->tile[c->data.rack] = true;
+			break;
+		}
+		case CMD_KEEP: {
+			tmd->tile[c->data.rack] = false;
+			break;
+		}
+		default: break;
+		}
+		break;
+	}
+	case FOCUS_CHOICE: {
+		switch (c->type) {
+		case CMD_MODE:   break;
+		case CMD_PLAY:   break;
+		case CMD_RECALL: break;
+		case CMD_QUIT:   break;
+		default: break;
+		}
 		break;
 	}
 	default: break;
@@ -722,10 +836,11 @@ void cmdIntoTransMove(struct transMove *tm, struct cmd *c)
 	
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE: {
-		cmdIntoTransMovePlace(&tm->data.place, c);
+		cmdIntoTransMovePlace(tm, c);
 		break;
 	}
 	case TRANS_MOVE_DISCARD: {
+		cmdIntoTransMoveDiscard(tm, c);
 		break;
 	}
 	case TRANS_MOVE_NONE:
@@ -800,9 +915,9 @@ void boardWidgetDraw(struct io *io, struct boardWidget *bw)
 			case TILE_LETTER:
 				letter = (int)bw->locWidget[y][x].tile.letter;
 				surfaceDraw(io->screen,
-					     io->tile[type][letter],
-					     xOffset + x * w,
-					     yOffset + y * h);
+						io->tile[type][letter],
+						xOffset + x * w,
+					    	yOffset + y * h);
 				break;
 			default: break;
 			}

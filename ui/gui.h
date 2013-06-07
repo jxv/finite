@@ -32,7 +32,8 @@ typedef enum
 typedef enum
 {
 	CHOICE_INVALID = -1,
-	CHOICE_PLAY = 0,
+	CHOICE_MODE = 0,
+	CHOICE_PLAY,
 	CHOICE_RECALL,
 	CHOICE_QUIT,
 	CHOICE_COUNT
@@ -46,7 +47,12 @@ typedef enum
 	CMD_PLACE,
 	CMD_GRAB,
 	CMD_SWAP,
-	CMD_CHOICE,
+	CMD_DISCARD,
+	CMD_KEEP,
+	CMD_MODE,
+	CMD_PLAY,
+	CMD_RECALL,
+	CMD_QUIT,
 	CMD_COUNT
 } cmd_t;
 
@@ -192,10 +198,11 @@ struct transMoveDiscard
 struct transMove
 {
 	trans_move_t		type;
-	int			player_id;
+	int			playerId;
+	bool			act;
 	union {
 		struct transMovePlace	place;
-		struct transMoveDiscard discard;
+		struct transMoveDiscard	discard;
 	} data;
 };
 
