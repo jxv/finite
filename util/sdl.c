@@ -41,6 +41,9 @@ SDL_Surface *surfaceLoad(const char *filename)
 void delay(int st, int et, int fps)
 {
 	int ms;
+
+	assert(et >= st);
+	assert(fps > 0);
 	
 	ms = (1000 / fps) - (et - st);
 	if (ms > 0) {
@@ -68,7 +71,7 @@ SDL_Surface *surfaceCpy(SDL_Surface *s)
 	NOT(s);	
 
 	cpy = SDL_CreateRGBSurface(0, s->w, s->h, SCREEN_BPP, 0, 0, 0, 0);
-	surfaceDraw(cpy,s,0,0);
+	surfaceDraw(cpy, s, 0, 0);
 	return cpy;
 }
 

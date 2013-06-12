@@ -11,11 +11,11 @@ SRC+=$(wildcard core/*.c)
 SRC+=$(wildcard ui/*.c)
 SRC+=$(wildcard util/*.c)
 
-CFLAG= -ansi
-CFLAG+= -Werror
-CFLAG+= -Wall
-CFLAG+= -pedantic
-CFLAG+= -O2
+CFLAG=-ansi
+CFLAG+=-Werror
+CFLAG+=-Wall
+CFLAG+=-pedantic
+CFLAG+=-O3
 
 LIB=-lc
 LIB+=`sdl-config --libs`

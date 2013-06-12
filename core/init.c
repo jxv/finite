@@ -174,7 +174,7 @@ void moveInit(struct move *m)
 	m->type = MOVE_PLACE;
 	m->data.place.num = 4;
 	for (i = 0; i < RACK_SIZE; i++) {
-		m->data.place.rack_id[i] = i;
+		m->data.place.rackIdx[i] = i;
 		m->data.place.coor[i].x = 0;
 		m->data.place.coor[i].y = 0;
 	}

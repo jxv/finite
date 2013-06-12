@@ -16,7 +16,7 @@ typedef enum
 	KEYSTATE_HELD,
 	KEYSTATE_RELEASED,
 	KEYSTATE_COUNT
-} keystate_t;
+} KeystateType;
 
 
 typedef enum
@@ -26,7 +26,7 @@ typedef enum
 	FOCUS_RACK,
 	FOCUS_CHOICE,
 	FOCUS_COUNT
-} focus_t;
+} FocusType;
 
 
 typedef enum
@@ -37,7 +37,7 @@ typedef enum
 	CHOICE_RECALL,
 	CHOICE_QUIT,
 	CHOICE_COUNT
-} choice_t;
+} ChoiceType;
 
 
 typedef enum
@@ -54,7 +54,7 @@ typedef enum
 	CMD_RECALL,
 	CMD_QUIT,
 	CMD_COUNT
-} cmd_t;
+} CmdType;
 
 
 typedef enum
@@ -66,7 +66,7 @@ typedef enum
 	TRANS_MOVE_SKIP,
 	TRANS_MOVE_QUIT,
 	TRANS_MOVE_COUNT
-} trans_move_t;
+} TransMoveType;
 
 
 struct font
@@ -84,6 +84,12 @@ struct io
 	SDL_Surface		*tile[TILE_COUNT][LETTER_COUNT];
 	SDL_Surface		*wild;
 	SDL_Surface		*lockon;
+	SDL_Surface		*recall;
+	SDL_Surface		*mode;
+	SDL_Surface		*place;
+	SDL_Surface		*discard;
+	SDL_Surface		*skip;
+	SDL_Surface		*play;
 	struct font		white_font;
 	struct font		black_font;
 };
@@ -91,7 +97,7 @@ struct io
 
 struct keystate
 {
-	keystate_t		type;
+	KeystateType		type;
 	float			time;
 };
 
@@ -109,108 +115,38 @@ struct controls
 };
 
 
-struct locWidget
+struct gridWidget
 {
-	bool			enabled;
-	struct tile		tile;
-	sq_t			sq;
+	struct coor		index;
+	bool			**button;
+	void			(*onPress)(void*, struct coor);
+	int			width;
+	int			height;
 };
 
 
-struct tileWidget
+typedef enum
 {
-	bool			enabled;
-	struct tile		tile;
-};
+	GUI_FOCUS_INVALID = -1,
+	GUI_FOCUS_RACK = 0,
+	GUI_FOCUS_BOARD,
+	GUI_FOCUS_CHOICE,
+	GUI_FOCUS_COUNT
+} gui_FocusType;
 
 
-struct boardWidget
+struct gameGui
 {
-	struct coor		focus;
-	struct locWidget	locWidget[BOARD_Y][BOARD_X];
-	bool			select;
-	bool			cancel;
-};
-
-
-struct rackWidget
-{
-	int			focus;
-	struct tileWidget	tileWidget[RACK_SIZE];
-	bool			select;
-	bool			cancel;
-};
-
-
-struct choiceWidget
-{
-	int			focus;
-	bool			enabled[CHOICE_COUNT];
-	bool			select;
-	bool			cancel;
-};
-
-
-struct gameWidget
-{
-	focus_t			focus;
-	bool			select;
-	bool 			cancel;
-	struct boardWidget	boardWidget;
-	struct rackWidget	rackWidget;
-	struct choiceWidget	choiceWidget;
-};
-
-
-struct cmd
-{
-	cmd_t			type;
-	focus_t			focus;
-	union {
-		struct coor		board;
-		int			rack;
-		int			choice; 
-	} data;
-};
-
-
-struct transTile
-{
-	bool 			has;
-	int			rackId;
-};
-
-struct transMovePlace
-{
-	struct transTile	transTile;
-	int 			num;
-	int 			rackId[BOARD_Y][BOARD_X];
-	struct coor		gridId[RACK_SIZE];
-};
-
-
-struct transMoveDiscard
-{
-	bool			tile[RACK_SIZE];
-};
-
-
-struct transMove
-{
-	trans_move_t		type;
-	int			playerId;
-	bool			act;
-	union {
-		struct transMovePlace	place;
-		struct transMoveDiscard	discard;
-	} data;
+	gui_FocusType		focus;
+	struct gridWidget	rackWidget;
+	struct gridWidget	boardWidget;
+	struct gridWidget	choiceWidget;
 };
 
 
 struct gui
 {
-	struct gameWidget	gameWidget;
-	struct move		move;
+	struct gameGui		gameGui;
 };
 
 
