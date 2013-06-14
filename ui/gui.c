@@ -10,6 +10,7 @@ void guiInit(struct gui *g)
 	mkRackWidget(&g->gameGui.rackWidget);
 	mkChoiceWidget(&g->gameGui.choiceWidget);
 	mkBoardWidget(&g->gameGui.boardWidget);
+	g->gameGui.boardWidget.button[0][0] = true;
 }
 
 
@@ -284,6 +285,107 @@ bool handleEvent(struct controls *c)
 }
 
 
+void updateBoardWidget(struct gameGui *gg, struct controls *c)
+{
+	struct gridWidget *bw;
+
+	NOT(gg);
+	NOT(c);
+	assert(gg->focus == GUI_FOCUS_BOARD);
+
+	bw = &gg->boardWidget;
+
+	if (c->x.type == KEYSTATE_PRESSED) {
+		gg->focus = GUI_FOCUS_RACK;
+		return;
+	}
+	if (c->y.type == KEYSTATE_PRESSED) {
+		gg->focus = GUI_FOCUS_CHOICE;
+		return;
+	}
+	if (c->up.type == KEYSTATE_PRESSED) {
+		bw->index.y += BOARD_Y;
+		bw->index.y--;
+		bw->index.y %= BOARD_Y;
+	}
+	if (c->down.type == KEYSTATE_PRESSED) {
+		bw->index.y++;
+		bw->index.y %= BOARD_Y;
+	}
+	if (c->left.type == KEYSTATE_PRESSED) {
+		bw->index.x += BOARD_X;
+		bw->index.x--;
+		bw->index.x %= BOARD_X;
+	}
+	if (c->right.type == KEYSTATE_PRESSED) {
+		bw->index.x++;
+		bw->index.x %= BOARD_X;
+	}
+}
+
+
+void updateChoiceWidget(struct gameGui *gg, struct controls *c)
+{
+	struct gridWidget *cw;
+
+	NOT(gg);
+	NOT(c);
+	assert(gg->focus == GUI_FOCUS_CHOICE);
+
+	cw = &gg->boardWidget;
+	cw->index.y = 0;
+
+	if (c->x.type == KEYSTATE_PRESSED) {
+		gg->focus = GUI_FOCUS_BOARD;
+		return;
+	}
+	if (c->y.type == KEYSTATE_PRESSED) {
+		gg->focus = GUI_FOCUS_RACK;
+		return;
+	}
+	if (c->left.type == KEYSTATE_PRESSED) {
+		cw->index.x += CHOICE_COUNT; 
+		cw->index.x--;
+		cw->index.x %= CHOICE_COUNT;
+	}
+	if (c->right.type == KEYSTATE_PRESSED) {
+		cw->index.x++;
+		cw->index.x %= CHOICE_COUNT;
+	}
+}
+
+
+void updateRackWidget(struct gameGui *gg, struct controls *c)
+{
+	struct gridWidget *rw;
+
+	NOT(gg);
+	NOT(c);
+	assert(gg->focus == GUI_FOCUS_RACK);
+	
+	rw = &gg->boardWidget;
+	rw->index.y = 0;
+
+	if (c->x.type == KEYSTATE_PRESSED) {
+		gg->focus = GUI_FOCUS_CHOICE;
+		return;
+	}
+	if (c->y.type == KEYSTATE_PRESSED) {
+		gg->focus = GUI_FOCUS_BOARD;
+		return;
+	}
+	if (c->left.type == KEYSTATE_PRESSED) {
+		rw->index.x += RACK_SIZE; 
+		rw->index.x--;
+		rw->index.x %= RACK_SIZE;
+	}
+	if (c->right.type == KEYSTATE_PRESSED) {
+		rw->index.x++;
+		rw->index.x %= RACK_SIZE;
+	}
+}
+
+
 void update(struct env *e)
 {
 	/*
@@ -293,6 +395,23 @@ void update(struct env *e)
 	GUI + Controls -> Controller
 	*/
 	NOT(e);
+	
+	switch (e->gui.gameGui.focus) {
+	case GUI_FOCUS_BOARD: {
+		updateBoardWidget(&e->gui.gameGui, &e->controls);
+		break;
+	}
+	case GUI_FOCUS_CHOICE: {
+		updateChoiceWidget(&e->gui.gameGui, &e->controls);
+		break;
+	}
+	case GUI_FOCUS_RACK: {
+		updateRackWidget(&e->gui.gameGui, &e->controls);
+		break;
+	}
+	default: break;
+	}
+
 }
 
 
@@ -303,13 +422,20 @@ void guiDraw(struct io *io, struct gui *g)
 
 	NOT(io), NOT(g);
 
-	pos.x = 105;
-	pos.y = 5;
-	
 	dim.x = 14;
 	dim.y = 14;
-	
+
+	pos.x = 106;
+	pos.y = 5;
 	gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim);
+	
+	pos.x = 162;
+	pos.y = 222;
+	gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim);
+	
+	pos.x = 106;
+	pos.y = 222;
+	gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim);
 }
 
 
@@ -318,8 +444,7 @@ void draw(struct env *e)
 	NOT(e);
 
 	SDL_FillRect(e->io.screen, NULL, 0);
-	surfaceDraw(e->io.screen, e->io.back, 0, 0);
-	surfaceDraw(e->io.screen, e->io.recall, 105, 220);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0); surfaceDraw(e->io.screen, e->io.recall, 105, 220);
 	surfaceDraw(e->io.screen, e->io.mode,   119, 217);
 	surfaceDraw(e->io.screen, e->io.place,   119, 220);
 	surfaceDraw(e->io.screen, e->io.discard, 119, 220);

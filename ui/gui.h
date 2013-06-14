@@ -32,10 +32,9 @@ typedef enum
 typedef enum
 {
 	CHOICE_INVALID = -1,
-	CHOICE_MODE = 0,
+	CHOICE_RECALL = 0,
+	CHOICE_MODE,
 	CHOICE_PLAY,
-	CHOICE_RECALL,
-	CHOICE_QUIT,
 	CHOICE_COUNT
 } ChoiceType;
 
@@ -119,7 +118,6 @@ struct gridWidget
 {
 	struct coor		index;
 	bool			**button;
-	void			(*onPress)(void*, struct coor);
 	int			width;
 	int			height;
 };
@@ -132,12 +130,12 @@ typedef enum
 	GUI_FOCUS_BOARD,
 	GUI_FOCUS_CHOICE,
 	GUI_FOCUS_COUNT
-} gui_FocusType;
+} GuiFocusType;
 
 
 struct gameGui
 {
-	gui_FocusType		focus;
+	GuiFocusType		focus;
 	struct gridWidget	rackWidget;
 	struct gridWidget	boardWidget;
 	struct gridWidget	choiceWidget;

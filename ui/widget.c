@@ -13,24 +13,6 @@ bool validGridId(struct coor c)
 }
 
 
-void onPressRack(void *cmdr, struct coor idx)
-{
-	NOT(cmdr);
-}
-
-
-void onPressChoice(void *cmdr, struct coor idx)
-{
-	NOT(cmdr);
-}
-
-
-void onPressBoard(void *cmdr, struct coor idx)
-{
-	NOT(cmdr);
-}
-
-
 void mkGridWidgetByDim(struct gridWidget *gw)
 {
 	int i, y, x;
@@ -57,9 +39,8 @@ void mkRackWidget(struct gridWidget *gw)
 {
 	NOT(gw);
 	
-	gw->width   = RACK_SIZE;
-	gw->height  = 1;
-	gw->onPress = onPressRack;
+	gw->width  = RACK_SIZE;
+	gw->height = 1;
 	mkGridWidgetByDim(gw);
 }
 
@@ -68,9 +49,8 @@ void mkChoiceWidget(struct gridWidget *gw)
 {
 	NOT(gw);
 	
-	gw->width   = CHOICE_COUNT;
-	gw->height  = 1;
-	gw->onPress = onPressChoice;
+	gw->width  = CHOICE_COUNT;
+	gw->height = 1;
 	mkGridWidgetByDim(gw);
 }
 
@@ -79,9 +59,8 @@ void mkBoardWidget(struct gridWidget *gw)
 {
 	NOT(gw);
 	
-	gw->width   = BOARD_X;
-	gw->height  = BOARD_Y;
-	gw->onPress = onPressBoard;
+	gw->width  = BOARD_X;
+	gw->height = BOARD_Y;
 	mkGridWidgetByDim(gw);
 }
 
@@ -91,9 +70,11 @@ void gridWidgetDraw(SDL_Surface *s, struct gridWidget *gw, struct coor pos, stru
 	int y, x;
 	SDL_Rect clip;
 	Uint32 red, green, color;
-
+	
 	NOT(gw);
 
+	clip.w = dim.x - 1;
+	clip.h = dim.y - 1;
 	red   = SDL_MapRGB(s->format, 255, 0, 0);
 	green = SDL_MapRGB(s->format, 0, 255, 0);
 	for (y = 0; y < gw->height; y++) {
