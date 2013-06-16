@@ -42,15 +42,14 @@ typedef enum
 typedef enum
 {
 	CMD_INVALID = -1,
-	CMD_DROP,
-	CMD_PLACE,
-	CMD_GRAB,
-	CMD_SWAP,
-	CMD_DISCARD,
-	CMD_KEEP,
-	CMD_MODE,
-	CMD_PLAY,
+	CMD_FOCUS_PREV = 0,
+	CMD_FOCUS_NEXT,
+	CMD_BOARD,
+	CMD_RACK,
 	CMD_RECALL,
+	CMD_MODE_UP,
+	CMD_MODE_DOWN,
+	CMD_PLAY,
 	CMD_QUIT,
 	CMD_COUNT
 } CmdType;
@@ -60,8 +59,13 @@ typedef enum
 {
 	TRANS_MOVE_INVALID = -1,
 	TRANS_MOVE_NONE = 0,
-	TRANS_MOVE_PLACE, 
+	TRANS_MOVE_PLACE_INIT,
+	TRANS_MOVE_PLACE,
+	TRANS_MOVE_PLACE_HOLD,
+	TRANS_MOVE_DISCARD_INIT,
 	TRANS_MOVE_DISCARD,
+	TRANS_MOVE_DISCARD_HOLD,
+	TRANS_MOVE_SKIP_INIT,
 	TRANS_MOVE_SKIP,
 	TRANS_MOVE_QUIT,
 	TRANS_MOVE_COUNT
@@ -114,6 +118,16 @@ struct controls
 };
 
 
+struct cmd
+{
+	CmdType			type;
+	union {
+		struct coor		board;
+		int			rack;
+	} data;
+};
+
+
 struct gridWidget
 {
 	struct coor		index;
@@ -148,12 +162,22 @@ struct gui
 };
 
 
+struct transMove
+{
+	TransMoveType		type;
+	union {
+		int			rack;
+	} data;
+};
+
+
 struct env
 {
 	struct io		io;
 	struct game		game;
 	struct controls		controls;
 	struct gui		gui;
+	struct transMove	transMove;
 };
 
 

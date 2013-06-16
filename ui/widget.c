@@ -65,6 +65,27 @@ void mkBoardWidget(struct gridWidget *gw)
 }
 
 
+void boardWidgetDraw(struct io *io, struct gridWidget *bw, struct board *b, struct coor pos, struct coor dim)
+{
+	struct tile *t;
+	struct SDL_Surface *ts;
+	int y, x;
+	NOT(io);
+	NOT(bw);
+	NOT(b);
+
+	for (y = 0; y < BOARD_Y; y++) {
+		for (x = 0; x < BOARD_X; x++) {
+			t = &b->tile[y][x];
+			if (t->type != TILE_NONE) {
+				ts = io->tile[t->type][t->letter];
+				surfaceDraw(io->screen, ts, x * dim.x + pos.x, y * dim.y + pos.y);
+			}
+		}
+	}
+}
+
+
 void gridWidgetDraw(SDL_Surface *s, struct gridWidget *gw, struct coor pos, struct coor dim)
 {
 	int y, x;

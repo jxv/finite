@@ -10,7 +10,7 @@ void guiInit(struct gui *g)
 	mkRackWidget(&g->gameGui.rackWidget);
 	mkChoiceWidget(&g->gameGui.choiceWidget);
 	mkBoardWidget(&g->gameGui.boardWidget);
-	g->gameGui.boardWidget.button[0][0] = true;
+	g->gameGui.focus = GUI_FOCUS_BOARD;
 }
 
 
@@ -285,37 +285,47 @@ bool handleEvent(struct controls *c)
 }
 
 
-void updateBoardWidget(struct gameGui *gg, struct controls *c)
+void updateBoardWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 {
 	struct gridWidget *bw;
 
+	NOT(cmd);
 	NOT(gg);
 	NOT(c);
 	assert(gg->focus == GUI_FOCUS_BOARD);
 
 	bw = &gg->boardWidget;
+	cmd->type = CMD_INVALID;
 
 	if (c->x.type == KEYSTATE_PRESSED) {
-		gg->focus = GUI_FOCUS_RACK;
+		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
 	if (c->y.type == KEYSTATE_PRESSED) {
-		gg->focus = GUI_FOCUS_CHOICE;
+		cmd->type = CMD_FOCUS_NEXT;
+		return;
+	}
+	if (c->a.type == KEYSTATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
+		cmd->type = CMD_BOARD;
+		cmd->data.board = bw->index;
 		return;
 	}
 	if (c->up.type == KEYSTATE_PRESSED) {
 		bw->index.y += BOARD_Y;
 		bw->index.y--;
 		bw->index.y %= BOARD_Y;
+		return;
 	}
 	if (c->down.type == KEYSTATE_PRESSED) {
 		bw->index.y++;
 		bw->index.y %= BOARD_Y;
+		return;
 	}
 	if (c->left.type == KEYSTATE_PRESSED) {
 		bw->index.x += BOARD_X;
 		bw->index.x--;
 		bw->index.x %= BOARD_X;
+		return;
 	}
 	if (c->right.type == KEYSTATE_PRESSED) {
 		bw->index.x++;
@@ -324,29 +334,61 @@ void updateBoardWidget(struct gameGui *gg, struct controls *c)
 }
 
 
-void updateChoiceWidget(struct gameGui *gg, struct controls *c)
+void updateChoiceWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 {
 	struct gridWidget *cw;
 
+	NOT(cmd);
 	NOT(gg);
 	NOT(c);
 	assert(gg->focus == GUI_FOCUS_CHOICE);
 
 	cw = &gg->boardWidget;
 	cw->index.y = 0;
+	cmd->type = CMD_INVALID;
 
 	if (c->x.type == KEYSTATE_PRESSED) {
-		gg->focus = GUI_FOCUS_BOARD;
+		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
 	if (c->y.type == KEYSTATE_PRESSED) {
-		gg->focus = GUI_FOCUS_RACK;
+		cmd->type = CMD_FOCUS_NEXT;
 		return;
+	}
+	if (cw->button[cw->index.y][cw->index.x]) {
+		if (c->a.type == KEYSTATE_PRESSED) {
+			switch (cw->index.x) {
+			case CHOICE_RECALL: cmd->type = CMD_RECALL; break;
+			case CHOICE_PLAY: cmd->type = CMD_PLAY; break;
+			case CHOICE_MODE: /* fall through */
+			default: break;
+			}
+			return;
+		}
+		if (c->up.type == KEYSTATE_PRESSED) {
+			switch (cw->index.x) {
+			case CHOICE_MODE: cmd->type = CMD_MODE_UP; break;
+			case CHOICE_RECALL: /* fall through */
+			case CHOICE_PLAY:
+			default: break;
+			}
+			return;
+		}
+		if (c->down.type == KEYSTATE_PRESSED) {
+			switch (cw->index.x) {
+			case CHOICE_MODE: cmd->type = CMD_MODE_DOWN; break;
+			case CHOICE_RECALL: /* fall through */
+			case CHOICE_PLAY:
+			default: break;
+			}
+			return;
+		}
 	}
 	if (c->left.type == KEYSTATE_PRESSED) {
 		cw->index.x += CHOICE_COUNT; 
 		cw->index.x--;
 		cw->index.x %= CHOICE_COUNT;
+		return;
 	}
 	if (c->right.type == KEYSTATE_PRESSED) {
 		cw->index.x++;
@@ -355,33 +397,108 @@ void updateChoiceWidget(struct gameGui *gg, struct controls *c)
 }
 
 
-void updateRackWidget(struct gameGui *gg, struct controls *c)
+void updateRackWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 {
 	struct gridWidget *rw;
 
+	NOT(cmd);
 	NOT(gg);
 	NOT(c);
 	assert(gg->focus == GUI_FOCUS_RACK);
 	
 	rw = &gg->boardWidget;
 	rw->index.y = 0;
+	cmd->type = CMD_INVALID;
 
 	if (c->x.type == KEYSTATE_PRESSED) {
-		gg->focus = GUI_FOCUS_CHOICE;
+		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
 	if (c->y.type == KEYSTATE_PRESSED) {
-		gg->focus = GUI_FOCUS_BOARD;
+		cmd->type = CMD_FOCUS_NEXT;
+		return;
+	}
+	if (c->a.type == KEYSTATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
+		cmd->type = CMD_BOARD;
+		cmd->data.rack = rw->index.x;
 		return;
 	}
 	if (c->left.type == KEYSTATE_PRESSED) {
 		rw->index.x += RACK_SIZE; 
 		rw->index.x--;
 		rw->index.x %= RACK_SIZE;
+		return;
 	}
 	if (c->right.type == KEYSTATE_PRESSED) {
 		rw->index.x++;
 		rw->index.x %= RACK_SIZE;
+	}
+}
+
+
+void printCmd(struct cmd *c)
+{
+	NOT(c);
+
+	switch (c->type) {
+	case CMD_FOCUS_PREV: puts("[cmd:focus-prev]"); break;
+	case CMD_FOCUS_NEXT: puts("[cmd:focus-next]"); break;
+	case CMD_BOARD: printf("[cmd:board (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
+	case CMD_RACK: printf("[cmd:rack %d]\n", c->data.rack); break;
+	case CMD_RECALL: puts("[cmd:recall]"); break;
+	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
+	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
+	case CMD_PLAY: puts("[cmd:play]"); break;
+	case CMD_QUIT: puts("[cmd:quit]"); break;
+	case CMD_INVALID: /* fall through */
+	default: break;
+	}
+}
+
+
+void updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_PLACE_INIT);
+	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_RECALL);
+	assert(c->type != CMD_PLAY);
+
+	switch (c->type) {
+	case CMD_RACK: {
+	       tm->type = TRANS_MOVE_PLACE_HOLD;
+	       tm->data.rack = c->data.rack;
+	       break;
+	}
+	case CMD_MODE_UP: tm->type = TRANS_MOVE_SKIP_INIT; break;
+	case CMD_MODE_DOWN: tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	case CMD_QUIT: tm->type = TRANS_MOVE_QUIT; break;
+	case CMD_INVALID: /* fall through */
+	case CMD_FOCUS_PREV:
+	case CMD_FOCUS_NEXT:
+	default: break;
+	}
+}
+
+
+void updateTransMove(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE_INIT:  break;
+	case TRANS_MOVE_PLACE:  break;
+	case TRANS_MOVE_PLACE_HOLD:  break;
+	case TRANS_MOVE_DISCARD_INIT: break;
+	case TRANS_MOVE_DISCARD: break;
+	case TRANS_MOVE_DISCARD_HOLD: break;
+	case TRANS_MOVE_SKIP: break;
+	case TRANS_MOVE_QUIT: break;
+	case TRANS_MOVE_NONE: /* fall through */
+	case TRANS_MOVE_INVALID:
+	default: break;
 	}
 }
 
@@ -394,28 +511,39 @@ void update(struct env *e)
 	GUI + IO       -> View
 	GUI + Controls -> Controller
 	*/
+	struct cmd c;
+
 	NOT(e);
-	
+
 	switch (e->gui.gameGui.focus) {
-	case GUI_FOCUS_BOARD: {
-		updateBoardWidget(&e->gui.gameGui, &e->controls);
+	case GUI_FOCUS_BOARD: updateBoardWidget(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_CHOICE: updateChoiceWidget(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_RACK: updateRackWidget(&c, &e->gui.gameGui, &e->controls); break;
+	default: break;
+	}
+
+	switch (c.type) {
+	case CMD_FOCUS_PREV: {
+		e->gui.gameGui.focus += GUI_FOCUS_COUNT;
+		e->gui.gameGui.focus--;
+		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
 		break;
 	}
-	case GUI_FOCUS_CHOICE: {
-		updateChoiceWidget(&e->gui.gameGui, &e->controls);
-		break;
-	}
-	case GUI_FOCUS_RACK: {
-		updateRackWidget(&e->gui.gameGui, &e->controls);
+	case CMD_FOCUS_NEXT: {
+		e->gui.gameGui.focus++;
+		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
 		break;
 	}
 	default: break;
 	}
 
+	printCmd(&c);
+
+	updateTransMove(&e->transMove, &c);
 }
 
 
-void guiDraw(struct io *io, struct gui *g)
+void guiDraw(struct io *io, struct gui *g, struct game *gm)
 {
 	struct coor pos;
 	struct coor dim;
@@ -428,6 +556,7 @@ void guiDraw(struct io *io, struct gui *g)
 	pos.x = 106;
 	pos.y = 5;
 	gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim);
+	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->board, pos, dim);
 	
 	pos.x = 162;
 	pos.y = 222;
@@ -450,7 +579,7 @@ void draw(struct env *e)
 	surfaceDraw(e->io.screen, e->io.discard, 119, 220);
 	surfaceDraw(e->io.screen, e->io.discard, 119, 220);
 	surfaceDraw(e->io.screen, e->io.play, 133, 220);
-	guiDraw(&e->io, &e->gui); 
+	guiDraw(&e->io, &e->gui, &e->game); 
 	SDL_Flip(e->io.screen);
 }
 
@@ -496,7 +625,6 @@ int gui()
 	int exit_status = EXIT_FAILURE;
 	struct env e;
 	if (init(&e)) {
-		adjustTest(&e.game);
 		exec(&e);
 		exit_status = EXIT_SUCCESS;
 	}
