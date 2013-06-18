@@ -471,14 +471,86 @@ void updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
 	       tm->data.rack = c->data.rack;
 	       break;
 	}
-	case CMD_MODE_UP: tm->type = TRANS_MOVE_SKIP_INIT; break;
-	case CMD_MODE_DOWN: tm->type = TRANS_MOVE_DISCARD_INIT; break;
-	case CMD_QUIT: tm->type = TRANS_MOVE_QUIT; break;
+	case CMD_MODE_UP:	tm->type = TRANS_MOVE_SKIP_INIT; break;
+	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	case CMD_QUIT:		tm->type = TRANS_MOVE_QUIT; break;
 	case CMD_INVALID: /* fall through */
-	case CMD_FOCUS_PREV:
-	case CMD_FOCUS_NEXT:
 	default: break;
 	}
+}
+
+
+void updateTransMovePlace(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_PLACE);
+	assert(c->type != CMD_MODE_UP);
+	assert(c->type != CMD_MODE_DOWN);
+}
+
+
+void updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_PLACE_HOLD);
+	assert(c->type != CMD_MODE_UP);
+	assert(c->type != CMD_MODE_DOWN);
+	
+	switch (c->type) {
+	case CMD_BOARD:		tm->type = TRANS_MOVE_PLACE; break;
+	case CMD_RACK:		tm->type = TRANS_MOVE_PLACE; break;
+	case CMD_RECALL:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	default: break;
+	}
+	
+}
+
+
+void updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_DISCARD_INIT);
+	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_RECALL);
+	assert(c->type != CMD_PLAY);
+	
+}
+
+
+void updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_DISCARD);
+	assert(c->type != CMD_BOARD);
+}
+
+
+void updateTransMoveDiscardHold(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_DISCARD_HOLD);
+	assert(c->type != CMD_BOARD);
+}
+
+
+void updateTransMoveSkip(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_SKIP);
+}
+
+
+void updateTransMoveQuit(struct transMove *tm, struct cmd *c)
+{
+	NOT(tm);
+	NOT(c);
+	assert(tm->type == TRANS_MOVE_QUIT);
 }
 
 
@@ -488,14 +560,14 @@ void updateTransMove(struct transMove *tm, struct cmd *c)
 	NOT(c);
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE_INIT:  break;
-	case TRANS_MOVE_PLACE:  break;
-	case TRANS_MOVE_PLACE_HOLD:  break;
-	case TRANS_MOVE_DISCARD_INIT: break;
-	case TRANS_MOVE_DISCARD: break;
-	case TRANS_MOVE_DISCARD_HOLD: break;
-	case TRANS_MOVE_SKIP: break;
-	case TRANS_MOVE_QUIT: break;
+	case TRANS_MOVE_PLACE_INIT:	updateTransMovePlaceInit(tm, c); break;
+	case TRANS_MOVE_PLACE: 		updateTransMovePlace(tm, c); break;
+	case TRANS_MOVE_PLACE_HOLD:	updateTransMovePlaceHold(tm, c); break;
+	case TRANS_MOVE_DISCARD_INIT:	updateTransMoveDiscardInit(tm, c); break;
+	case TRANS_MOVE_DISCARD:	updateTransMoveDiscard(tm, c); break;
+	case TRANS_MOVE_DISCARD_HOLD:	updateTransMoveDiscardHold(tm, c); break;
+	case TRANS_MOVE_SKIP:		updateTransMoveSkip(tm, c); break;
+	case TRANS_MOVE_QUIT:		updateTransMoveQuit(tm, c); break;
 	case TRANS_MOVE_NONE: /* fall through */
 	case TRANS_MOVE_INVALID:
 	default: break;
