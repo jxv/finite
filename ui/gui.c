@@ -285,7 +285,7 @@ bool handleEvent(struct controls *c)
 }
 
 
-void updateBoardWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
+void boardWidgetControls(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 {
 	struct gridWidget *bw;
 
@@ -334,7 +334,7 @@ void updateBoardWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 }
 
 
-void updateChoiceWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
+void choiceWidgetControls(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 {
 	struct gridWidget *cw;
 
@@ -397,7 +397,7 @@ void updateChoiceWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 }
 
 
-void updateRackWidget(struct cmd *cmd, struct gameGui *gg, struct controls *c)
+void rackWidgetControls(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 {
 	struct gridWidget *rw;
 
@@ -441,16 +441,36 @@ void printCmd(struct cmd *c)
 	NOT(c);
 
 	switch (c->type) {
-	case CMD_FOCUS_PREV: puts("[cmd:focus-prev]"); break;
-	case CMD_FOCUS_NEXT: puts("[cmd:focus-next]"); break;
-	case CMD_BOARD: printf("[cmd:board (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
-	case CMD_RACK: printf("[cmd:rack %d]\n", c->data.rack); break;
-	case CMD_RECALL: puts("[cmd:recall]"); break;
-	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
-	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
-	case CMD_PLAY: puts("[cmd:play]"); break;
-	case CMD_QUIT: puts("[cmd:quit]"); break;
-	case CMD_INVALID: /* fall through */
+	case CMD_FOCUS_PREV:	puts("[cmd:focus-prev]"); break;
+	case CMD_FOCUS_NEXT:	puts("[cmd:focus-next]"); break;
+	case CMD_BOARD:		printf("[cmd:board (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
+	case CMD_RACK:		printf("[cmd:rack %d]\n", c->data.rack); break;
+	case CMD_RECALL:	puts("[cmd:recall]"); break;
+	case CMD_MODE_UP:	puts("[cmd:mode-up]"); break;
+	case CMD_MODE_DOWN:	puts("[cmd:mode-down]"); break;
+	case CMD_PLAY:		puts("[cmd:play]"); break;
+	case CMD_QUIT:		puts("[cmd:quit]"); break;
+	/*case CMD_INVALID:	puts("[cmd:invalid]"); break; <- noisy */
+	default: break;
+	}
+}
+
+
+void printTransMove(struct transMove *tm)
+{
+	NOT(tm);
+
+	switch (tm->type) {
+	case TRANS_MOVE_NONE:		puts("[trans-move:none]"); break;
+	case TRANS_MOVE_PLACE_INIT:	puts("[trans-move:none]"); break;
+	case TRANS_MOVE_PLACE:		puts("[trans-move:place]"); break;
+	case TRANS_MOVE_PLACE_HOLD:	puts("[trans-move:place-hold]"); break;
+	case TRANS_MOVE_DISCARD_INIT:	puts("[trans-move:discard-init]"); break;
+	case TRANS_MOVE_DISCARD:	puts("[trans-move:discard]"); break;
+	case TRANS_MOVE_DISCARD_HOLD:	puts("[trans-move:discard-hold]"); break;
+	case TRANS_MOVE_SKIP:		puts("[trans-move:skip]"); break;
+	case TRANS_MOVE_QUIT:		puts("[trans-move:quit]"); break;
+	case TRANS_MOVE_INVALID:	puts("[trans-move:invalid]"); break;
 	default: break;
 	}
 }
@@ -464,6 +484,7 @@ void updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_BOARD);
 	assert(c->type != CMD_RECALL);
 	assert(c->type != CMD_PLAY);
+	assert(c->type != CMD_QUIT);
 
 	switch (c->type) {
 	case CMD_RACK: {
@@ -473,7 +494,6 @@ void updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
 	}
 	case CMD_MODE_UP:	tm->type = TRANS_MOVE_SKIP_INIT; break;
 	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
-	case CMD_QUIT:		tm->type = TRANS_MOVE_QUIT; break;
 	case CMD_INVALID: /* fall through */
 	default: break;
 	}
@@ -487,6 +507,14 @@ void updateTransMovePlace(struct transMove *tm, struct cmd *c)
 	assert(tm->type == TRANS_MOVE_PLACE);
 	assert(c->type != CMD_MODE_UP);
 	assert(c->type != CMD_MODE_DOWN);
+	assert(c->type != CMD_QUIT);
+	
+	switch (c->type) {
+	case CMD_BOARD:		tm->type = TRANS_MOVE_PLACE_HOLD; break;
+	case CMD_RACK:		tm->type = TRANS_MOVE_PLACE; /* or swap */ break;
+	case CMD_RECALL:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	default: break;
+	}
 }
 
 
@@ -497,6 +525,8 @@ void updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
 	assert(tm->type == TRANS_MOVE_PLACE_HOLD);
 	assert(c->type != CMD_MODE_UP);
 	assert(c->type != CMD_MODE_DOWN);
+	assert(c->type != CMD_PLAY);
+	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
 	case CMD_BOARD:		tm->type = TRANS_MOVE_PLACE; break;
@@ -516,7 +546,14 @@ void updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_BOARD);
 	assert(c->type != CMD_RECALL);
 	assert(c->type != CMD_PLAY);
+	assert(c->type != CMD_QUIT);
 	
+	switch (c->type) {
+	case CMD_RACK:		tm->type = TRANS_MOVE_DISCARD_HOLD; break;
+	case CMD_MODE_UP:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_SKIP; break;
+	default: break;
+	}
 }
 
 
@@ -526,6 +563,15 @@ void updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_DISCARD);
 	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_MODE_UP);
+	assert(c->type != CMD_MODE_DOWN);
+	assert(c->type != CMD_QUIT);
+	
+	switch (c->type) {
+	case CMD_RACK:		tm->type = TRANS_MOVE_DISCARD_HOLD; break;
+	case CMD_RECALL:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	default: break;
+	}
 }
 
 
@@ -535,6 +581,15 @@ void updateTransMoveDiscardHold(struct transMove *tm, struct cmd *c)
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_DISCARD_HOLD);
 	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_MODE_UP);
+	assert(c->type != CMD_MODE_DOWN);
+	assert(c->type != CMD_PLAY);
+	
+	switch (c->type) {
+	case CMD_RACK:		tm->type = TRANS_MOVE_DISCARD; /* or swap */ break;
+	case CMD_RECALL:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	default: break;
+	}
 }
 
 
@@ -543,14 +598,69 @@ void updateTransMoveSkip(struct transMove *tm, struct cmd *c)
 	NOT(tm);
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_SKIP);
+	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_RACK);
+	assert(c->type != CMD_RECALL);
+	
+	switch (c->type) {
+	case CMD_MODE_UP:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	default: break;
+	}
 }
 
 
-void updateTransMoveQuit(struct transMove *tm, struct cmd *c)
+void updateBoardWidget(struct gridWidget *bw, struct transMove *tm)
 {
+	NOT(bw);
 	NOT(tm);
-	NOT(c);
-	assert(tm->type == TRANS_MOVE_QUIT);
+	
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE_INIT:
+	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_HOLD:
+	case TRANS_MOVE_DISCARD_INIT:
+	case TRANS_MOVE_DISCARD:
+	case TRANS_MOVE_DISCARD_HOLD:
+	case TRANS_MOVE_SKIP:
+	default: break;
+	}
+}
+
+
+void updateRackWidget(struct gridWidget *rw, struct transMove *tm)
+{
+	NOT(rw);
+	NOT(tm);
+	
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE_INIT:
+	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_HOLD:
+	case TRANS_MOVE_DISCARD_INIT:
+	case TRANS_MOVE_DISCARD:
+	case TRANS_MOVE_DISCARD_HOLD:
+	case TRANS_MOVE_SKIP:
+	default: break;
+	}
+}
+
+
+void updateChoiceWidget(struct gridWidget *cw, struct transMove *tm)
+{
+	NOT(cw);
+	NOT(tm);
+	
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE_INIT:
+	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_HOLD:
+	case TRANS_MOVE_DISCARD_INIT:
+	case TRANS_MOVE_DISCARD:
+	case TRANS_MOVE_DISCARD_HOLD:
+	case TRANS_MOVE_SKIP:
+	default: break;
+	}
 }
 
 
@@ -567,8 +677,8 @@ void updateTransMove(struct transMove *tm, struct cmd *c)
 	case TRANS_MOVE_DISCARD:	updateTransMoveDiscard(tm, c); break;
 	case TRANS_MOVE_DISCARD_HOLD:	updateTransMoveDiscardHold(tm, c); break;
 	case TRANS_MOVE_SKIP:		updateTransMoveSkip(tm, c); break;
-	case TRANS_MOVE_QUIT:		updateTransMoveQuit(tm, c); break;
-	case TRANS_MOVE_NONE: /* fall through */
+	case TRANS_MOVE_QUIT: /* fall through */
+	case TRANS_MOVE_NONE:
 	case TRANS_MOVE_INVALID:
 	default: break;
 	}
@@ -577,20 +687,14 @@ void updateTransMove(struct transMove *tm, struct cmd *c)
 
 void update(struct env *e)
 {
-	/*
-	Follows a MVC pattern:
-	Game           -> Model
-	GUI + IO       -> View
-	GUI + Controls -> Controller
-	*/
 	struct cmd c;
 
 	NOT(e);
 
 	switch (e->gui.gameGui.focus) {
-	case GUI_FOCUS_BOARD: updateBoardWidget(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_CHOICE: updateChoiceWidget(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_RACK: updateRackWidget(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_BOARD:	boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_CHOICE:	choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_RACK:	rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
 	default: break;
 	}
 
@@ -612,6 +716,10 @@ void update(struct env *e)
 	printCmd(&c);
 
 	updateTransMove(&e->transMove, &c);
+	
+	updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
+	updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+	updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
 }
 
 

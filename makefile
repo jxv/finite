@@ -16,6 +16,7 @@ CFLAG+=-Werror
 CFLAG+=-Wall
 CFLAG+=-pedantic
 CFLAG+=-O3
+CFLAG+=-DDEBUG
 
 LIB=-lc
 LIB+=`sdl-config --libs`
