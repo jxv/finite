@@ -21,22 +21,22 @@ typedef enum
 
 typedef enum
 {
-	FOCUS_INVALID = -1,
-	FOCUS_BOARD = 0,
-	FOCUS_RACK,
-	FOCUS_CHOICE,
-	FOCUS_COUNT
-} FocusType;
-
-
-typedef enum
-{
 	CHOICE_INVALID = -1,
 	CHOICE_RECALL = 0,
 	CHOICE_MODE,
 	CHOICE_PLAY,
 	CHOICE_COUNT
 } ChoiceType;
+
+
+typedef enum
+{
+	MODE_INVALID = -1,
+	MODE_PLACE = 0,
+	MODE_DISCARD,
+	MODE_SKIP,
+	MODE_COUNT
+} ModeType;
 
 
 typedef enum
@@ -65,7 +65,6 @@ typedef enum
 	TRANS_MOVE_DISCARD_INIT,
 	TRANS_MOVE_DISCARD,
 	TRANS_MOVE_DISCARD_HOLD,
-	TRANS_MOVE_SKIP_INIT,
 	TRANS_MOVE_SKIP,
 	TRANS_MOVE_QUIT,
 	TRANS_MOVE_COUNT
@@ -88,11 +87,17 @@ struct io
 	SDL_Surface		*wild;
 	SDL_Surface		*lockon;
 	SDL_Surface		*recall;
+	SDL_Surface		*recallDisable;
 	SDL_Surface		*mode;
+	SDL_Surface		*modeDisable;
 	SDL_Surface		*place;
+	SDL_Surface		*placeDisable;
 	SDL_Surface		*discard;
+	SDL_Surface		*discardDisable;
 	SDL_Surface		*skip;
+	SDL_Surface		*skipDisable;
 	SDL_Surface		*play;
+	SDL_Surface		*playDisable;
 	struct font		white_font;
 	struct font		black_font;
 };
@@ -140,8 +145,8 @@ struct gridWidget
 typedef enum
 {
 	GUI_FOCUS_INVALID = -1,
-	GUI_FOCUS_RACK = 0,
-	GUI_FOCUS_BOARD,
+	GUI_FOCUS_BOARD = 0,
+	GUI_FOCUS_RACK,
 	GUI_FOCUS_CHOICE,
 	GUI_FOCUS_COUNT
 } GuiFocusType;
@@ -165,6 +170,7 @@ struct gui
 struct transMove
 {
 	TransMoveType		type;
+	struct tile		tile[RACK_SIZE];
 	union {
 		int			rack;
 	} data;

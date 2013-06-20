@@ -19,6 +19,7 @@ CFLAG+=-O3
 CFLAG+=-DDEBUG
 
 LIB=-lc
+LIB=-lpthread
 LIB+=`sdl-config --libs`
 LIB+=-lSDL_image
 
