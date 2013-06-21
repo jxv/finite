@@ -2,10 +2,8 @@
 #include "term.h"
 #include "gui.h"
 
-
-int main()
+int
+main()
 {
 	return gui();
 }
-
-

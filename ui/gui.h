@@ -167,12 +167,26 @@ struct gui
 };
 
 
+struct moveModePlace
+{
+	int deleteMe;
+};
+
+
+struct moveModeDiscard
+{
+	int i;
+};
+
+
 struct transMove
 {
 	TransMoveType		type;
 	struct tile		tile[RACK_SIZE];
 	union {
 		int			rack;
+		struct moveModePlace	place;
+		struct moveModeDiscard	discard;
 	} data;
 };
 

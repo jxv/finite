@@ -183,7 +183,7 @@ bool init(struct env *e)
 	playerInit(&e->game.player[0], &e->game.bag);
 	controlsInit(&e->controls);
 	guiInit(&e->gui);
-	e->transMove.type = TRANS_MOVE_PLACE_INIT;
+	e->transMove.type = TRANS_MOVE_INVALID;
 	e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
 	e->gui.gameGui.choiceWidget.index.x = 1;
 	return true;
@@ -505,8 +505,14 @@ void update(struct env *e)
 {
 	struct cmd c;
 	int i;
+	TransMoveType tmt;
 
 	NOT(e);
+
+	tmt = e->transMove.type;
+	if (e->transMove.type == TRANS_MOVE_INVALID) {
+		e->transMove.type = TRANS_MOVE_PLACE_INIT;
+	}
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		e->transMove.tile[i] = e->game.player[0].tile[i];
@@ -536,17 +542,14 @@ void update(struct env *e)
 
 	printCmd(&c);
 
-	{
-	TransMoveType tmt;
-	tmt = e->transMove.type;
 	updateTransMove(&e->transMove, &c);
-	if (tmt != e->transMove.type)
-		printTransMove(&e->transMove);
-	}
 
-	updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
-	updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-	updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	if (tmt != e->transMove.type) {
+		printTransMove(&e->transMove);
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
+		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	}
 }
 
 
@@ -593,17 +596,17 @@ void guiDraw(struct io *io, struct gui *g, struct game *gm, struct transMove *tm
 
 	pos.x = 106;
 	pos.y = 5;
-	/*gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim);*/
+	gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim);
 	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->board, pos, dim);
 	
 	pos.x = 162;
 	pos.y = 222;
-	/*gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim);*/
+	gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim);
 	rackWidgetDraw(io, tm, &g->gameGui.rackWidget, pos, dim);
 	
 	pos.x = 106;
 	pos.y = 222;
-	/*gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim);*/
+	gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim);
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
 	guiDrawLockon(io, &g->gameGui);

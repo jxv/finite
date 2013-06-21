@@ -1,13 +1,13 @@
 #include "widget.h"
 
 
-bool validRackId(int id)
+bool validRackIdx(int id)
 {
 	return id >= 0 && id < RACK_SIZE;
 }
 
 
-bool validGridId(struct coor c)
+bool validGridIdx(struct coor c)
 {
 	return c.x >= 0 && c.y >= 0 && c.x < BOARD_X && c.y < BOARD_Y;
 }
@@ -218,17 +218,44 @@ void rackWidgetControls(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 
 void updateBoardWidget(struct gridWidget *bw, struct transMove *tm)
 {
+	struct coor idx;
+
 	NOT(bw);
 	NOT(tm);
 	
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE_INIT:
-	case TRANS_MOVE_PLACE:
-	case TRANS_MOVE_PLACE_HOLD:
+	case TRANS_MOVE_PLACE_INIT: {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				bw->button[idx.y][idx.x] = false;
+			}
+		}
+		break;
+	}
+	case TRANS_MOVE_PLACE: {
+		break;
+	}
+	case TRANS_MOVE_PLACE_HOLD: {
+		break;
+	}
 	case TRANS_MOVE_DISCARD_INIT:
 	case TRANS_MOVE_DISCARD:
-	case TRANS_MOVE_DISCARD_HOLD:
-	case TRANS_MOVE_SKIP:
+	case TRANS_MOVE_DISCARD_HOLD: {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				bw->button[idx.y][idx.x] = false;
+			}
+		}
+		break;
+	}
+	case TRANS_MOVE_SKIP: {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				bw->button[idx.y][idx.x] = false;
+			}
+		}
+		break;
+	}
 	default: break;
 	}
 }
