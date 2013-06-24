@@ -294,9 +294,9 @@ bool handleEvent(struct controls *c)
 		default: break;
 		}
 	}
-	keystateUpdate(&c->up,    ks[SDLK_UP]);
-	keystateUpdate(&c->down,  ks[SDLK_DOWN]);
-	keystateUpdate(&c->left,  ks[SDLK_LEFT]);
+	keystateUpdate(&c->up, ks[SDLK_UP]);
+	keystateUpdate(&c->down, ks[SDLK_DOWN]);
+	keystateUpdate(&c->left, ks[SDLK_LEFT]);
 	keystateUpdate(&c->right, ks[SDLK_RIGHT]);
 	keystateUpdate(&c->a, ks[SDLK_a]);
 	keystateUpdate(&c->b, ks[SDLK_b]);
@@ -311,16 +311,16 @@ void printCmd(struct cmd *c)
 	NOT(c);
 
 	switch (c->type) {
-	case CMD_FOCUS_PREV:	puts("[cmd:focus-prev]"); break;
-	case CMD_FOCUS_NEXT:	puts("[cmd:focus-next]"); break;
-	case CMD_BOARD:		printf("[cmd:board (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
-	case CMD_RACK:		printf("[cmd:rack %d]\n", c->data.rack); break;
-	case CMD_RECALL:	puts("[cmd:recall]"); break;
-	case CMD_MODE_UP:	puts("[cmd:mode-up]"); break;
-	case CMD_MODE_DOWN:	puts("[cmd:mode-down]"); break;
-	case CMD_PLAY:		puts("[cmd:play]"); break;
-	case CMD_QUIT:		puts("[cmd:quit]"); break;
-	/*case CMD_INVALID:	puts("[cmd:invalid]"); break; <- noisy */
+	case CMD_FOCUS_PREV: puts("[cmd:focus-prev]"); break;
+	case CMD_FOCUS_NEXT: puts("[cmd:focus-next]"); break;
+	case CMD_BOARD: printf("[cmd:board (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
+	case CMD_RACK: printf("[cmd:rack %d]\n", c->data.rack); break;
+	case CMD_RECALL: puts("[cmd:recall]"); break;
+	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
+	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
+	case CMD_PLAY: puts("[cmd:play]"); break;
+	case CMD_QUIT: puts("[cmd:quit]"); break;
+	/*case CMD_INVALID:	puts("[cmd:invalid]"); break; // very noisy */
 	default: break;
 	}
 }
@@ -331,22 +331,21 @@ void printTransMove(struct transMove *tm)
 	NOT(tm);
 
 	switch (tm->type) {
-	case TRANS_MOVE_NONE:		puts("[trans-move:none]"); break;
-	case TRANS_MOVE_PLACE_INIT:	puts("[trans-move:place-init]"); break;
-	case TRANS_MOVE_PLACE:		puts("[trans-move:place]"); break;
-	case TRANS_MOVE_PLACE_HOLD:	puts("[trans-move:place-hold]"); break;
-	case TRANS_MOVE_DISCARD_INIT:	puts("[trans-move:discard-init]"); break;
-	case TRANS_MOVE_DISCARD:	puts("[trans-move:discard]"); break;
-	case TRANS_MOVE_DISCARD_HOLD:	puts("[trans-move:discard-hold]"); break;
-	case TRANS_MOVE_SKIP:		puts("[trans-move:skip]"); break;
-	case TRANS_MOVE_QUIT:		puts("[trans-move:quit]"); break;
-	case TRANS_MOVE_INVALID:	puts("[trans-move:invalid]"); break;
+	case TRANS_MOVE_NONE: puts("[trans-move:none]"); break;
+	case TRANS_MOVE_PLACE_INIT: puts("[trans-move:place-init]"); break;
+	case TRANS_MOVE_PLACE: puts("[trans-move:place]"); break;
+	case TRANS_MOVE_PLACE_HOLD: puts("[trans-move:place-hold]"); break;
+	case TRANS_MOVE_DISCARD_INIT: puts("[trans-move:discard-init]"); break;
+	case TRANS_MOVE_DISCARD: puts("[trans-move:discard]"); break;
+	case TRANS_MOVE_SKIP: puts("[trans-move:skip]"); break;
+	case TRANS_MOVE_QUIT: puts("[trans-move:quit]"); break;
+	case TRANS_MOVE_INVALID: puts("[trans-move:invalid]"); break;
 	default: break;
 	}
 }
 
 
-void updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
+bool updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -358,19 +357,29 @@ void updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
 
 	switch (c->type) {
 	case CMD_RACK: {
-	       tm->type = TRANS_MOVE_PLACE_HOLD;
-	       tm->data.rack = c->data.rack;
-	       break;
+		if (tm->adjust.data.tile[c->data.rack].type != TILE_NONE) {
+			tm->data.place.idx = c->data.rack;
+			tm->type = TRANS_MOVE_PLACE_HOLD;
+			return true;
+		}
+		break;
 	}
-	case CMD_MODE_UP:	tm->type = TRANS_MOVE_SKIP; break;
-	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	case CMD_MODE_UP: {
+		tm->type = TRANS_MOVE_SKIP;
+		return true;
+	}
+	case CMD_MODE_DOWN: {
+		tm->type = TRANS_MOVE_DISCARD_INIT;
+		return true;
+	}
 	case CMD_INVALID: /* fall through */
 	default: break;
 	}
+	return false;
 }
 
 
-void updateTransMovePlace(struct transMove *tm, struct cmd *c)
+bool updateTransMovePlace(struct transMove *tm, struct cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -380,16 +389,29 @@ void updateTransMovePlace(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
-	case CMD_BOARD:		tm->type = TRANS_MOVE_PLACE_HOLD; break;
-	case CMD_RACK:		tm->type = TRANS_MOVE_PLACE; /* or swap */ break;
-	case CMD_RECALL:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	case CMD_BOARD:	tm->type = TRANS_MOVE_PLACE_HOLD; break;
+	case CMD_RACK: {
+		if (tm->adjust.data.tile[c->data.rack].type != TILE_NONE) {
+			tm->data.place.idx = c->data.rack;
+			tm->type = TRANS_MOVE_PLACE_HOLD;
+			return true;
+		}
+		break;
+	}
+	case CMD_RECALL: {
+		tm->type = TRANS_MOVE_PLACE_INIT;
+		return true;
+	}
 	default: break;
 	}
+	return false;
 }
 
 
-void updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
+bool updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
 {
+	TileType t;
+
 	NOT(tm);
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_PLACE_HOLD);
@@ -399,16 +421,40 @@ void updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
-	case CMD_BOARD:		tm->type = TRANS_MOVE_PLACE; break;
-	case CMD_RACK:		tm->type = TRANS_MOVE_PLACE; break;
-	case CMD_RECALL:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	case CMD_BOARD:	{
+		tm->type = TRANS_MOVE_PLACE;
+		break;
+	}
+	case CMD_RACK: {
+		assert(c->data.rack >= 0);
+		assert(c->data.rack < RACK_SIZE);
+		t = tm->adjust.data.tile[c->data.rack].type;
+		if (t == TILE_NONE) {
+			assert(tm->data.place.num >= 0);
+			assert(tm->data.place.num < RACK_SIZE);
+			if (tm->data.place.num == 0) {
+				tm->data.place.num = TRANS_MOVE_PLACE_INIT;
+			} else {
+				tm->data.place.num = TRANS_MOVE_PLACE;
+			}
+		} else {
+			assert(t == TILE_LETTER || t == TILE_WILD);
+			adjustSwap(&tm->adjust, tm->data.place.idx, c->data.rack);
+			tm->data.place.idx = c->data.rack;
+		}
+		return true;
+	}
+	case CMD_RECALL: {
+		tm->type = TRANS_MOVE_PLACE_INIT;
+		return true;
+	}
 	default: break;
 	}
-	
+	return false;
 }
 
 
-void updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
+bool updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -419,15 +465,16 @@ void updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
-	case CMD_RACK:		tm->type = TRANS_MOVE_DISCARD_HOLD; break;
-	case CMD_MODE_UP:	tm->type = TRANS_MOVE_PLACE_INIT; break;
-	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_SKIP; break;
+	case CMD_RACK: tm->type = TRANS_MOVE_DISCARD; break;
+	case CMD_MODE_UP: tm->type = TRANS_MOVE_PLACE_INIT; break;
+	case CMD_MODE_DOWN: tm->type = TRANS_MOVE_SKIP; break;
 	default: break;
 	}
+	return false;
 }
 
 
-void updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
+bool updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -438,32 +485,21 @@ void updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
-	case CMD_RACK:		tm->type = TRANS_MOVE_DISCARD_HOLD; break;
-	case CMD_RECALL:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
+	case CMD_RACK: {
+		tm->type = TRANS_MOVE_DISCARD;
+		break;
+	}
+	case CMD_RECALL: {
+		tm->type = TRANS_MOVE_DISCARD_INIT;
+		return true;
+	}
 	default: break;
 	}
+	return false;
 }
 
 
-void updateTransMoveDiscardHold(struct transMove *tm, struct cmd *c)
-{
-	NOT(tm);
-	NOT(c);
-	assert(tm->type == TRANS_MOVE_DISCARD_HOLD);
-	assert(c->type != CMD_BOARD);
-	assert(c->type != CMD_MODE_UP);
-	assert(c->type != CMD_MODE_DOWN);
-	assert(c->type != CMD_PLAY);
-	
-	switch (c->type) {
-	case CMD_RACK:		tm->type = TRANS_MOVE_DISCARD; /* or swap */ break;
-	case CMD_RECALL:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
-	default: break;
-	}
-}
-
-
-void updateTransMoveSkip(struct transMove *tm, struct cmd *c)
+bool updateTransMoveSkip(struct transMove *tm, struct cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -473,55 +509,62 @@ void updateTransMoveSkip(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_RECALL);
 	
 	switch (c->type) {
-	case CMD_MODE_UP:	tm->type = TRANS_MOVE_DISCARD_INIT; break;
-	case CMD_MODE_DOWN:	tm->type = TRANS_MOVE_PLACE_INIT; break;
+	case CMD_MODE_UP: {
+		tm->type = TRANS_MOVE_DISCARD_INIT;
+		return true;
+	}
+	case CMD_MODE_DOWN: {
+		tm->type = TRANS_MOVE_PLACE_INIT;
+		return true;
+	}
 	default: break;
 	}
+	return false;
 }
 
 
-void updateTransMove(struct transMove *tm, struct cmd *c)
+bool updateTransMove(struct transMove *tm, struct cmd *c)
 {
 	NOT(tm);
 	NOT(c);
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE_INIT:	updateTransMovePlaceInit(tm, c); break;
-	case TRANS_MOVE_PLACE: 		updateTransMovePlace(tm, c); break;
-	case TRANS_MOVE_PLACE_HOLD:	updateTransMovePlaceHold(tm, c); break;
-	case TRANS_MOVE_DISCARD_INIT:	updateTransMoveDiscardInit(tm, c); break;
-	case TRANS_MOVE_DISCARD:	updateTransMoveDiscard(tm, c); break;
-	case TRANS_MOVE_DISCARD_HOLD:	updateTransMoveDiscardHold(tm, c); break;
-	case TRANS_MOVE_SKIP:		updateTransMoveSkip(tm, c); break;
+	case TRANS_MOVE_PLACE_INIT: return updateTransMovePlaceInit(tm, c);
+	case TRANS_MOVE_PLACE: return updateTransMovePlace(tm, c);
+	case TRANS_MOVE_PLACE_HOLD: return updateTransMovePlaceHold(tm, c);
+	case TRANS_MOVE_DISCARD_INIT: return updateTransMoveDiscardInit(tm, c);
+	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c);
+	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c);
 	case TRANS_MOVE_QUIT: /* fall through */
 	case TRANS_MOVE_NONE:
 	case TRANS_MOVE_INVALID:
 	default: break;
 	}
+	return false;
 }
 
 
 void update(struct env *e)
 {
 	struct cmd c;
-	int i;
-	TransMoveType tmt;
 
 	NOT(e);
 
-	tmt = e->transMove.type;
 	if (e->transMove.type == TRANS_MOVE_INVALID) {
+		e->transMove.playerIdx = 0;
 		e->transMove.type = TRANS_MOVE_PLACE_INIT;
-	}
-
-	for (i = 0; i < RACK_SIZE; i++) {
-		e->transMove.tile[i] = e->game.player[0].tile[i];
+		mkAdjust(&e->transMove.adjust, &e->game.player[0]);
+		c.type = CMD_INVALID;
+		updateTransMove(&e->transMove, &c);
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
+		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
 	}
 
 	switch (e->gui.gameGui.focus) {
-	case GUI_FOCUS_BOARD:	boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_CHOICE:	choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_RACK:	rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_BOARD: boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_CHOICE: choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_RACK: rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
 	default: break;
 	}
 
@@ -542,9 +585,7 @@ void update(struct env *e)
 
 	printCmd(&c);
 
-	updateTransMove(&e->transMove, &c);
-
-	if (tmt != e->transMove.type) {
+	if (updateTransMove(&e->transMove, &c)) {
 		printTransMove(&e->transMove);
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
@@ -602,7 +643,7 @@ void guiDraw(struct io *io, struct gui *g, struct game *gm, struct transMove *tm
 	pos.x = 162;
 	pos.y = 222;
 	gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim);
-	rackWidgetDraw(io, tm, &g->gameGui.rackWidget, pos, dim);
+	rackWidgetDraw(io, tm, &g->gameGui.rackWidget, pos, dim, &gm->player[tm->playerIdx]);
 	
 	pos.x = 106;
 	pos.y = 222;
@@ -626,9 +667,13 @@ void draw(struct env *e)
 
 void exec(struct env *e)
 {
-	int st, q = 0;
-	e->game.turn = 0; 
+	int st;
+	bool q;
+
 	NOT(e);
+
+	e->game.turn = 0; 
+	q = false;
 
 	do {
 		st = SDL_GetTicks();
@@ -642,17 +687,12 @@ void exec(struct env *e)
 
 void adjustTest(struct game *g)
 {
-	int i;
 	struct adjust a;
 
-	a.type = ADJUST_RACK;
-	for (i = 0; i < RACK_SIZE; i++) {
-		a.data.rack[i] = i;
-	}
+	mkAdjust(&a, &g->player[0]);
 
-	switch (fdAdjustErr(&a, g)) {
+	switch (fdAdjustErr(&a, &g->player[0])) {
 	case ADJUST_ERR_RACK_OUT_OF_RANGE: puts("[adjust err: out of range]"); break;
-	case ADJUST_ERR_RACK_INVALID_TILE: puts("[adjust err: selected tile is invalid]"); break;
 	case ADJUST_ERR_RACK_DUPLICATE_INDEX: puts("[adjust err: duplicate tile swap]"); break;
 	case ADJUST_ERR_NONE: puts("[adjust err: none]"); break;
 	default: break;

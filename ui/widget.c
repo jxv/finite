@@ -90,6 +90,8 @@ void boardWidgetControls(struct cmd *cmd, struct gameGui *gg, struct controls *c
 		cmd->data.board = bw->index;
 		return;
 	}
+	bw->index.y %= BOARD_Y;
+	bw->index.x %= BOARD_X;
 	if (c->up.type == KEYSTATE_PRESSED) {
 		bw->index.y += BOARD_Y;
 		bw->index.y--;
@@ -199,7 +201,7 @@ void rackWidgetControls(struct cmd *cmd, struct gameGui *gg, struct controls *c)
 		return;
 	}
 	if (c->a.type == KEYSTATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
-		cmd->type = CMD_BOARD;
+		cmd->type = CMD_RACK;
 		cmd->data.rack = rw->index.x;
 		return;
 	}
@@ -233,14 +235,23 @@ void updateBoardWidget(struct gridWidget *bw, struct transMove *tm)
 		break;
 	}
 	case TRANS_MOVE_PLACE: {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				bw->button[idx.y][idx.x] = false;
+			}
+		}
 		break;
 	}
 	case TRANS_MOVE_PLACE_HOLD: {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				bw->button[idx.y][idx.x] = false;
+			}
+		}
 		break;
 	}
 	case TRANS_MOVE_DISCARD_INIT:
-	case TRANS_MOVE_DISCARD:
-	case TRANS_MOVE_DISCARD_HOLD: {
+	case TRANS_MOVE_DISCARD: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 				bw->button[idx.y][idx.x] = false;
@@ -261,18 +272,36 @@ void updateBoardWidget(struct gridWidget *bw, struct transMove *tm)
 }
 
 
-void updateRackWidget(struct gridWidget *bw, struct transMove *tm)
+void updateRackWidget(struct gridWidget *rw, struct transMove *tm)
 {
-	NOT(bw);
+	struct coor idx;
+	TileType tt;
+
+	NOT(rw);
 	NOT(tm);
 	
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE_INIT:
-	case TRANS_MOVE_PLACE:
-	case TRANS_MOVE_PLACE_HOLD:
+	case TRANS_MOVE_PLACE: {
+		assert(tm->adjust.type == ADJUST_RACK);
+		idx.y = 0;
+		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
+			tt = tm->adjust.data.tile[idx.x].type;
+			assert(tt == TILE_NONE || tt == TILE_WILD || tt == TILE_LETTER);
+			rw->button[idx.y][idx.x] = tt != TILE_NONE;
+		}	
+		break;
+	}
+	case TRANS_MOVE_PLACE_HOLD: {
+		assert(tm->adjust.type == ADJUST_RACK);
+		idx.y = 0;
+		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
+			rw->button[idx.y][idx.x] = true; 
+		}	
+		break;
+	}
 	case TRANS_MOVE_DISCARD_INIT:
 	case TRANS_MOVE_DISCARD:
-	case TRANS_MOVE_DISCARD_HOLD:
 	case TRANS_MOVE_SKIP:
 	default: break;
 	}
@@ -287,45 +316,39 @@ void updateChoiceWidget(struct gridWidget *cw, struct transMove *tm)
 	
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE_INIT: {
-		cw->button[0][CHOICE_RECALL]	= false;
-		cw->button[0][CHOICE_MODE]	= true;
-		cw->button[0][CHOICE_PLAY]	= false;
+		cw->button[0][CHOICE_RECALL] = false;
+		cw->button[0][CHOICE_MODE] = true;
+		cw->button[0][CHOICE_PLAY] = false;
 		break;
 	}
 	case TRANS_MOVE_PLACE: {
-		cw->button[0][CHOICE_RECALL]	= true;
-		cw->button[0][CHOICE_MODE]	= false;
-		cw->button[0][CHOICE_PLAY]	= true;
+		cw->button[0][CHOICE_RECALL] = true;
+		cw->button[0][CHOICE_MODE] = false;
+		cw->button[0][CHOICE_PLAY] = true;
 		break;
 	}
 	case TRANS_MOVE_PLACE_HOLD: {
-		cw->button[0][CHOICE_RECALL]	= true;
-		cw->button[0][CHOICE_MODE]	= false;
-		cw->button[0][CHOICE_PLAY]	= false; 
+		cw->button[0][CHOICE_RECALL] = true;
+		cw->button[0][CHOICE_MODE] = false;
+		cw->button[0][CHOICE_PLAY] = false; 
 		break;
 	}
 	case TRANS_MOVE_DISCARD_INIT: {
-		cw->button[0][CHOICE_RECALL]	= false;
-		cw->button[0][CHOICE_MODE]	= true;
-		cw->button[0][CHOICE_PLAY]	= false;
+		cw->button[0][CHOICE_RECALL] = false;
+		cw->button[0][CHOICE_MODE] = true;
+		cw->button[0][CHOICE_PLAY] = false;
 		break;
 	}
 	case TRANS_MOVE_DISCARD: {
-		cw->button[0][CHOICE_RECALL]	= true;
-		cw->button[0][CHOICE_MODE]	= false;
-		cw->button[0][CHOICE_PLAY]	= true;
-		break;
-	}
-	case TRANS_MOVE_DISCARD_HOLD: {
-		cw->button[0][CHOICE_RECALL]	= true;
-		cw->button[0][CHOICE_MODE]	= false;
-		cw->button[0][CHOICE_PLAY]	= false;
+		cw->button[0][CHOICE_RECALL] = true;
+		cw->button[0][CHOICE_MODE] = false;
+		cw->button[0][CHOICE_PLAY] = true;
 		break;
 	}
 	case TRANS_MOVE_SKIP: {
-		cw->button[0][CHOICE_RECALL]	= false;
-		cw->button[0][CHOICE_MODE]	= true;
-		cw->button[0][CHOICE_PLAY]	= true;
+		cw->button[0][CHOICE_RECALL] = false;
+		cw->button[0][CHOICE_MODE] = true;
+		cw->button[0][CHOICE_PLAY] = true;
 		break;
 	}
 	default: break;
@@ -356,20 +379,24 @@ void boardWidgetDraw(struct io *io, struct gridWidget *bw, struct board *b, stru
 }
 
 
-void rackWidgetDraw(struct io *io, struct transMove *tm, struct gridWidget *rw, struct coor pos, struct coor dim)
+void rackWidgetDraw(struct io *io, struct transMove *tm, struct gridWidget *rw, struct coor pos, struct coor dim, struct player *p)
 {
-	int i;
+/*	int i;
 	struct tile *t;
+*/
 
 	NOT(io);
 	NOT(tm);
+	NOT(p);
 
+/*
 	for (i = 0; i < RACK_SIZE; i++) {
 		t = &tm->tile[i];
 		if (t->type != TILE_NONE) {
 			surfaceDraw(io->screen, io->tile[t->type][t->letter], i * dim.x + 164, 220);
 		}
 	}
+*/
 }
 
 
@@ -392,8 +419,7 @@ void choiceWidgetDraw(struct io *io, struct transMove *tm, struct gridWidget *cw
 	case TRANS_MOVE_PLACE:
 	case TRANS_MOVE_PLACE_HOLD: type = MODE_PLACE; break;
 	case TRANS_MOVE_DISCARD_INIT:
-	case TRANS_MOVE_DISCARD:
-	case TRANS_MOVE_DISCARD_HOLD: type = MODE_DISCARD; break;
+	case TRANS_MOVE_DISCARD: type = MODE_DISCARD; break;
 	case TRANS_MOVE_SKIP: type = MODE_SKIP; break;
 	default: break;
 	}

@@ -18,7 +18,7 @@ void updateRackWidget(struct gridWidget*, struct transMove*);
 void updateChoiceWidget(struct gridWidget*, struct transMove*);
 
 void boardWidgetDraw(struct io*, struct gridWidget*, struct board*, struct coor, struct coor);
-void rackWidgetDraw(struct io*, struct transMove*, struct gridWidget*, struct coor, struct coor);
+void rackWidgetDraw(struct io*, struct transMove*, struct gridWidget*, struct coor, struct coor, struct player*);
 void choiceWidgetDraw(struct io*, struct transMove*, struct gridWidget*, struct coor, struct coor);
 
 void gridWidgetDraw(SDL_Surface*, struct gridWidget*, struct coor, struct coor);

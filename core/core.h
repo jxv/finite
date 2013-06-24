@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #include <pthread.h>
 
 
@@ -12,22 +13,22 @@
 #include "mem.h"
 
 
-#define RES_PATH		"res/"
+#define RES_PATH "res/"
 
 
-#define MAX(x, y)		(((x) > (y)) ? (x) : (y))
-#define MIN(x, y)		(((x) < (y)) ? (x) : (y))
-#define BOARD_X			15
-#define BOARD_Y			15
-#define BOARD_SIZE		MAX(BOARD_Y,BOARD_X)
-#define RACK_SIZE		7
-#define BAG_SIZE		(100 + 1)	/* needs a dummy element for impl. */
-#define MAX_PLAYER		4
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define BOARD_X	15
+#define BOARD_Y	15
+#define BOARD_SIZE MAX(BOARD_Y,BOARD_X)
+#define RACK_SIZE 7
+#define BAG_SIZE (100 + 1)	/* needs a dummy element for impl. */
+#define MAX_PLAYER 4
 
 
-#define VALID_BOARD_X(x)	RANGE(x, 0, BOARD_X - 1)
-#define VALID_BOARD_Y(y)	RANGE(y, 0, BOARD_Y - 1)
-#define VALID_BOARD_SIZE(s)	RANGE(s, 0, BOARD_SIZE - 1)
+#define VALID_BOARD_X(x) RANGE(x, 0, BOARD_X - 1)
+#define VALID_BOARD_Y(y) RANGE(y, 0, BOARD_Y - 1)
+#define VALID_BOARD_SIZE(s) RANGE(s, 0, BOARD_SIZE - 1)
 
 
 typedef enum
@@ -103,7 +104,6 @@ typedef enum
 {
 	ADJUST_ERR_NONE = 0,
 	ADJUST_ERR_RACK_OUT_OF_RANGE,
-	ADJUST_ERR_RACK_INVALID_TILE,
 	ADJUST_ERR_RACK_DUPLICATE_INDEX,
 	ADJUST_ERR_COUNT
 } AdjustErrType;
@@ -176,172 +176,180 @@ typedef enum
 
 struct word
 {
-	int 		len;
-	LetterType	letter[BOARD_SIZE];
+	int len;
+	LetterType letter[BOARD_SIZE];
 };
 
 
 struct tile
 {
-	TileType	type;
-	LetterType	letter;
+	TileType type;
+	LetterType letter;
 };
 
 
 struct loc
 {
-	struct tile	tile;
-	SqType		sq;
+	struct tile tile;
+	SqType sq;
 };
 
 
 struct board
 {
-	struct tile	tile[BOARD_Y][BOARD_X];
-	SqType		sq[BOARD_Y][BOARD_X];
+	struct tile tile[BOARD_Y][BOARD_X];
+	SqType sq[BOARD_Y][BOARD_X];
 	/* struct loc	loc[BOARD_Y][BOARD_X]; */
 };
 
 
 struct player
 {
-	bool		active;
-	int		score;
-	struct tile	tile[RACK_SIZE];
+	bool active;
+	int score;
+	struct tile tile[RACK_SIZE];
 };
 
 
 struct coor
 {
-	int		x;
-	int		y;
+	int x;
+	int y;
 };
 
 
 struct movePlace
 {
-	int		num;
-	int		rackIdx[RACK_SIZE];
-	struct coor	coor[RACK_SIZE];
+	int num;
+	int rackIdx[RACK_SIZE];
+	struct coor coor[RACK_SIZE];
 };
 
 
 struct moveDiscard
 {
-	int		num;
-	int		rackIdx[RACK_SIZE];
+	int num;
+	int rackIdx[RACK_SIZE];
+};
+
+
+struct tileAdjust
+{
+	TileType type;
+	int idx;
 };
 
 
 struct adjust
 {
-	AdjustType	type;
-	int		playerIdx;
+	AdjustType type;
 	union {
-		int		rack[RACK_SIZE];
-		AdjustErrType	err;
+	struct tileAdjust tile[RACK_SIZE];
+	AdjustErrType err;
 	} data;
 };
 
 
 struct move
 {
-	MoveType	type;
-	int		playerIdx;
+	MoveType type;
+	int playerIdx;
 	union {
-		struct movePlace	place;
-		struct moveDiscard	discard;
+	struct movePlace place;
+	struct moveDiscard discard;
 	} data;
 };
 
 
 struct bag
 {
-	int		head;
-	int		tail;
-	struct tile	tile[BAG_SIZE];
+	int head;
+	int tail;
+	struct tile tile[BAG_SIZE];
 };
 
 
 struct dir
 {
-	DirType		type;
-	int		x;
-	int		y;
-	int		len;
-	int		pos[BOARD_SIZE];
+	DirType type;
+	int x;
+	int y;
+	int len;
+	int pos[BOARD_SIZE];
 };
 
 
 struct path
 {
-	PathType	type;
-	union {
-		struct {
-			struct dir	right;
-			struct dir	down; 
-		} dot;
-		struct {
-			struct dir	right;
-			struct dir	down[BOARD_X];
-		} horz;
-		struct {
-			struct dir	right[BOARD_Y];
-			struct dir	down;
-		} vert;
-	} data;
+	PathType type;
 	struct board board;
+	union {
+	struct {
+	 	struct dir right;
+	 	struct dir down; 
+	} dot;
+	struct {
+		struct dir right;
+	 	struct dir down[BOARD_X];
+	} horz;
+	struct {
+ 		struct dir right[BOARD_Y];
+	 	struct dir down;
+	} vert;
+	} data;
 };
 
 
 struct action
 {
 	ActionType	type;
-	int		playerIdx;
+	int playerIdx;
 	union {
-		struct {
-			int		score;
-			int		num;
-			int		rackIdx[RACK_SIZE];
-			struct path	path;
-		} place;
-		struct moveDiscard	discard;
-		ActionErrType		err;
+	struct {
+ 		int score;
+	 	int num;
+ 		int rackIdx[RACK_SIZE];
+ 		struct path path;
+	} place;
+	struct moveDiscard discard;
+	ActionErrType err;
 	} data;
 };
 
 
 struct dict
 {
-	long		num;
-	struct word	*words;
+	long num;
+	struct word *words;
 };
 
 
 struct game
 {
-	int		turn;
-	int		playerNum;
-	struct player	player[MAX_PLAYER];
-	struct board	board;
-	struct bag	bag;
-	struct dict	dict;
+	int turn;
+	int playerNum;
+	struct player player[MAX_PLAYER];
+	struct board board;
+	struct bag bag;
+	struct dict dict;
 };
 
 
-AdjustErrType	fdAdjustErr(struct adjust*, struct game*);
-void		applyAdjust(struct game*, struct adjust*);
-void		mkAction(struct action*, struct game*, struct move*);
-bool		applyAction(struct game*, struct action*);
-void		nextTurn(struct game*);
-CmpType		cmpWord(struct word*, struct word*);
-void		moveClr(struct move*);
-void		actionClr(struct action*);
-void		rmRackTile(struct player*, int*, int);
-void		rackShift(struct player*);
-void		rackRefill(struct player*, struct bag*);
-bool		endGame(struct game *g);
-int		fdWinner(struct game *g);
+void mkAdjust(struct adjust*, struct player*);
+void adjustSwap(struct adjust*, int, int);
+AdjustErrType fdAdjustErr(struct adjust*, struct player*);
+void applyAdjust(struct player*, struct adjust*);
+void mkAction(struct action*, struct game*, struct move*);
+bool applyAction(struct game*, struct action*);
+void nextTurn(struct game*);
+CmpType cmpWord(struct word*, struct word*);
+void moveClr(struct move*);
+void actionClr(struct action*);
+void rmRackTile(struct player*, int*, int);
+void rackShift(struct player*);
+void rackRefill(struct player*, struct bag*);
+bool endGame(struct game *g);
+int fdWinner(struct game *g);
 
 
 #endif

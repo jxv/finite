@@ -64,7 +64,6 @@ typedef enum
 	TRANS_MOVE_PLACE_HOLD,
 	TRANS_MOVE_DISCARD_INIT,
 	TRANS_MOVE_DISCARD,
-	TRANS_MOVE_DISCARD_HOLD,
 	TRANS_MOVE_SKIP,
 	TRANS_MOVE_QUIT,
 	TRANS_MOVE_COUNT
@@ -73,72 +72,72 @@ typedef enum
 
 struct font
 {
-	int			width;
-	int			height;
-	SDL_Surface		*map;
+	int 	width;
+	int 	height;
+	SDL_Surface *map;
 };
 
 
 struct io
 {
-	SDL_Surface		*screen;
-	SDL_Surface		*back;
-	SDL_Surface		*tile[TILE_COUNT][LETTER_COUNT];
-	SDL_Surface		*wild;
-	SDL_Surface		*lockon;
-	SDL_Surface		*recall;
-	SDL_Surface		*recallDisable;
-	SDL_Surface		*mode;
-	SDL_Surface		*modeDisable;
-	SDL_Surface		*place;
-	SDL_Surface		*placeDisable;
-	SDL_Surface		*discard;
-	SDL_Surface		*discardDisable;
-	SDL_Surface		*skip;
-	SDL_Surface		*skipDisable;
-	SDL_Surface		*play;
-	SDL_Surface		*playDisable;
-	struct font		white_font;
-	struct font		black_font;
+	SDL_Surface *screen;
+	SDL_Surface *back;
+	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT];
+	SDL_Surface *wild;
+	SDL_Surface *lockon;
+	SDL_Surface *recall;
+	SDL_Surface *recallDisable;
+	SDL_Surface *mode;
+	SDL_Surface *modeDisable;
+	SDL_Surface *place;
+	SDL_Surface *placeDisable;
+	SDL_Surface *discard;
+	SDL_Surface *discardDisable;
+	SDL_Surface *skip;
+	SDL_Surface *skipDisable;
+	SDL_Surface *play;
+	SDL_Surface *playDisable;
+	struct font white_font;
+	struct font black_font;
 };
 
 
 struct keystate
 {
-	KeystateType		type;
-	float			time;
+	KeystateType type;
+	float 	time;
 };
 
 
 struct controls
 {
-	struct keystate		up;
-	struct keystate		down;
-	struct keystate		left;
-	struct keystate		right;
-	struct keystate		a;
-	struct keystate		b;
-	struct keystate		x;
-	struct keystate		y;
+	struct keystate up;
+	struct keystate down;
+	struct keystate left;
+	struct keystate right;
+	struct keystate a;
+	struct keystate b;
+	struct keystate x;
+	struct keystate y;
 };
 
 
 struct cmd
 {
-	CmdType			type;
+	CmdType 	type;
 	union {
-		struct coor		board;
-		int			rack;
+		struct coor board;
+		int rack;
 	} data;
 };
 
 
 struct gridWidget
 {
-	struct coor		index;
-	bool			**button;
-	int			width;
-	int			height;
+	struct coor index;
+	bool **button;
+	int width;
+	int height;
 };
 
 
@@ -154,50 +153,51 @@ typedef enum
 
 struct gameGui
 {
-	GuiFocusType		focus;
-	struct gridWidget	rackWidget;
-	struct gridWidget	boardWidget;
-	struct gridWidget	choiceWidget;
+	GuiFocusType focus;
+	struct gridWidget rackWidget;
+	struct gridWidget boardWidget;
+	struct gridWidget choiceWidget;
 };
 
 
 struct gui
 {
-	struct gameGui		gameGui;
+	struct gameGui gameGui;
 };
 
 
 struct moveModePlace
 {
-	int deleteMe;
+	int num;
+	int idx;
 };
 
 
 struct moveModeDiscard
 {
-	int i;
+	bool rack[RACK_SIZE];
 };
 
 
 struct transMove
 {
-	TransMoveType		type;
-	struct tile		tile[RACK_SIZE];
+	TransMoveType type;
+	int playerIdx;
+	struct adjust adjust;
 	union {
-		int			rack;
-		struct moveModePlace	place;
-		struct moveModeDiscard	discard;
+		struct moveModePlace place;
+		struct moveModeDiscard discard;
 	} data;
 };
 
 
 struct env
 {
-	struct io		io;
-	struct game		game;
-	struct controls		controls;
-	struct gui		gui;
-	struct transMove	transMove;
+	struct io io;
+	struct game game;
+	struct controls controls;
+	struct gui gui;
+	struct transMove transMove;
 };
 
 
