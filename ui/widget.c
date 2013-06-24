@@ -381,22 +381,19 @@ void boardWidgetDraw(struct io *io, struct gridWidget *bw, struct board *b, stru
 
 void rackWidgetDraw(struct io *io, struct transMove *tm, struct gridWidget *rw, struct coor pos, struct coor dim, struct player *p)
 {
-/*	int i;
+	int i;
 	struct tile *t;
-*/
 
 	NOT(io);
 	NOT(tm);
 	NOT(p);
 
-/*
 	for (i = 0; i < RACK_SIZE; i++) {
-		t = &tm->tile[i];
+		t = &p->tile[tm->adjust.data.tile[i].idx];
 		if (t->type != TILE_NONE) {
 			surfaceDraw(io->screen, io->tile[t->type][t->letter], i * dim.x + 164, 220);
 		}
 	}
-*/
 }
 
 
