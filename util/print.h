@@ -3,16 +3,16 @@
 
 #include "core.h"
 
-void		printWord(struct word*);
-void		printDict(struct dict*);
-void		printTile(struct tile*);
-void		printBag(struct bag*);
-void		printAction(struct action*);
-void		printScore(struct game*);
-void		printBoard(struct board*);
-void		printRack(struct player*);
-void		printPlace(struct movePlace*);
-void		printActionErr(ActionErrType);
+void printWord(struct Word *);
+void printDict(struct Dict *);
+void printTile(struct Tile *);
+void printBag(struct Bag *);
+void printAction(struct Action *);
+void printScore(struct Game *);
+void printBoard(struct Board *);
+void printRack(struct Player *);
+void printPlace(struct MovePlace *);
+void printActionErr(ActionErrType);
 
 
 #endif

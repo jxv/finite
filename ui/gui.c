@@ -2,8 +2,7 @@
 #include "init.h"
 #include "widget.h"
 
-
-void guiInit(struct gui *g)
+void guiInit(struct GUI *g)
 {
 	NOT(g);
 	
@@ -13,10 +12,10 @@ void guiInit(struct gui *g)
 	g->gameGui.focus = GUI_FOCUS_BOARD;
 }
 
-
-bool fontmapInit(struct font *f, int w, int h, const char *filename)
+bool fontmapInit(struct Font *f, int w, int h, const char *filename)
 {
-	NOT(f), NOT(filename);
+	NOT(f);
+	NOT(filename);
 
 	f->width = w;
 	f->height = h;
@@ -24,22 +23,24 @@ bool fontmapInit(struct font *f, int w, int h, const char *filename)
 	return f->map != NULL;
 }
 
-
-void fontmapQuit(struct font *f)
+void fontmapQuit(struct Font *f)
 {
-	NOT(f), NOT(f->map);
+	NOT(f);
+	NOT(f->map);
 
 	surfaceFree(f->map);
 }
 
-
-void strDraw(SDL_Surface *s, struct font *f, const char *str, int x, int y)
+void strDraw(SDL_Surface *s, struct Font *f, const char *str, int x, int y)
 {
 	int i;
 	char c;
 	SDL_Rect offset, clip;
 
-	NOT(s), NOT(f), NOT(f->map), NOT(str);
+	NOT(s);
+	NOT(f);
+	NOT(f->map);
+	NOT(str);
 
 	offset.x = x;
 	offset.y = y;
@@ -57,16 +58,14 @@ void strDraw(SDL_Surface *s, struct font *f, const char *str, int x, int y)
 	}
 }
 
-
-bool ioInit(struct io *io)
+bool ioInit(struct IO *io)
 {
 	NOT(io);
 
 	return false;
 }
 
-
-void keystateInit(struct keystate *ks)
+void keystateInit(struct Keystate *ks)
 {
 	NOT(ks);
 	
@@ -74,8 +73,7 @@ void keystateInit(struct keystate *ks)
 	ks->time = 0.0f;
 }
 
-
-void controlsInit(struct controls *c)
+void controlsInit(struct Controls *c)
 {
 	NOT(c);
 	
@@ -89,8 +87,7 @@ void controlsInit(struct controls *c)
 	keystateInit(&c->y);
 }
 
-
-bool init(struct env *e)
+bool init(struct Env *e)
 {
 	int i;
 	char str[32];
@@ -189,8 +186,7 @@ bool init(struct env *e)
 	return true;
 }
 
-
-void quit(struct env *e)
+void quit(struct Env *e)
 {
 	int i;
 
@@ -216,8 +212,7 @@ void quit(struct env *e)
 	SDL_Quit();
 }
 
-
-void keystateUpdate(struct keystate *ks, bool touched)
+void keystateUpdate(struct Keystate *ks, bool touched)
 {
 	NOT(ks);
 
@@ -270,8 +265,7 @@ void keystateUpdate(struct keystate *ks, bool touched)
 	}
 }
 
-
-bool handleEvent(struct controls *c)
+bool handleEvent(struct Controls *c)
 {
 	SDL_Event event;
 	Uint8 *ks;
@@ -305,8 +299,7 @@ bool handleEvent(struct controls *c)
 	return false;
 }
 
-
-void printCmd(struct cmd *c)
+void printCmd(struct Cmd *c)
 {
 	NOT(c);
 
@@ -325,8 +318,7 @@ void printCmd(struct cmd *c)
 	}
 }
 
-
-void printTransMove(struct transMove *tm)
+void printTransMove(struct TransMove *tm)
 {
 	NOT(tm);
 
@@ -344,8 +336,27 @@ void printTransMove(struct transMove *tm)
 	}
 }
 
+void clrMoveModePlace(struct MoveModePlace *mmp, struct Board *b) 
+{
+	NOT(mmp);
+	
+	mmp->idx = 0;
+	mmp->num = 0;
+}
 
-bool updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
+void clrMoveModeDiscard(struct MoveModeDiscard *mmd)
+{
+	int i;
+
+	NOT(mmd);
+	
+	mmd->num = 0;
+	for (i = 0; i < RACK_SIZE; i++) {
+		mmd->rack[i] = false;
+	}
+}
+
+bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -378,11 +389,11 @@ bool updateTransMovePlaceInit(struct transMove *tm, struct cmd *c)
 	return false;
 }
 
-
-bool updateTransMovePlace(struct transMove *tm, struct cmd *c)
+bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	NOT(tm);
 	NOT(c);
+	NOT(b);
 	assert(tm->type == TRANS_MOVE_PLACE);
 	assert(c->type != CMD_MODE_UP);
 	assert(c->type != CMD_MODE_DOWN);
@@ -400,6 +411,7 @@ bool updateTransMovePlace(struct transMove *tm, struct cmd *c)
 	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
+		clrMoveModePlace(&tm->data.place, b);
 		return true;
 	}
 	default: break;
@@ -407,13 +419,13 @@ bool updateTransMovePlace(struct transMove *tm, struct cmd *c)
 	return false;
 }
 
-
-bool updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
+bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	TileType t;
 
 	NOT(tm);
 	NOT(c);
+	NOT(b);
 	assert(tm->type == TRANS_MOVE_PLACE_HOLD);
 	assert(c->type != CMD_MODE_UP);
 	assert(c->type != CMD_MODE_DOWN);
@@ -446,6 +458,7 @@ bool updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
 	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
+		clrMoveModePlace(&tm->data.place, b);
 		return true;
 	}
 	default: break;
@@ -453,11 +466,13 @@ bool updateTransMovePlaceHold(struct transMove *tm, struct cmd *c)
 	return false;
 }
 
-
-bool updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
+bool updateTransMoveDiscardInit(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
+	int i;
+
 	NOT(tm);
 	NOT(c);
+	NOT(b);
 	assert(tm->type == TRANS_MOVE_DISCARD_INIT);
 	assert(c->type != CMD_BOARD);
 	assert(c->type != CMD_RECALL);
@@ -465,16 +480,30 @@ bool updateTransMoveDiscardInit(struct transMove *tm, struct cmd *c)
 	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
-	case CMD_RACK: tm->type = TRANS_MOVE_DISCARD; break;
-	case CMD_MODE_UP: tm->type = TRANS_MOVE_PLACE_INIT; break;
-	case CMD_MODE_DOWN: tm->type = TRANS_MOVE_SKIP; break;
+	case CMD_RACK: {
+		for (i = 0; i < RACK_SIZE; i++) {
+			tm->data.discard.rack[i] = false;
+		}
+		tm->data.discard.rack[c->data.rack] = true;
+		tm->data.discard.num = 1;
+		tm->type = TRANS_MOVE_DISCARD;
+		return true;
+	}
+	case CMD_MODE_UP: {
+		tm->type = TRANS_MOVE_PLACE_INIT;
+		clrMoveModePlace(&tm->data.place, b);
+		return true;
+	}
+	case CMD_MODE_DOWN: {
+		tm->type = TRANS_MOVE_SKIP;
+		return true;
+	}
 	default: break;
 	}
 	return false;
 }
 
-
-bool updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
+bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 {
 	NOT(tm);
 	NOT(c);
@@ -486,11 +515,21 @@ bool updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
 	
 	switch (c->type) {
 	case CMD_RACK: {
-		tm->type = TRANS_MOVE_DISCARD;
-		break;
+		tm->data.discard.rack[c->data.rack] = !tm->data.discard.rack[c->data.rack];
+		if (tm->data.discard.rack[c->data.rack]) {
+			tm->data.discard.num++;
+		} else {
+			tm->data.discard.num--;
+		}
+		if (tm->data.discard.num == 0) {
+			tm->type = TRANS_MOVE_DISCARD_INIT;
+			clrMoveModeDiscard(&tm->data.discard);
+		}
+		return true;
 	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_DISCARD_INIT;
+		clrMoveModeDiscard(&tm->data.discard);
 		return true;
 	}
 	default: break;
@@ -498,8 +537,7 @@ bool updateTransMoveDiscard(struct transMove *tm, struct cmd *c)
 	return false;
 }
 
-
-bool updateTransMoveSkip(struct transMove *tm, struct cmd *c)
+bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	NOT(tm);
 	NOT(c);
@@ -511,10 +549,12 @@ bool updateTransMoveSkip(struct transMove *tm, struct cmd *c)
 	switch (c->type) {
 	case CMD_MODE_UP: {
 		tm->type = TRANS_MOVE_DISCARD_INIT;
+		clrMoveModeDiscard(&tm->data.discard);
 		return true;
 	}
 	case CMD_MODE_DOWN: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
+		clrMoveModePlace(&tm->data.place, b);
 		return true;
 	}
 	default: break;
@@ -522,19 +562,18 @@ bool updateTransMoveSkip(struct transMove *tm, struct cmd *c)
 	return false;
 }
 
-
-bool updateTransMove(struct transMove *tm, struct cmd *c)
+bool updateTransMove(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	NOT(tm);
 	NOT(c);
 
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE_INIT: return updateTransMovePlaceInit(tm, c);
-	case TRANS_MOVE_PLACE: return updateTransMovePlace(tm, c);
-	case TRANS_MOVE_PLACE_HOLD: return updateTransMovePlaceHold(tm, c);
-	case TRANS_MOVE_DISCARD_INIT: return updateTransMoveDiscardInit(tm, c);
+	case TRANS_MOVE_PLACE: return updateTransMovePlace(tm, c, b);
+	case TRANS_MOVE_PLACE_HOLD: return updateTransMovePlaceHold(tm, c, b);
+	case TRANS_MOVE_DISCARD_INIT: return updateTransMoveDiscardInit(tm, c, b);
 	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c);
-	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c);
+	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c, b);
 	case TRANS_MOVE_QUIT: /* fall through */
 	case TRANS_MOVE_NONE:
 	case TRANS_MOVE_INVALID:
@@ -543,19 +582,26 @@ bool updateTransMove(struct transMove *tm, struct cmd *c)
 	return false;
 }
 
-
-void update(struct env *e)
+void clrTransMove(struct TransMove *tm, int pidx, struct Player *p, struct Board *b)
 {
-	struct cmd c;
+	NOT(tm);
+
+	tm->type = TRANS_MOVE_PLACE_INIT;
+	tm->playerIdx = 0;
+	mkAdjust(&tm->adjust, p);
+	clrMoveModePlace(&tm->data.place, b);
+}
+
+void update(struct Env *e)
+{
+	struct Cmd c;
 
 	NOT(e);
 
 	if (e->transMove.type == TRANS_MOVE_INVALID) {
-		e->transMove.playerIdx = 0;
-		e->transMove.type = TRANS_MOVE_PLACE_INIT;
-		mkAdjust(&e->transMove.adjust, &e->game.player[0]);
+		clrTransMove(&e->transMove, 0, &e->game.player[0], &e->game.board);
 		c.type = CMD_INVALID;
-		updateTransMove(&e->transMove, &c);
+		updateTransMove(&e->transMove, &c, &e->game.board);
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
@@ -585,7 +631,7 @@ void update(struct env *e)
 
 	printCmd(&c);
 
-	if (updateTransMove(&e->transMove, &c)) {
+	if (updateTransMove(&e->transMove, &c, &e->game.board)) {
 		printTransMove(&e->transMove);
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
@@ -593,11 +639,10 @@ void update(struct env *e)
 	}
 }
 
-
-void guiDrawLockon(struct io *io, struct gameGui *gg)
+void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 {
 	const int w = 14, h = 14;
-	struct coor idx;
+	struct Coor idx;
 
 	NOT(io);
 	NOT(gg);
@@ -622,11 +667,9 @@ void guiDrawLockon(struct io *io, struct gameGui *gg)
 	}
 }
 
-
-void guiDraw(struct io *io, struct gui *g, struct game *gm, struct transMove *tm)
+void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm)
 {
-	struct coor pos;
-	struct coor dim;
+	struct Coor pos, dim;
 
 	NOT(io);
 	NOT(g);
@@ -653,8 +696,7 @@ void guiDraw(struct io *io, struct gui *g, struct game *gm, struct transMove *tm
 	guiDrawLockon(io, &g->gameGui);
 }
 
-
-void draw(struct env *e)
+void draw(struct Env *e)
 {
 	NOT(e);
 
@@ -664,8 +706,7 @@ void draw(struct env *e)
 	SDL_Flip(e->io.screen);
 }
 
-
-void exec(struct env *e)
+void exec(struct Env *e)
 {
 	int st;
 	bool q;
@@ -684,10 +725,9 @@ void exec(struct env *e)
 	} while (!q);
 }
 
-
-void adjustTest(struct game *g)
+void adjustTest(struct Game *g)
 {
-	struct adjust a;
+	struct Adjust a;
 
 	mkAdjust(&a, &g->player[0]);
 
@@ -699,11 +739,10 @@ void adjustTest(struct game *g)
 	}
 }
 
-
 int gui()
 {
 	int exit_status = EXIT_FAILURE;
-	struct env e;
+	struct Env e;
 	if (init(&e)) {
 		exec(&e);
 		exit_status = EXIT_SUCCESS;
@@ -711,5 +750,4 @@ int gui()
 	quit(&e);
 	return exit_status;
 }
-
 

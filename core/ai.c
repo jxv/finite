@@ -20,7 +20,7 @@ int max_value()
 
 
 
-void ai_find_move(struct move *m, struct player *p, struct board *b)
+void ai_find_move(struct Move *m, struct Player *p, struct Board *b)
 {
 	/* dummy function */
 	/*

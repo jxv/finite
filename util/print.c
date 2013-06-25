@@ -1,11 +1,9 @@
 #include <string.h>
 
-
 #include "core.h"
 #include "print.h"
 
-
-void printWord(struct word *w)
+void printWord(struct Word *w)
 {
 	char str[BOARD_SIZE];
 	int j;
@@ -19,8 +17,7 @@ void printWord(struct word *w)
 	printf("[%s]\n", str);
 }
 
-
-void printDict(struct dict *d)
+void printDict(struct Dict *d)
 {
 	int i;
 
@@ -32,8 +29,7 @@ void printDict(struct dict *d)
 	}
 }
 
-
-void printTile(struct tile *t)
+void printTile(struct Tile *t)
 {
 	char c;
 	
@@ -47,8 +43,7 @@ void printTile(struct tile *t)
 	putchar(c);
 }
 
-
-void printBag(struct bag *b)
+void printBag(struct Bag *b)
 {
 	int i;
 
@@ -63,8 +58,7 @@ void printBag(struct bag *b)
 	putchar('\n');
 }
 
-
-void printAction(struct action *a)
+void printAction(struct Action *a)
 {
 	NOT(a);
 
@@ -85,8 +79,7 @@ void printAction(struct action *a)
 	}
 }
 
-
-void printScore(struct game *g)
+void printScore(struct Game *g)
 {
 	int i;
 	
@@ -97,12 +90,11 @@ void printScore(struct game *g)
 	}
 }
 
-
-void printBoard(struct board *b)
+void printBoard(struct Board *b)
 {
 	int x, y;
 	char c;
-	struct tile *t;
+	struct Tile *t;
 	SqType sq;
 
 	NOT(b);
@@ -130,12 +122,11 @@ void printBoard(struct board *b)
 	}
 }
 
-
-void printRack(struct player *p)
+void printRack(struct Player *p)
 {
 	int i;
 	char c;
-	struct tile *t;
+	struct Tile *t;
 
 	NOT(p);
 
@@ -152,8 +143,7 @@ void printRack(struct player *p)
 	}
 }
 
-
-void printPlace(struct movePlace *mp)
+void printPlace(struct MovePlace *mp)
 {
 	int i;
 	
@@ -164,7 +154,6 @@ void printPlace(struct movePlace *mp)
 	}
 	printf("\n");
 }
-
 
 void printActionErr(ActionErrType err)
 {
@@ -181,6 +170,4 @@ void printActionErr(ActionErrType err)
 	default: break;
 	}
 }
-
-
 

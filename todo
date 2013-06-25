@@ -1,15 +1,8 @@
 - gui
 	- board
-	- rack
-	- choice
 
 	- place (rack -> board)
 	- displace (board -> rack)
-	
-	- discard (rack)
-	
-	- change mode (choice)
-	- recall (choice -> board, rack)
-
 	- play (mode: place, rack, skip)
+
 

@@ -4,10 +4,8 @@
 #include "sdl.h"
 #include "common.h"
 
-
 #define SCREEN_WIDTH	320
 #define SCREEN_HEIGHT	240
-
 
 typedef enum
 {
@@ -18,7 +16,6 @@ typedef enum
 	KEYSTATE_COUNT
 } KeystateType;
 
-
 typedef enum
 {
 	CHOICE_INVALID = -1,
@@ -28,7 +25,6 @@ typedef enum
 	CHOICE_COUNT
 } ChoiceType;
 
-
 typedef enum
 {
 	MODE_INVALID = -1,
@@ -37,7 +33,6 @@ typedef enum
 	MODE_SKIP,
 	MODE_COUNT
 } ModeType;
-
 
 typedef enum
 {
@@ -54,7 +49,6 @@ typedef enum
 	CMD_COUNT
 } CmdType;
 
-
 typedef enum
 {
 	TRANS_MOVE_INVALID = -1,
@@ -69,16 +63,14 @@ typedef enum
 	TRANS_MOVE_COUNT
 } TransMoveType;
 
-
-struct font
+struct Font
 {
-	int 	width;
-	int 	height;
+	int width;
+	int height;
 	SDL_Surface *map;
 };
 
-
-struct io
+struct IO
 {
 	SDL_Surface *screen;
 	SDL_Surface *back;
@@ -97,49 +89,44 @@ struct io
 	SDL_Surface *skipDisable;
 	SDL_Surface *play;
 	SDL_Surface *playDisable;
-	struct font white_font;
-	struct font black_font;
+	struct Font white_font;
+	struct Font black_font;
 };
 
-
-struct keystate
+struct Keystate
 {
 	KeystateType type;
-	float 	time;
+	float time;
 };
 
-
-struct controls
+struct Controls
 {
-	struct keystate up;
-	struct keystate down;
-	struct keystate left;
-	struct keystate right;
-	struct keystate a;
-	struct keystate b;
-	struct keystate x;
-	struct keystate y;
+	struct Keystate up;
+	struct Keystate down;
+	struct Keystate left;
+	struct Keystate right;
+	struct Keystate a;
+	struct Keystate b;
+	struct Keystate x;
+	struct Keystate y;
 };
 
-
-struct cmd
+struct Cmd
 {
-	CmdType 	type;
+	CmdType type;
 	union {
-		struct coor board;
-		int rack;
+	struct Coor board;
+	int rack;
 	} data;
 };
 
-
-struct gridWidget
+struct GridWidget
 {
-	struct coor index;
+	struct Coor index;
 	bool **button;
 	int width;
 	int height;
 };
-
 
 typedef enum
 {
@@ -148,62 +135,55 @@ typedef enum
 	GUI_FOCUS_RACK,
 	GUI_FOCUS_CHOICE,
 	GUI_FOCUS_COUNT
-} GuiFocusType;
+} GUIFocusType;
 
-
-struct gameGui
+struct GameGUI
 {
-	GuiFocusType focus;
-	struct gridWidget rackWidget;
-	struct gridWidget boardWidget;
-	struct gridWidget choiceWidget;
+	GUIFocusType focus;
+	struct GridWidget rackWidget;
+	struct GridWidget boardWidget;
+	struct GridWidget choiceWidget;
 };
 
-
-struct gui
+struct GUI
 {
-	struct gameGui gameGui;
+	struct GameGUI gameGui;
 };
 
-
-struct moveModePlace
+struct MoveModePlace
 {
 	int num;
 	int idx;
+	bool taken[BOARD_Y][BOARD_X];
 };
 
-
-struct moveModeDiscard
+struct MoveModeDiscard
 {
+	int num;
 	bool rack[RACK_SIZE];
 };
 
-
-struct transMove
+struct TransMove
 {
 	TransMoveType type;
 	int playerIdx;
-	struct adjust adjust;
+	struct Adjust adjust;
 	union {
-		struct moveModePlace place;
-		struct moveModeDiscard discard;
+	struct MoveModePlace place;
+	struct MoveModeDiscard discard;
 	} data;
 };
 
-
-struct env
+struct Env
 {
-	struct io io;
-	struct game game;
-	struct controls controls;
-	struct gui gui;
-	struct transMove transMove;
+	struct IO io;
+	struct Game game;
+	struct Controls controls;
+	struct GUI gui;
+	struct TransMove transMove;
 };
-
 
 int gui();
 
-
 #endif
-
 

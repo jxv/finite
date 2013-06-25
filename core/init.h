@@ -1,18 +1,14 @@
 #ifndef FINITE_INIT_H
 #define FINITE_INIT_H
 
-
 #include "init.h"
 
-
-void boardInit(struct board *b);
-void bagInit(struct bag *b);
-void playerInit(struct player *p, struct bag *b);
-void moveInit(struct move *m);
-bool dictInit(struct dict*, const char*);
-void dictQuit(struct dict*);
-
+void boardInit(struct Board *);
+void bagInit(struct Bag *);
+void playerInit(struct Player *, struct Bag *);
+void moveInit(struct Move *);
+bool dictInit(struct Dict *, const char *);
+void dictQuit(struct Dict *);
 
 #endif
-
 

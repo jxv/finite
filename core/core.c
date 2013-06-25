@@ -1,8 +1,7 @@
 #include "common.h"
 #include "print.h"
 
-
-int tileScore(struct tile *t)
+int tileScore(struct Tile *t)
 {
 	NOT(t);
 
@@ -40,8 +39,7 @@ int tileScore(struct tile *t)
 	return 0;
 }
 
-
-bool canUseDblLet(struct board *b, struct dir *d, int p, int x, int y)
+bool canUseDblLet(struct Board *b, struct Dir *d, int p, int x, int y)
 {
 	NOT(b);
 	NOT(d);
@@ -52,8 +50,7 @@ bool canUseDblLet(struct board *b, struct dir *d, int p, int x, int y)
 	return d->pos[p] && b->sq[y][x] == SQ_DBL_LET;
 }
 
-
-bool canUseTrpLet(struct board *b, struct dir *d, int p, int x, int y)
+bool canUseTrpLet(struct Board *b, struct Dir *d, int p, int x, int y)
 {
 	NOT(b);
 	NOT(d);
@@ -64,8 +61,7 @@ bool canUseTrpLet(struct board *b, struct dir *d, int p, int x, int y)
 	return d->pos[p] && b->sq[y][x] == SQ_TRP_LET;
 }
 
-
-bool canUseDblWrd(struct board *b, struct dir *d, int p, int x, int y)
+bool canUseDblWrd(struct Board *b, struct Dir *d, int p, int x, int y)
 {
 	NOT(b);
 	NOT(d);
@@ -77,7 +73,7 @@ bool canUseDblWrd(struct board *b, struct dir *d, int p, int x, int y)
 }
 	
 
-bool canUseTrpWrd(struct board *b, struct dir *d, int p, int x, int y)
+bool canUseTrpWrd(struct Board *b, struct Dir *d, int p, int x, int y)
 {
 	NOT(b);
 	NOT(d);
@@ -88,8 +84,7 @@ bool canUseTrpWrd(struct board *b, struct dir *d, int p, int x, int y)
 	return d->pos[p] && b->sq[y][x] == SQ_TRP_WRD;
 }
 
-
-int dirScore(struct board *b, struct dir *d)
+int dirScore(struct Board *b, struct Dir *d)
 {
 	int dw, tw, x, y, s, p, i, t;
 
@@ -126,19 +121,16 @@ int dirScore(struct board *b, struct dir *d)
 	case DIR_INVALID: /* fall through */
 	default: return 0;
 	}
-
 	if (dw > 0) {
 		s *= dw * 2;
 	}
 	if (tw > 0) {
 		s *= tw * 3;
 	}
-
 	return s;
 }
 
-
-int metaPathScore(struct dir *d, struct dir *adj, int n, struct board *b)
+int metaPathScore(struct Dir *d, struct Dir *adj, int n, struct Board *b)
 {
 	int i, s;
 
@@ -155,15 +147,13 @@ int metaPathScore(struct dir *d, struct dir *adj, int n, struct board *b)
 			}
 		}
 	}
-
 	return s;
 }
 
-
-int pathScore(struct path *p)
+int pathScore(struct Path *p)
 {
 	int s;
-	struct board *b;
+	struct Board *b;
 
 	NOT(p);
 
@@ -191,28 +181,24 @@ int pathScore(struct path *p)
 	case PATH_INVALID: /* fall through */
 	default: return 0;
 	}
-
 	return s;
 }
 
-
-bool bagFull(struct bag *b)
+bool bagFull(struct Bag *b)
 {
 	NOT(b);
 
 	return (b->head + 1) % BAG_SIZE == b->tail;
 }
 
-
-bool bagEmpty(struct bag *b)
+bool bagEmpty(struct Bag *b)
 {
 	NOT(b);
 
 	return b->head == b->tail;
 }
 
-
-int bagSize(struct bag *b)
+int bagSize(struct Bag *b)
 {
 	NOT(b);
 
@@ -222,10 +208,9 @@ int bagSize(struct bag *b)
 	return b->tail - b->head;
 }
 
-
-struct tile bagPeek(struct bag *b)
+struct Tile bagPeek(struct Bag *b)
 {
-	struct tile next;
+	struct Tile next;
 
 	NOT(b);
 
@@ -236,8 +221,7 @@ struct tile bagPeek(struct bag *b)
 	return next;
 }
 
-
-void bagDrop(struct bag *b)
+void bagDrop(struct Bag *b)
 {
 	NOT(b);
 
@@ -245,8 +229,7 @@ void bagDrop(struct bag *b)
 	b->head %= BAG_SIZE;
 }
 
-
-void bagAdd(struct bag *b, struct tile t)
+void bagAdd(struct Bag *b, struct Tile t)
 {
 	NOT(b);
 
@@ -255,8 +238,7 @@ void bagAdd(struct bag *b, struct tile t)
 	b->tail %= BAG_SIZE;
 }
 
-
-bool adjustOutOfRange(struct adjust *a)
+bool adjustOutOfRange(struct Adjust *a)
 {
 	int i;
 
@@ -271,14 +253,12 @@ bool adjustOutOfRange(struct adjust *a)
 			return true;
 		}
 	}
-
 	return false;
 }
 
-
-void adjustSwap(struct adjust *a, int i, int j)
+void adjustSwap(struct Adjust *a, int i, int j)
 {
-	struct tileAdjust tmp;
+	struct TileAdjust tmp;
 
 	NOT(a);
 	assert(a->type == ADJUST_RACK);
@@ -292,8 +272,7 @@ void adjustSwap(struct adjust *a, int i, int j)
 	a->data.tile[j] = tmp;
 }
 
-
-void mkAdjust(struct adjust *a, struct player *p)
+void mkAdjust(struct Adjust *a, struct Player *p)
 {
 	int i;
 
@@ -301,15 +280,13 @@ void mkAdjust(struct adjust *a, struct player *p)
 	NOT(p);
 
 	a->type = ADJUST_RACK;
-
 	for (i = 0; i < RACK_SIZE; i++) {
 		a->data.tile[i].type = p->tile[i].type;
 		a->data.tile[i].idx = i;
 	}
 }
 
-
-bool adjustDuplicateIndex(struct adjust *a)
+bool adjustDuplicateIndex(struct Adjust *a)
 {
 	int i, j, idx;
 
@@ -330,8 +307,7 @@ bool adjustDuplicateIndex(struct adjust *a)
 	return false;
 }
 
-
-AdjustErrType fdAdjustErr(struct adjust *a, struct player *p)
+AdjustErrType fdAdjustErr(struct Adjust *a, struct Player *p)
 {
 	NOT(a);
 	NOT(p);
@@ -347,11 +323,10 @@ AdjustErrType fdAdjustErr(struct adjust *a, struct player *p)
 	return ADJUST_ERR_NONE;
 }
 
-
-void applyAdjust(struct player *p, struct adjust *a)
+void applyAdjust(struct Player *p, struct Adjust *a)
 {
 	int i, idx;
-	struct tile tile[RACK_SIZE];
+	struct Tile tile[RACK_SIZE];
 
 	NOT(p);
 	NOT(a);
@@ -361,12 +336,10 @@ void applyAdjust(struct player *p, struct adjust *a)
 		idx = a->data.tile[i].idx;
 		tile[i] = p->tile[idx];
 	}
-
 	memCpy(p->tile, tile, sizeof(tile));
 }
 
-
-CmpType cmpWord(struct word *w0, struct word *w1) 
+CmpType cmpWord(struct Word *w0, struct Word *w1) 
 {
 	/*
 	w0 > w1 -> CMP_GREATER
@@ -401,8 +374,7 @@ CmpType cmpWord(struct word *w0, struct word *w1)
 	return CMP_EQUAL;
 }
 
-
-bool wordValid(struct word *w, struct dict *d)
+bool wordValid(struct Word *w, struct Dict *d)
 {
 	long min, max, mid;
 	
@@ -420,18 +392,15 @@ bool wordValid(struct word *w, struct dict *d)
 		case CMP_LESS: max = mid - 1; break;
 		default: return false; /* Should never arrive here via cmpWord */
 		}
-
 		mid = (min + max) / 2;
 	}
-
 	return false;
 }
 
-
-bool dirValid(struct dir *dir, struct board *b, struct dict *dict)
+bool dirValid(struct Dir *dir, struct Board *b, struct Dict *dict)
 {
 	int x, y, i;
-	struct word w;
+	struct Word w;
 
 	NOT(dir);
 	NOT(b);
@@ -464,12 +433,10 @@ bool dirValid(struct dir *dir, struct board *b, struct dict *dict)
 	case DIR_INVALID: /* fall through */
 	default: return false;
 	}
-
 	return wordValid(&w, dict);
 }
 
-
-bool pathValid(struct path *p, struct dict *d)
+bool pathValid(struct Path *p, struct Dict *d)
 {
 	int i;
 
@@ -516,8 +483,7 @@ bool pathValid(struct path *p, struct dict *d)
 	return true;
 }
 
-
-bool tilesAdjacent(struct board *b, struct movePlace *mp, struct player *p)
+bool tilesAdjacent(struct Board *b, struct MovePlace *mp, struct Player *p)
 {
 	int x, y, i, r;
 
@@ -550,8 +516,7 @@ bool tilesAdjacent(struct board *b, struct movePlace *mp, struct player *p)
 	return false;
 }
 
-
-bool onFreeSquares(struct board *b, struct movePlace *mp, struct player *p)
+bool onFreeSquares(struct Board *b, struct MovePlace *mp, struct Player *p)
 {
 	int x, y, i, r;
 
@@ -570,8 +535,7 @@ bool onFreeSquares(struct board *b, struct movePlace *mp, struct player *p)
 	return false;
 }
 
-
-bool placeInRange(struct movePlace *mp)
+bool placeInRange(struct MovePlace *mp)
 {
 	int i;
 	
@@ -591,8 +555,7 @@ bool placeInRange(struct movePlace *mp)
 	return true;
 }
 
-
-bool placeOverlap(struct movePlace *mp)
+bool placeOverlap(struct MovePlace *mp)
 {
 	int i, j;
 
@@ -612,8 +575,7 @@ bool placeOverlap(struct movePlace *mp)
 	return false;
 }
 
-
-bool placeOverlapBoard(struct movePlace *mp, struct board *b)
+bool placeOverlapBoard(struct MovePlace *mp, struct Board *b)
 {
 	int i, x, y;
 
@@ -630,8 +592,7 @@ bool placeOverlapBoard(struct movePlace *mp, struct board *b)
 	return false;
 }
 
-
-bool placeRackExist(struct movePlace *mp, struct player *p)
+bool placeRackExist(struct MovePlace *mp, struct Player *p)
 {
 	int i, r;
 
@@ -647,8 +608,7 @@ bool placeRackExist(struct movePlace *mp, struct player *p)
 	return true;
 }
 
-
-void cpyRackBoard(struct board *b, struct movePlace *mp, struct player *p)
+void cpyRackBoard(struct Board *b, struct MovePlace *mp, struct Player *p)
 {
 	int x, y, i, r;
 
@@ -660,16 +620,15 @@ void cpyRackBoard(struct board *b, struct movePlace *mp, struct player *p)
 		r = mp->rackIdx[i];
 		y = mp->coor[i].y;
 		x = mp->coor[i].x;
-		memCpy(&b->tile[y][x], &p->tile[r], sizeof(struct tile));
+		memCpy(&b->tile[y][x], &p->tile[r], sizeof(struct Tile));
 	}
 }
 
-
-bool isHorz(struct action *a, struct move *m)
+bool isHorz(struct Action *a, struct Move *m)
 {
 	int i, min, max, y;
-	struct coor *coor;
-	struct board *b;
+	struct Coor *coor;
+	struct Board *b;
 
 	NOT(a);
 	NOT(m);
@@ -700,12 +659,11 @@ bool isHorz(struct action *a, struct move *m)
 	return true;
 }
 
-
-bool isVert(struct action *a, struct move *m)
+bool isVert(struct Action *a, struct Move *m)
 {
 	int i, min, max, x;
-	struct board *board;
-	struct coor *coor;
+	struct Board *board;
+	struct Coor *coor;
 	
 	NOT(a);
 	NOT(m);
@@ -717,7 +675,6 @@ bool isVert(struct action *a, struct move *m)
 	if (m->data.place.num < 2) {
 		return false;
 	}
-
 	for (i = 1; i < m->data.place.num; i++) {
 		coor = &m->data.place.coor[i];
 		if (x != coor->x) {
@@ -730,18 +687,15 @@ bool isVert(struct action *a, struct move *m)
 			max = coor->y;
 		}
 	}
-
 	for (i = min; i <= max; i++) {
 		if (board->tile[i][x].type == TILE_NONE) {
 			return false;
 		}
 	}
-
 	return true;
 }
 
-
-void mkRight(struct dir *d, int x, int y, struct board *b)
+void mkRight(struct Dir *d, int x, int y, struct Board *b)
 {
 	int i;
 
@@ -761,15 +715,13 @@ void mkRight(struct dir *d, int x, int y, struct board *b)
 	for (i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++) {
 		d->len = i;
 	}
-
 	d->len -= d->x - 1;
 	if (d->len == 1) {
 		 d->type = DIR_INVALID;
 	}
 }
 
-
-void mkDown(struct dir *d, int x, int y, struct board *b)
+void mkDown(struct Dir *d, int x, int y, struct Board *b)
 {
 	int i;
 
@@ -788,20 +740,18 @@ void mkDown(struct dir *d, int x, int y, struct board *b)
 	for (i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++) {
 		d->len = i;
 	}
-
 	d->len -= d->y - 1;
 	if (d->len == 1) {
 		 d->type = DIR_INVALID;
 	}
 }
 
-
-void mkDot(struct action *a, struct move *m)
+void mkDot(struct Action *a, struct Move *m)
 {
 	int x, y;
-	struct path *p;
-	struct board *b;
-	struct dir *d;
+	struct Path *p;
+	struct Board *b;
+	struct Dir *d;
 
 	NOT(a);
 	NOT(m);
@@ -821,13 +771,12 @@ void mkDot(struct action *a, struct move *m)
 	mkDown(d, x, y, b);
 }
 
-
-void mkHorz(struct action *a, struct move *m)
+void mkHorz(struct Action *a, struct Move *m)
 {
 	int i, x, y;
-	struct path *p;
-	struct board *b;
-	struct dir *d;
+	struct Path *p;
+	struct Board *b;
+	struct Dir *d;
 
 	NOT(a);
 	NOT(m);
@@ -846,11 +795,9 @@ void mkHorz(struct action *a, struct move *m)
 		x = m->data.place.coor[i].x;
 		d->pos[x] = 1;
 	}
-
 	for (i = 0; i < BOARD_X; i++) {
 		p->data.horz.down[i].type = DIR_INVALID;
 	}
-
 	for (i = 0; i < m->data.place.num; i++) {
 		d = &p->data.horz.down[i];
 		x = m->data.place.coor[i].x;
@@ -859,13 +806,12 @@ void mkHorz(struct action *a, struct move *m)
 	}
 }
 
-
-void mkVert(struct action *a, struct move *m)
+void mkVert(struct Action *a, struct Move *m)
 {
 	int i, x, y;
-	struct path *path;
-	struct board *b;
-	struct dir *d;
+	struct Path *path;
+	struct Board *b;
+	struct Dir *d;
 
 	NOT(a);
 	NOT(m);
@@ -885,11 +831,9 @@ void mkVert(struct action *a, struct move *m)
 		y = m->data.place.coor[i].y;
 		d->pos[y] = 1;
 	}
-
 	for (i = 0; i < BOARD_Y; i++) {
 		path->data.vert.right[i].type = DIR_INVALID;
 	}
-
 	for (i = 0; i < m->data.place.num; i++) {
 		d = &path->data.vert.right[i];
 		x = m->data.place.coor[i].x;
@@ -898,8 +842,7 @@ void mkVert(struct action *a, struct move *m)
 	}
 }
 
-
-ActionErrType fdPlaceErr(struct movePlace *mp,struct player *p, struct board *b)
+ActionErrType fdPlaceErr(struct MovePlace *mp,struct Player *p, struct Board *b)
 {
 	NOT(mp);
 	NOT(p);
@@ -923,12 +866,11 @@ ActionErrType fdPlaceErr(struct movePlace *mp,struct player *p, struct board *b)
 	return ACTION_ERR_NONE;
 }
 
-
-void mkPlace(struct action *a, struct game *g, struct move *m)
+void mkPlace(struct Action *a, struct Game *g, struct Move *m)
 {
 	int num, i;
-	struct path *path;
-	struct player *player;
+	struct Path *path;
+	struct Player *player;
 	ActionErrType err;
 
 	NOT(a);
@@ -944,22 +886,19 @@ void mkPlace(struct action *a, struct game *g, struct move *m)
 	for (i = 0; i < num; i++) {
 		a->data.place.rackIdx[i] = m->data.place.rackIdx[i];
 	}
-
 	err = fdPlaceErr(&m->data.place, player, &g->board);
 	if (err != ACTION_ERR_NONE) {
 		a->type = ACTION_INVALID;
 		a->data.err = err;
 		return;
 	}
-
-	memCpy(&path->board, &g->board, sizeof(struct board));
+	memCpy(&path->board, &g->board, sizeof(struct Board));
 	cpyRackBoard(&path->board, &m->data.place, player);
 	if (num <= 0) {
 		a->type = ACTION_INVALID;
 		a->data.err = ACTION_ERR_PLACE_NO_RACK;
 		return;
 	}
-
 	if (num == 1) {
 		mkDot(a, m);
 	} else if (num >= 2) {
@@ -973,18 +912,15 @@ void mkPlace(struct action *a, struct game *g, struct move *m)
 			return;
 		}
 	}
-
 	if (!pathValid(path, &g->dict)) {
 		a->type = ACTION_INVALID;
 		a->data.err = ACTION_ERR_PLACE_INVALID_PATH;
 		return;
 	}
-
 	a->data.place.score = pathScore(path);
 }
 
-
-void mkDiscard(struct action *a, struct game *g, struct move *m)
+void mkDiscard(struct Action *a, struct Game *g, struct Move *m)
 {
 	int i;
 
@@ -999,11 +935,10 @@ void mkDiscard(struct action *a, struct game *g, struct move *m)
 		printf("[%d]\n", a->data.discard.rackIdx[i]);
 		a->data.discard.rackIdx[i] = m->data.discard.rackIdx[i];
 	}
-	/* memCpy(&a->data.discard, &m->data.discard, sizeof(struct discard)); */
+	/* memCpy(&a->data.discard, &m->data.discard, sizeof(struct Discard)); */
 }
 
-
-void mkAction(struct action *a, struct game *g, struct move *m)
+void mkAction(struct Action *a, struct Game *g, struct Move *m)
 {
 	NOT(a);
 	NOT(g);
@@ -1020,8 +955,7 @@ void mkAction(struct action *a, struct game *g, struct move *m)
 	}
 }
 
-
-void rackShift(struct player *p)
+void rackShift(struct Player *p)
 {
 	int i, j;
 
@@ -1036,7 +970,7 @@ void rackShift(struct player *p)
 		if (i == RACK_SIZE) {
 			break;
 		}
-		memCpy(&p->tile[j], &p->tile[i], sizeof(struct tile));
+		memCpy(&p->tile[j], &p->tile[i], sizeof(struct Tile));
 		i++;
 		j++;
 	}
@@ -1046,8 +980,7 @@ void rackShift(struct player *p)
 	}
 }
 
-
-void rackRefill(struct player *p, struct bag *b)
+void rackRefill(struct Player *p, struct Bag *b)
 {
 	int i;
 	
@@ -1062,8 +995,7 @@ void rackRefill(struct player *p, struct bag *b)
 	}
 }
 
-
-bool applyAction(struct game *g, struct action *a)
+bool applyAction(struct Game *g, struct Action *a)
 {
 	int id, i, r;
 
@@ -1074,11 +1006,10 @@ bool applyAction(struct game *g, struct action *a)
 	if (id != g->turn) {
 		return false;
 	}
-
 	switch (a->type) {
 	case ACTION_PLACE: {
 		memCpy(&g->board, &a->data.place.path.board,
-				sizeof(struct board));
+				sizeof(struct Board));
 		g->player[id].score += a->data.place.score;
 		for (i = 0; i < a->data.place.num; i++) {
 			r = a->data.place.rackIdx[i];
@@ -1107,12 +1038,10 @@ bool applyAction(struct game *g, struct action *a)
 	case ACTION_INVALID: /* fall through */
 	default: return false;
 	}
-
 	return true;
 }
 
-
-void rmRackTile(struct player *p, int *rackIdx, int n)
+void rmRackTile(struct Player *p, int *rackIdx, int n)
 {
 	int i;
 
@@ -1124,8 +1053,7 @@ void rmRackTile(struct player *p, int *rackIdx, int n)
 	}
 }
 
-
-void nextTurn(struct game *g)
+void nextTurn(struct Game *g)
 {
 	NOT(g);
 
@@ -1135,26 +1063,23 @@ void nextTurn(struct game *g)
 	} while (!g->player[g->turn].active);
 }
 
-
-void moveClr(struct move *m)
+void moveClr(struct Move *m)
 {
 	NOT(m);
 
-	memSet(m, 0, sizeof(struct move));
+	memSet(m, 0, sizeof(struct Move));
 	m->type = MOVE_INVALID;
 }
 
-
-void actionClr(struct action *a)
+void actionClr(struct Action *a)
 {
 	NOT(a);
 
-	memSet(a, 0, sizeof(struct action));
+	memSet(a, 0, sizeof(struct Action));
 	a->type = ACTION_INVALID;
 }
 
-
-bool endGame(struct game *g)
+bool endGame(struct Game *g)
 {
 	int i, j, k;
 
@@ -1170,7 +1095,6 @@ bool endGame(struct game *g)
 	if (j < 2) {
 			return true;
 	}
-
 	/* 1 player wth tiles on the rack */
 	j = 0;
 	for (i = 0; i < g->playerNum; i++) {
@@ -1185,12 +1109,10 @@ bool endGame(struct game *g)
 	if (j == 0) {
 		return true;
 	}
-
 	return false;
 }
 
-
-int fdWinner(struct game *g)
+int fdWinner(struct Game *g)
 {
 	int max, idx, i, j;
 
@@ -1210,7 +1132,6 @@ int fdWinner(struct game *g)
 	if (j <= 1) {
 		return idx;
 	}
-
 	idx = -1;
 	max = 0;
 	for (i = 0; i < g->playerNum; i++) {
@@ -1223,5 +1144,4 @@ int fdWinner(struct game *g)
 	} 
 	return idx;
 }
-
 

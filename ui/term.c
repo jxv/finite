@@ -23,7 +23,7 @@ int getLine(char *line, size_t s)
 }
 
 
-bool termInit(struct game *g)
+bool termInit(struct Game *g)
 {
 	NOT(g);
 
@@ -55,7 +55,7 @@ int fdNextChar(const char *str, int len, const char c)
 }
 
 
-bool parseToPlace(struct movePlace *mp, const char *str, int len)
+bool parseToPlace(struct MovePlace *mp, const char *str, int len)
 {
 	int x, y, r;
 	int i, j, k;
@@ -92,7 +92,7 @@ bool parseToPlace(struct movePlace *mp, const char *str, int len)
 }
 
 
-bool parseToDiscard(struct moveDiscard *md, const char *str, int len)
+bool parseToDiscard(struct MoveDiscard *md, const char *str, int len)
 {
 	int r, k, i, j;
 	size_t n;
@@ -126,7 +126,7 @@ bool parseToDiscard(struct moveDiscard *md, const char *str, int len)
 }
 
 
-void termGetMoveType(struct move *m)
+void termGetMoveType(struct Move *m)
 {
 	char line[256];
 
@@ -151,7 +151,7 @@ void termGetMoveType(struct move *m)
 }
 
 
-void termMove(struct move *m)
+void termMove(struct Move *m)
 {
 	char line[256];
 
@@ -189,9 +189,9 @@ void termMove(struct move *m)
 
 int term()
 {
-	struct game g;
-	struct move m;
-	struct action a;
+	struct Game g;
+	struct Move m;
+	struct Action a;
 	int winnerIdx;
 
 	if (!termInit(&g)) {
