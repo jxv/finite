@@ -212,7 +212,7 @@ void quit(struct Env *e)
 	SDL_Quit();
 }
 
-void keystateUpdate(struct KeyState *ks, bool touched)
+void keyStateUpdate(struct KeyState *ks, bool touched)
 {
 	NOT(ks);
 
@@ -288,14 +288,14 @@ bool handleEvent(struct Controls *c)
 		default: break;
 		}
 	}
-	keystateUpdate(&c->up, ks[SDLK_UP]);
-	keystateUpdate(&c->down, ks[SDLK_DOWN]);
-	keystateUpdate(&c->left, ks[SDLK_LEFT]);
-	keystateUpdate(&c->right, ks[SDLK_RIGHT]);
-	keystateUpdate(&c->a, ks[SDLK_a]);
-	keystateUpdate(&c->b, ks[SDLK_b]);
-	keystateUpdate(&c->x, ks[SDLK_x]);
-	keystateUpdate(&c->y, ks[SDLK_y]);
+	keyStateUpdate(&c->up, ks[SDLK_UP]);
+	keyStateUpdate(&c->down, ks[SDLK_DOWN]);
+	keyStateUpdate(&c->left, ks[SDLK_LEFT]);
+	keyStateUpdate(&c->right, ks[SDLK_RIGHT]);
+	keyStateUpdate(&c->a, ks[SDLK_a]);
+	keyStateUpdate(&c->b, ks[SDLK_b]);
+	keyStateUpdate(&c->x, ks[SDLK_x]);
+	keyStateUpdate(&c->y, ks[SDLK_y]);
 	return false;
 }
 
@@ -450,8 +450,6 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	return false;
 }
 
-
-
 bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	struct MoveModePlace *mmp;
@@ -471,13 +469,14 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 	switch (c->type) {
 	case CMD_BOARD:	{
 		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
-			int idx;
-			idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
-			mmp->rackIdx[c->data.board.y][c->data.board.x] = mmp->idx;
+			int idx = mmp->idx;
 			mmp->boardIdx[mmp->idx] = c->data.board;
-			mmp->idx = idx;
+			mmp->idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
+			mmp->rackIdx[c->data.board.y][c->data.board.x] = idx;
+			mmp->boardIdx[mmp->idx].y = -1;
+			mmp->boardIdx[mmp->idx].x = -1;
 		} else {
-			mmp->rackIdx[c->data.board.y][c->data.board.x] = tm->data.place.idx;
+			mmp->rackIdx[c->data.board.y][c->data.board.x] = mmp->idx;
 			mmp->boardIdx[mmp->idx] = c->data.board;
 			mmp->num++;
 			tm->type = TRANS_MOVE_PLACE;
@@ -500,6 +499,13 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 			assert(t == TILE_LETTER || t == TILE_WILD);
 			if (mmp->idx != c->data.rack) {
 				adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
+				if (validBoardIdx(mmp->boardIdx[c->data.rack])) {
+					mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = -1;
+					mmp->boardIdx[mmp->idx] = mmp->boardIdx[c->data.rack];
+					mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = mmp->idx;
+					mmp->boardIdx[c->data.rack].x = -1;
+					mmp->boardIdx[c->data.rack].y = -1;
+				}
 				mmp->idx = c->data.rack;
 			} else {
 				if (mmp->num == 0) {

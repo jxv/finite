@@ -430,16 +430,16 @@ void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw
 	if (mode) {
 		surfaceDraw(io->screen, io->mode, 119, 217);
 		switch (type) {
-		case MODE_PLACE:	surfaceDraw(io->screen, io->place, 119, 220); break;
-		case MODE_DISCARD:	surfaceDraw(io->screen, io->discard, 119, 220); break;
-		case MODE_SKIP:		surfaceDraw(io->screen, io->skip, 119, 220); break;
+		case MODE_PLACE: surfaceDraw(io->screen, io->place, 119, 220); break;
+		case MODE_DISCARD: surfaceDraw(io->screen, io->discard, 119, 220); break;
+		case MODE_SKIP: surfaceDraw(io->screen, io->skip, 119, 220); break;
 		default: break;
 		}
 	} else {
 		surfaceDraw(io->screen, io->modeDisable, 119, 217);
 		switch (type) {
-		case MODE_PLACE:surfaceDraw(io->screen, io->placeDisable, 119, 220); break;
-		case MODE_DISCARD:surfaceDraw(io->screen, io->discardDisable, 119, 220); break;
+		case MODE_PLACE: surfaceDraw(io->screen, io->placeDisable, 119, 220); break;
+		case MODE_DISCARD: surfaceDraw(io->screen, io->discardDisable, 119, 220); break;
 		case MODE_SKIP:	surfaceDraw(io->screen, io->skip, 119, 220); break;
 		default: break;
 		}
