@@ -17,6 +17,7 @@ CFLAG+=-Wall
 CFLAG+=-pedantic
 CFLAG+=-O3
 CFLAG+=-DDEBUG
+CFLAG+=`sdl-config --cflags`
 
 LIB=-lc
 LIB=-lpthread
@@ -26,6 +27,6 @@ LIB+=-lSDL_image
 OUT=finite
 
 all:
-	$(CC) $(SRC) -o $(OUT) $(CFLAG) `sdl-config --cflags` $(INC) $(LIB)  && ./$(OUT)
+	$(CC) $(SRC) -o $(OUT) $(CFLAG) $(INC) $(LIB)  
 clean:
 	$(RM) $(OUT)
