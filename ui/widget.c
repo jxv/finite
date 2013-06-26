@@ -259,12 +259,11 @@ void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
 
 	NOT(rw);
 	NOT(tm);
-	
+	assert(tm->adjust.type == ADJUST_RACK);
+
+	idx.y = 0;
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE_INIT:
-	case TRANS_MOVE_PLACE: {
-		assert(tm->adjust.type == ADJUST_RACK);
-		idx.y = 0;
+	case TRANS_MOVE_PLACE_INIT: {
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			tt = tm->adjust.data.tile[idx.x].type;
 			assert(tt == TILE_NONE || tt == TILE_WILD || tt == TILE_LETTER);
@@ -272,9 +271,15 @@ void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
 		}	
 		break;
 	}
+	case TRANS_MOVE_PLACE: {
+		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
+			tt = tm->adjust.data.tile[idx.x].type;
+			assert(tt == TILE_NONE || tt == TILE_WILD || tt == TILE_LETTER);
+			rw->button[idx.y][idx.x] = tt != TILE_NONE && !validBoardIdx(tm->data.place.boardIdx[idx.x]);
+		}	
+		break;
+	}
 	case TRANS_MOVE_PLACE_HOLD: {
-		assert(tm->adjust.type == ADJUST_RACK);
-		idx.y = 0;
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			rw->button[idx.y][idx.x] = true; 
 		}	
@@ -282,7 +287,6 @@ void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
 	}
 	case TRANS_MOVE_DISCARD_INIT:
 	case TRANS_MOVE_DISCARD: {
-		idx.y = 0;
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			tt = tm->adjust.data.tile[idx.x].type;
 			assert(tt == TILE_NONE || tt == TILE_WILD || tt == TILE_LETTER);
@@ -291,7 +295,6 @@ void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
 		break;
 	}
 	case TRANS_MOVE_SKIP: {
-		idx.y = 0;
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			rw->button[idx.y][idx.x] = false;
 		}
@@ -376,7 +379,7 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 	for (i = 0; i < RACK_SIZE; i++) {
 		idx = tm->data.place.boardIdx[i];
 		if (validBoardIdx(idx)) {
-			t = &p->tile[tm->data.place.rackIdx[idx.y][idx.x]];
+			t = &p->tile[tm->adjust.data.tile[tm->data.place.rackIdx[idx.y][idx.x]].idx];
 			ts = io->tile[t->type][t->letter];
 			surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 		}
