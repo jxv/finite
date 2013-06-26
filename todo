@@ -1,8 +1,4 @@
 - gui
-	- board
-
-	- place (rack -> board)
-	- displace (board -> rack)
 	- play (mode: place, rack, skip)
 
 
