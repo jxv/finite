@@ -177,8 +177,9 @@ struct Board
 {
 	struct Tile tile[BOARD_Y][BOARD_X];
 	SqType sq[BOARD_Y][BOARD_X];
-	/* struct Loc	loc[BOARD_Y][BOARD_X]; */
+	/* struct Loc loc[BOARD_Y][BOARD_X]; */
 };
+
 struct Player
 {
 	bool active;
@@ -253,15 +254,15 @@ struct Path
 	union {
 	struct {
 	 	struct Dir right;
-	 	struct Dir down; 
+ 		struct Dir down; 
 	} dot;
 	struct {
 		struct Dir right;
 	 	struct Dir down[BOARD_X];
 	} horz;
 	struct {
- 		struct Dir right[BOARD_Y];
-	 	struct Dir down;
+		struct Dir right[BOARD_Y];
+ 		struct Dir down;
 	} vert;
 	} data;
 };
@@ -313,6 +314,8 @@ void rackShift(struct Player*);
 void rackRefill(struct Player*, struct Bag *);
 bool endGame(struct Game *);
 int fdWinner(struct Game *);
+bool validRackIdx(int);
+bool validBoardIdx(struct Coor);
 
 #endif
 

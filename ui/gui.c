@@ -65,11 +65,11 @@ bool ioInit(struct IO *io)
 	return false;
 }
 
-void keystateInit(struct Keystate *ks)
+void keystateInit(struct KeyState *ks)
 {
 	NOT(ks);
 	
-	ks->type = KEYSTATE_UNTOUCHED;
+	ks->type = KEY_STATE_UNTOUCHED;
 	ks->time = 0.0f;
 }
 
@@ -212,28 +212,28 @@ void quit(struct Env *e)
 	SDL_Quit();
 }
 
-void keystateUpdate(struct Keystate *ks, bool touched)
+void keystateUpdate(struct KeyState *ks, bool touched)
 {
 	NOT(ks);
 
 	if (touched) {
 		switch(ks->type) {
-		case KEYSTATE_UNTOUCHED: {
-			ks->type = KEYSTATE_PRESSED;
+		case KEY_STATE_UNTOUCHED: {
+			ks->type = KEY_STATE_PRESSED;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEYSTATE_PRESSED: {
-			ks->type = KEYSTATE_HELD;
+		case KEY_STATE_PRESSED: {
+			ks->type = KEY_STATE_HELD;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEYSTATE_HELD: {
+		case KEY_STATE_HELD: {
 			ks->time += 1.0f / 60.0f;
 			break;
 		}
-		case KEYSTATE_RELEASED: {
-			ks->type = KEYSTATE_PRESSED;
+		case KEY_STATE_RELEASED: {
+			ks->type = KEY_STATE_PRESSED;
 			ks->time = 0.0f;
 			break;
 		}
@@ -241,22 +241,22 @@ void keystateUpdate(struct Keystate *ks, bool touched)
 		}
 	} else {
 		switch(ks->type) {
-		case KEYSTATE_UNTOUCHED: {
+		case KEY_STATE_UNTOUCHED: {
 			ks->time += 1.0f / 60.0f;
 			break;
 		}
-		case KEYSTATE_PRESSED: {
-			ks->type = KEYSTATE_RELEASED;
+		case KEY_STATE_PRESSED: {
+			ks->type = KEY_STATE_RELEASED;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEYSTATE_HELD: {
-			ks->type = KEYSTATE_RELEASED;
+		case KEY_STATE_HELD: {
+			ks->type = KEY_STATE_RELEASED;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEYSTATE_RELEASED: {
-			ks->type = KEYSTATE_UNTOUCHED;
+		case KEY_STATE_RELEASED: {
+			ks->type = KEY_STATE_UNTOUCHED;
 			ks->time = 0.0f;
 			break;
 		}
@@ -338,10 +338,26 @@ void printTransMove(struct TransMove *tm)
 
 void clrMoveModePlace(struct MoveModePlace *mmp, struct Board *b) 
 {
+	int i;
+	struct Coor idx;
+
 	NOT(mmp);
 	
 	mmp->idx = 0;
 	mmp->num = 0;
+
+	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+			mmp->taken[idx.y][idx.x] = false;
+			mmp->rackIdx[idx.y][idx.x] = -1;
+		}
+	}
+
+	idx.x = -1;
+	idx.y = -1;
+	for (i = 0; i < RACK_SIZE; i++) {
+		mmp->boardIdx[i] = idx;
+	}
 }
 
 void clrMoveModeDiscard(struct MoveModeDiscard *mmd)
@@ -391,6 +407,8 @@ bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c)
 
 bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
+	struct MoveModePlace *mmp;
+
 	NOT(tm);
 	NOT(c);
 	NOT(b);
@@ -398,12 +416,25 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	assert(c->type != CMD_MODE_UP);
 	assert(c->type != CMD_MODE_DOWN);
 	assert(c->type != CMD_QUIT);
+
+	mmp = &tm->data.place;
 	
 	switch (c->type) {
-	case CMD_BOARD:	tm->type = TRANS_MOVE_PLACE_HOLD; break;
+	case CMD_BOARD:	{
+		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
+			tm->type = TRANS_MOVE_PLACE_HOLD;
+			mmp->idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
+			mmp->rackIdx[c->data.board.y][c->data.board.x] = -1;
+			mmp->boardIdx[mmp->idx].x = -1;
+			mmp->boardIdx[mmp->idx].y = -1;
+			mmp->num--;
+			return true;
+		}
+		break;
+	}
 	case CMD_RACK: {
-		if (tm->adjust.data.tile[c->data.rack].type != TILE_NONE) {
-			tm->data.place.idx = c->data.rack;
+		if (tm->adjust.data.tile[c->data.rack].type != TILE_NONE && !validBoardIdx(mmp->boardIdx[c->data.rack])) {
+			mmp->idx = c->data.rack;
 			tm->type = TRANS_MOVE_PLACE_HOLD;
 			return true;
 		}
@@ -411,7 +442,7 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
-		clrMoveModePlace(&tm->data.place, b);
+		clrMoveModePlace(mmp, b);
 		return true;
 	}
 	default: break;
@@ -419,8 +450,11 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	return false;
 }
 
+
+
 bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
+	struct MoveModePlace *mmp;
 	TileType t;
 
 	NOT(tm);
@@ -432,33 +466,54 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 	assert(c->type != CMD_PLAY);
 	assert(c->type != CMD_QUIT);
 	
+	mmp = &tm->data.place;
+	
 	switch (c->type) {
 	case CMD_BOARD:	{
-		tm->type = TRANS_MOVE_PLACE;
-		break;
+		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
+			int idx;
+			idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
+			mmp->rackIdx[c->data.board.y][c->data.board.x] = mmp->idx;
+			mmp->boardIdx[mmp->idx] = c->data.board;
+			mmp->idx = idx;
+		} else {
+			mmp->rackIdx[c->data.board.y][c->data.board.x] = tm->data.place.idx;
+			mmp->boardIdx[mmp->idx] = c->data.board;
+			mmp->num++;
+			tm->type = TRANS_MOVE_PLACE;
+		}
+		return true;
 	}
 	case CMD_RACK: {
 		assert(c->data.rack >= 0);
 		assert(c->data.rack < RACK_SIZE);
 		t = tm->adjust.data.tile[c->data.rack].type;
 		if (t == TILE_NONE) {
-			assert(tm->data.place.num >= 0);
-			assert(tm->data.place.num < RACK_SIZE);
+			assert(mmp->num >= 0);
+			assert(mmp->num < RACK_SIZE);
 			if (tm->data.place.num == 0) {
-				tm->data.place.num = TRANS_MOVE_PLACE_INIT;
+				tm->type = TRANS_MOVE_PLACE_INIT;
 			} else {
-				tm->data.place.num = TRANS_MOVE_PLACE;
+				tm->type = TRANS_MOVE_PLACE;
 			}
 		} else {
 			assert(t == TILE_LETTER || t == TILE_WILD);
-			adjustSwap(&tm->adjust, tm->data.place.idx, c->data.rack);
-			tm->data.place.idx = c->data.rack;
+			if (mmp->idx != c->data.rack) {
+				adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
+				mmp->idx = c->data.rack;
+			} else {
+				if (mmp->num == 0) {
+					tm->type = TRANS_MOVE_PLACE_INIT;
+				} else {
+					tm->type = TRANS_MOVE_PLACE;
+				}
+			}
 		}
 		return true;
 	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
-		clrMoveModePlace(&tm->data.place, b);
+		clrMoveModePlace(mmp, b);
 		return true;
 	}
 	default: break;
@@ -602,7 +657,7 @@ void update(struct Env *e)
 		clrTransMove(&e->transMove, 0, &e->game.player[0], &e->game.board);
 		c.type = CMD_INVALID;
 		updateTransMove(&e->transMove, &c, &e->game.board);
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
 	}
@@ -633,7 +688,7 @@ void update(struct Env *e)
 
 	if (updateTransMove(&e->transMove, &c, &e->game.board)) {
 		printTransMove(&e->transMove);
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove); 
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
 	}
@@ -681,7 +736,7 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	pos.x = 106;
 	pos.y = 5;
 	gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim);
-	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->board, pos, dim);
+	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->player[tm->playerIdx], &gm->board, tm, pos, dim);
 	
 	pos.x = 162;
 	pos.y = 222;

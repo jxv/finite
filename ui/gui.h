@@ -9,12 +9,12 @@
 
 typedef enum
 {
-	KEYSTATE_UNTOUCHED = 0,
-	KEYSTATE_PRESSED,
-	KEYSTATE_HELD,
-	KEYSTATE_RELEASED,
-	KEYSTATE_COUNT
-} KeystateType;
+	KEY_STATE_UNTOUCHED = 0,
+	KEY_STATE_PRESSED,
+	KEY_STATE_HELD,
+	KEY_STATE_RELEASED,
+	KEY_STATE_COUNT
+} KeyStateType;
 
 typedef enum
 {
@@ -93,22 +93,22 @@ struct IO
 	struct Font black_font;
 };
 
-struct Keystate
+struct KeyState
 {
-	KeystateType type;
+	KeyStateType type;
 	float time;
 };
 
 struct Controls
 {
-	struct Keystate up;
-	struct Keystate down;
-	struct Keystate left;
-	struct Keystate right;
-	struct Keystate a;
-	struct Keystate b;
-	struct Keystate x;
-	struct Keystate y;
+	struct KeyState up;
+	struct KeyState down;
+	struct KeyState left;
+	struct KeyState right;
+	struct KeyState a;
+	struct KeyState b;
+	struct KeyState x;
+	struct KeyState y;
 };
 
 struct Cmd
@@ -155,6 +155,8 @@ struct MoveModePlace
 	int num;
 	int idx;
 	bool taken[BOARD_Y][BOARD_X];
+	int rackIdx[BOARD_Y][BOARD_X];
+	struct Coor boardIdx[RACK_SIZE];
 };
 
 struct MoveModeDiscard

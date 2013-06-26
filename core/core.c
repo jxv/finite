@@ -1145,3 +1145,13 @@ int fdWinner(struct Game *g)
 	return idx;
 }
 
+bool validRackIdx(int id)
+{
+	return id >= 0 && id < RACK_SIZE;
+}
+
+bool validBoardIdx(struct Coor c)
+{
+	return c.x >= 0 && c.y >= 0 && c.x < BOARD_X && c.y < BOARD_Y;
+}
+

@@ -1,15 +1,5 @@
 #include "widget.h"
 
-bool validRackIdx(int id)
-{
-	return id >= 0 && id < RACK_SIZE;
-}
-
-bool validGridIdx(struct Coor c)
-{
-	return c.x >= 0 && c.y >= 0 && c.x < BOARD_X && c.y < BOARD_Y;
-}
-
 void mkGridWidgetByDim(struct GridWidget *gw)
 {
 	int i, y, x;
@@ -70,39 +60,39 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 	bw = &gg->boardWidget;
 	cmd->type = CMD_INVALID;
 
-	if (c->x.type == KEYSTATE_PRESSED) {
+	if (c->x.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
-	if (c->y.type == KEYSTATE_PRESSED) {
+	if (c->y.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
-	if (c->a.type == KEYSTATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
+	if (c->a.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
 		cmd->type = CMD_BOARD;
 		cmd->data.board = bw->index;
 		return;
 	}
 	bw->index.y %= BOARD_Y;
 	bw->index.x %= BOARD_X;
-	if (c->up.type == KEYSTATE_PRESSED) {
+	if (c->up.type == KEY_STATE_PRESSED) {
 		bw->index.y += BOARD_Y;
 		bw->index.y--;
 		bw->index.y %= BOARD_Y;
 		return;
 	}
-	if (c->down.type == KEYSTATE_PRESSED) {
+	if (c->down.type == KEY_STATE_PRESSED) {
 		bw->index.y++;
 		bw->index.y %= BOARD_Y;
 		return;
 	}
-	if (c->left.type == KEYSTATE_PRESSED) {
+	if (c->left.type == KEY_STATE_PRESSED) {
 		bw->index.x += BOARD_X;
 		bw->index.x--;
 		bw->index.x %= BOARD_X;
 		return;
 	}
-	if (c->right.type == KEYSTATE_PRESSED) {
+	if (c->right.type == KEY_STATE_PRESSED) {
 		bw->index.x++;
 		bw->index.x %= BOARD_X;
 	}
@@ -121,16 +111,16 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	cw->index.y = 0;
 	cmd->type = CMD_INVALID;
 
-	if (c->x.type == KEYSTATE_PRESSED) {
+	if (c->x.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
-	if (c->y.type == KEYSTATE_PRESSED) {
+	if (c->y.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
 	if (cw->button[cw->index.y][cw->index.x]) {
-		if (c->a.type == KEYSTATE_PRESSED) {
+		if (c->a.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
 			case CHOICE_RECALL: cmd->type = CMD_RECALL; break;
 			case CHOICE_PLAY: cmd->type = CMD_PLAY; break;
@@ -139,7 +129,7 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 			}
 			return;
 		}
-		if (c->up.type == KEYSTATE_PRESSED) {
+		if (c->up.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
 			case CHOICE_MODE: cmd->type = CMD_MODE_UP; break;
 			case CHOICE_RECALL: /* fall through */
@@ -148,7 +138,7 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 			}
 			return;
 		}
-		if (c->down.type == KEYSTATE_PRESSED) {
+		if (c->down.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
 			case CHOICE_MODE: cmd->type = CMD_MODE_DOWN; break;
 			case CHOICE_RECALL: /* fall through */
@@ -158,13 +148,13 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 			return;
 		}
 	}
-	if (c->left.type == KEYSTATE_PRESSED) {
+	if (c->left.type == KEY_STATE_PRESSED) {
 		cw->index.x += CHOICE_COUNT; 
 		cw->index.x--;
 		cw->index.x %= CHOICE_COUNT;
 		return;
 	}
-	if (c->right.type == KEYSTATE_PRESSED) {
+	if (c->right.type == KEY_STATE_PRESSED) {
 		cw->index.x++;
 		cw->index.x %= CHOICE_COUNT;
 	}
@@ -183,43 +173,44 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 	rw->index.y = 0;
 	cmd->type = CMD_INVALID;
 
-	if (c->x.type == KEYSTATE_PRESSED) {
+	if (c->x.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
-	if (c->y.type == KEYSTATE_PRESSED) {
+	if (c->y.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
-	if (c->a.type == KEYSTATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
+	if (c->a.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
 		cmd->type = CMD_RACK;
 		cmd->data.rack = rw->index.x;
 		return;
 	}
-	if (c->left.type == KEYSTATE_PRESSED) {
+	if (c->left.type == KEY_STATE_PRESSED) {
 		rw->index.x += RACK_SIZE; 
 		rw->index.x--;
 		rw->index.x %= RACK_SIZE;
 		return;
 	}
-	if (c->right.type == KEYSTATE_PRESSED) {
+	if (c->right.type == KEY_STATE_PRESSED) {
 		rw->index.x++;
 		rw->index.x %= RACK_SIZE;
 	}
 }
 
-void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm)
+void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm, struct Board *b)
 {
 	struct Coor idx;
 
 	NOT(bw);
 	NOT(tm);
+	NOT(b);
 	
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE_INIT: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-				bw->button[idx.y][idx.x] = true; 
+				bw->button[idx.y][idx.x] = false;
 			}
 		}
 		break;
@@ -227,7 +218,7 @@ void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm)
 	case TRANS_MOVE_PLACE: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-				bw->button[idx.y][idx.x] = false;
+				bw->button[idx.y][idx.x] = validRackIdx(tm->data.place.rackIdx[idx.y][idx.x]); 
 			}
 		}
 		break;
@@ -235,7 +226,7 @@ void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm)
 	case TRANS_MOVE_PLACE_HOLD: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-				bw->button[idx.y][idx.x] = false;
+				bw->button[idx.y][idx.x] = b->tile[idx.y][idx.x].type == TILE_NONE;
 			}
 		}
 		break;
@@ -311,7 +302,6 @@ void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
 
 void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 {
-
 	NOT(cw);
 	NOT(tm);
 	
@@ -357,22 +347,38 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 
 }
 
-void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Board *b, struct Coor pos, struct Coor dim)
+void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, struct Board *b, struct TransMove *tm, struct Coor pos, struct Coor dim)
 {
 	struct Tile *t;
 	struct SDL_Surface *ts;
-	int y, x;
+	struct Coor idx;
+	int i;
+
 	NOT(io);
 	NOT(bw);
+	NOT(p);
 	NOT(b);
+	NOT(tm);
 
-	for (y = 0; y < BOARD_Y; y++) {
-		for (x = 0; x < BOARD_X; x++) {
-			t = &b->tile[y][x];
+	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+			t = &b->tile[idx.y][idx.x];
 			if (t->type != TILE_NONE) {
 				ts = io->tile[t->type][t->letter];
-				surfaceDraw(io->screen, ts, x * dim.x + pos.x, y * dim.y + pos.y);
+				surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 			}
+		}
+	}
+
+	if (!(tm->type == TRANS_MOVE_PLACE || tm->type == TRANS_MOVE_PLACE_HOLD)) {
+		return;
+	}
+	for (i = 0; i < RACK_SIZE; i++) {
+		idx = tm->data.place.boardIdx[i];
+		if (validBoardIdx(idx)) {
+			t = &p->tile[tm->data.place.rackIdx[idx.y][idx.x]];
+			ts = io->tile[t->type][t->letter];
+			surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 		}
 	}
 }
