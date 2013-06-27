@@ -85,6 +85,8 @@ void controlsInit(struct Controls *c)
 	keystateInit(&c->b);
 	keystateInit(&c->x);
 	keystateInit(&c->y);
+	keystateInit(&c->l);
+	keystateInit(&c->r);
 }
 
 bool init(struct Env *e)
@@ -292,10 +294,12 @@ bool handleEvent(struct Controls *c)
 	keyStateUpdate(&c->down, ks[SDLK_DOWN]);
 	keyStateUpdate(&c->left, ks[SDLK_LEFT]);
 	keyStateUpdate(&c->right, ks[SDLK_RIGHT]);
-	keyStateUpdate(&c->a, ks[SDLK_a]);
-	keyStateUpdate(&c->b, ks[SDLK_b]);
-	keyStateUpdate(&c->x, ks[SDLK_x]);
-	keyStateUpdate(&c->y, ks[SDLK_y]);
+	keyStateUpdate(&c->a, ks[SDLK_LCTRL]);
+	keyStateUpdate(&c->b, ks[SDLK_LALT]);
+	keyStateUpdate(&c->x, ks[SDLK_LSHIFT]);
+	keyStateUpdate(&c->y, ks[SDLK_SPACE]);
+	keyStateUpdate(&c->l, ks[SDLK_TAB]);
+	keyStateUpdate(&c->r, ks[SDLK_BACKSPACE]);
 	return false;
 }
 
@@ -697,6 +701,74 @@ void update(struct Env *e)
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	}
+}
+
+void moveModePlaceToMovePlace(struct MovePlace *mp, struct MoveModePlace *mmp, struct Adjust *a)
+{
+	int i, j, k, idx;
+
+	NOT(mp);
+	NOT(mmp);
+	NOT(a);
+
+	mp->num = mmp->num;
+	for (i = 0, j = 0; i < RACK_SIZE; i++) {
+		k = a->data.tile[i].idx;
+		if (!validBoardIdx(mmp->boardIdx[k])) {
+			continue;
+		}
+		idx = mmp->rackIdx[mmp->boardIdx[k].y][mmp->boardIdx[k].x];
+		if (!validRackIdx(idx)) {
+			continue;
+		}
+		mp->rackIdx[j] = idx;
+		mp->coor[j] = mmp->boardIdx[i];
+		j++;
+	}
+	assert(mp->num == j);
+}
+
+void moveModeDiscardToMoveDiscard(struct MoveDiscard *md, struct MoveModeDiscard *mmd, struct Adjust *a)
+{
+	int i, j, k;
+
+	NOT(md);
+	NOT(mmd);
+	NOT(a);
+
+	md->num = mmd->num;
+	for (i = 0, j = 0; i < RACK_SIZE; i++) {
+		k = a->data.tile[i].idx;
+		md->rackIdx[k] = -1;
+		if (mmd->rack[k]) {
+			md->rackIdx[j] = k;
+			j++;
+		}
+	}
+	assert(md->num == j);
+}
+
+void transMoveToMove(struct Move *m, struct TransMove *tm)
+{
+	NOT(m);
+	NOT(tm);
+	
+	m->playerIdx = tm->playerIdx;
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE: {
+		m->type = MOVE_PLACE;
+		moveModePlaceToMovePlace(&m->data.place, &tm->data.place, &tm->adjust);
+		break;
+	}
+	case TRANS_MOVE_DISCARD: {
+		m->type = MOVE_DISCARD;
+		moveModeDiscardToMoveDiscard(&m->data.discard, &tm->data.discard, &tm->adjust);
+		break;
+	}
+	case TRANS_MOVE_SKIP: m->type = MOVE_SKIP; break;
+	case TRANS_MOVE_QUIT: m->type = MOVE_QUIT; break;
+	default: m->type = MOVE_INVALID; break;
 	}
 }
 

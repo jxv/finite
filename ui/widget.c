@@ -60,15 +60,15 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 	bw = &gg->boardWidget;
 	cmd->type = CMD_INVALID;
 
-	if (c->x.type == KEY_STATE_PRESSED) {
+	if (c->l.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
-	if (c->y.type == KEY_STATE_PRESSED) {
+	if (c->r.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
+	if (c->b.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
 		cmd->type = CMD_BOARD;
 		cmd->data.board = bw->index;
 		return;
@@ -111,16 +111,16 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	cw->index.y = 0;
 	cmd->type = CMD_INVALID;
 
-	if (c->x.type == KEY_STATE_PRESSED) {
+	if (c->l.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
-	if (c->y.type == KEY_STATE_PRESSED) {
+	if (c->r.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
 	if (cw->button[cw->index.y][cw->index.x]) {
-		if (c->a.type == KEY_STATE_PRESSED) {
+		if (c->b.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
 			case CHOICE_RECALL: cmd->type = CMD_RECALL; break;
 			case CHOICE_PLAY: cmd->type = CMD_PLAY; break;
@@ -173,15 +173,15 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 	rw->index.y = 0;
 	cmd->type = CMD_INVALID;
 
-	if (c->x.type == KEY_STATE_PRESSED) {
+	if (c->l.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_PREV;
 		return;
 	}
-	if (c->y.type == KEY_STATE_PRESSED) {
+	if (c->r.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
+	if (c->b.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
 		cmd->type = CMD_RACK;
 		cmd->data.rack = rw->index.x;
 		return;

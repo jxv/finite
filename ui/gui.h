@@ -109,6 +109,8 @@ struct Controls
 	struct KeyState b;
 	struct KeyState x;
 	struct KeyState y;
+	struct KeyState l;
+	struct KeyState r;
 };
 
 struct Cmd
