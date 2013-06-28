@@ -1,8 +1,9 @@
 #include "gui.h"
 #include "init.h"
 #include "widget.h"
+#include "print.h"
 
-void guiInit(struct GUI *g)
+void initGUI(struct GUI *g)
 {
 	NOT(g);
 	
@@ -178,10 +179,11 @@ bool init(struct Env *e)
 	surfaceFree(tile);
 	boardInit(&e->game.board);
 	bagInit(&e->game.bag);
-	guiInit(&e->gui);
+	initGUI(&e->gui);
+	e->game.playerNum = 2;
 	playerInit(&e->game.player[0], &e->game.bag);
+	playerInit(&e->game.player[1], &e->game.bag);
 	controlsInit(&e->controls);
-	guiInit(&e->gui);
 	e->transMove.type = TRANS_MOVE_INVALID;
 	e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
 	e->gui.gameGui.choiceWidget.index.x = 1;
@@ -331,9 +333,12 @@ void printTransMove(struct TransMove *tm)
 	case TRANS_MOVE_PLACE_INIT: puts("[trans-move:place-init]"); break;
 	case TRANS_MOVE_PLACE: puts("[trans-move:place]"); break;
 	case TRANS_MOVE_PLACE_HOLD: puts("[trans-move:place-hold]"); break;
+	case TRANS_MOVE_PLACE_PLAY: puts("[trans-move:place-play]"); break;
 	case TRANS_MOVE_DISCARD_INIT: puts("[trans-move:discard-init]"); break;
 	case TRANS_MOVE_DISCARD: puts("[trans-move:discard]"); break;
+	case TRANS_MOVE_DISCARD_PLAY: puts("[trans-move:discard-play]"); break;
 	case TRANS_MOVE_SKIP: puts("[trans-move:skip]"); break;
+	case TRANS_MOVE_SKIP_PLAY: puts("[trans-move:skip-play]"); break;
 	case TRANS_MOVE_QUIT: puts("[trans-move:quit]"); break;
 	case TRANS_MOVE_INVALID: puts("[trans-move:invalid]"); break;
 	default: break;
@@ -447,6 +452,10 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
 		clrMoveModePlace(mmp, b);
+		return true;
+	}
+	case CMD_PLAY: {
+		tm->type = TRANS_MOVE_PLACE_PLAY;
 		return true;
 	}
 	default: break;
@@ -597,6 +606,10 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 		clrMoveModeDiscard(&tm->data.discard);
 		return true;
 	}
+	case CMD_PLAY: {
+		tm->type = TRANS_MOVE_DISCARD_PLAY;
+		return true;
+	}
 	default: break;
 	}
 	return false;
@@ -622,6 +635,10 @@ bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b)
 		clrMoveModePlace(&tm->data.place, b);
 		return true;
 	}
+	case CMD_PLAY: {
+		tm->type = TRANS_MOVE_SKIP_PLAY;
+		return true;
+	}
 	default: break;
 	}
 	return false;
@@ -641,8 +658,8 @@ bool updateTransMove(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c, b);
 	case TRANS_MOVE_QUIT: /* fall through */
 	case TRANS_MOVE_NONE:
-	case TRANS_MOVE_INVALID:
-	default: break;
+	case TRANS_MOVE_INVALID: 
+	default: tm->type = TRANS_MOVE_INVALID; break;
 	}
 	return false;
 }
@@ -655,53 +672,6 @@ void clrTransMove(struct TransMove *tm, int pidx, struct Player *p, struct Board
 	tm->playerIdx = 0;
 	mkAdjust(&tm->adjust, p);
 	clrMoveModePlace(&tm->data.place, b);
-}
-
-void update(struct Env *e)
-{
-	struct Cmd c;
-
-	NOT(e);
-
-	if (e->transMove.type == TRANS_MOVE_INVALID) {
-		clrTransMove(&e->transMove, 0, &e->game.player[0], &e->game.board);
-		c.type = CMD_INVALID;
-		updateTransMove(&e->transMove, &c, &e->game.board);
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
-	}
-
-	switch (e->gui.gameGui.focus) {
-	case GUI_FOCUS_BOARD: boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_CHOICE: choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_RACK: rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	default: break;
-	}
-
-	switch (c.type) {
-	case CMD_FOCUS_PREV: {
-		e->gui.gameGui.focus += GUI_FOCUS_COUNT;
-		e->gui.gameGui.focus--;
-		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
-		break;
-	}
-	case CMD_FOCUS_NEXT: {
-		e->gui.gameGui.focus++;
-		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
-		break;
-	}
-	default: break;
-	}
-
-	printCmd(&c);
-
-	if (updateTransMove(&e->transMove, &c, &e->game.board)) {
-		printTransMove(&e->transMove);
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
-	}
 }
 
 void moveModePlaceToMovePlace(struct MovePlace *mp, struct MoveModePlace *mmp, struct Adjust *a)
@@ -749,29 +719,86 @@ void moveModeDiscardToMoveDiscard(struct MoveDiscard *md, struct MoveModeDiscard
 	assert(md->num == j);
 }
 
-void transMoveToMove(struct Move *m, struct TransMove *tm)
+bool transMoveToMove(struct Move *m, struct TransMove *tm)
 {
 	NOT(m);
 	NOT(tm);
 	
 	m->playerIdx = tm->playerIdx;
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: {
+	case TRANS_MOVE_PLACE_PLAY: {
 		m->type = MOVE_PLACE;
 		moveModePlaceToMovePlace(&m->data.place, &tm->data.place, &tm->adjust);
-		break;
+		return true;
 	}
-	case TRANS_MOVE_DISCARD: {
+	case TRANS_MOVE_DISCARD_PLAY: {
 		m->type = MOVE_DISCARD;
 		moveModeDiscardToMoveDiscard(&m->data.discard, &tm->data.discard, &tm->adjust);
-		break;
+		return true;
 	}
-	case TRANS_MOVE_SKIP: m->type = MOVE_SKIP; break;
-	case TRANS_MOVE_QUIT: m->type = MOVE_QUIT; break;
+	case TRANS_MOVE_SKIP_PLAY: m->type = MOVE_SKIP; return true;
+	case TRANS_MOVE_QUIT: m->type = MOVE_QUIT; return true;
 	default: m->type = MOVE_INVALID; break;
 	}
+	return false;
 }
 
+void update(struct Env *e)
+{
+	struct Cmd c;
+	struct Move m;
+	struct Action a;
+
+	NOT(e);
+
+	if (e->transMove.type == TRANS_MOVE_INVALID) {
+		clrTransMove(&e->transMove, 0, &e->game.player[e->game.turn], &e->game.board);
+		c.type = CMD_INVALID;
+		updateTransMove(&e->transMove, &c, &e->game.board);
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
+		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	}
+
+	switch (e->gui.gameGui.focus) {
+	case GUI_FOCUS_BOARD: boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_CHOICE: choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GUI_FOCUS_RACK: rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	default: break;
+	}
+
+	switch (c.type) {
+	case CMD_FOCUS_PREV: {
+		e->gui.gameGui.focus += GUI_FOCUS_COUNT;
+		e->gui.gameGui.focus--;
+		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
+		break;
+	}
+	case CMD_FOCUS_NEXT: {
+		e->gui.gameGui.focus++;
+		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
+		break;
+	}
+	default: break;
+	}
+
+	printCmd(&c);
+
+	if (updateTransMove(&e->transMove, &c, &e->game.board)) {
+		printTransMove(&e->transMove);
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
+		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	}
+
+	transMoveToMove(&m, &e->transMove);
+	mkAction(&a, &e->game, &m);
+	applyAction(&e->game, &a);
+	if (a.type != ACTION_INVALID) {
+		printf("[PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
+		nextTurn(&e->game);
+	}
+}
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 {
 	const int w = 14, h = 14;
@@ -813,17 +840,17 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 
 	pos.x = 106;
 	pos.y = 5;
-	gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim);
+	/* gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim); */
 	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->player[tm->playerIdx], &gm->board, tm, pos, dim);
 	
 	pos.x = 162;
 	pos.y = 222;
-	gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim);
+	/* gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim); */
 	rackWidgetDraw(io, tm, &g->gameGui.rackWidget, pos, dim, &gm->player[tm->playerIdx]);
 	
 	pos.x = 106;
 	pos.y = 222;
-	gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim);
+	/* gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim); */
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
 	guiDrawLockon(io, &g->gameGui);
@@ -858,6 +885,7 @@ void exec(struct Env *e)
 	} while (!q);
 }
 
+/*
 void adjustTest(struct Game *g)
 {
 	struct Adjust a;
@@ -872,15 +900,38 @@ void adjustTest(struct Game *g)
 	}
 }
 
+void test(struct Env *e)
+{
+	struct Move m;
+	struct Action a;
+	mkAdjust(&e->transMove.adjust, &e->game.player[0]);
+	clrMoveModePlace(&e->transMove.data.place, &e->game.board);
+	e->transMove.type = TRANS_MOVE_PLACE;
+	e->transMove.playerIdx = 0;
+	e->transMove.data.place.num = 2;
+	e->transMove.data.place.rackIdx[7][7] = 1;
+	e->transMove.data.place.rackIdx[8][7] = 3;
+	e->transMove.data.place.boardIdx[1].x = 7;
+	e->transMove.data.place.boardIdx[1].y = 7;
+	e->transMove.data.place.boardIdx[3].x = 7;
+	e->transMove.data.place.boardIdx[3].y = 8;
+	transMoveToMove(&m, &e->transMove);
+	mkAction(&a, &e->game, &m);
+	printAction(&a);
+	clrMoveModePlace(&e->transMove.data.place, &e->game.board);
+	e->transMove.type = TRANS_MOVE_INVALID;
+}
+*/
+
 int gui()
 {
-	int exit_status = EXIT_FAILURE;
+	int exitStatus = EXIT_FAILURE;
 	struct Env e;
 	if (init(&e)) {
 		exec(&e);
-		exit_status = EXIT_SUCCESS;
+		exitStatus = EXIT_SUCCESS;
 	}
 	quit(&e);
-	return exit_status;
+	return exitStatus;
 }
 

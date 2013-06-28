@@ -14,6 +14,5 @@ void printRack(struct Player *);
 void printPlace(struct MovePlace *);
 void printActionErr(ActionErrType);
 
-
 #endif
 
