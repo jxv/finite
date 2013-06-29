@@ -197,6 +197,8 @@ bool init(struct Env *e)
 	e->game.playerNum = 2;
 	playerInit(&e->game.player[0], &e->game.bag);
 	playerInit(&e->game.player[1], &e->game.bag);
+	e->game.player[0].active = 1;
+	e->game.player[1].active = 1;
 	controlsInit(&e->controls);
 	e->transMove.type = TRANS_MOVE_INVALID;
 	e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
@@ -709,7 +711,7 @@ void clrTransMove(struct TransMove *tm, int pidx, struct Player *p, struct Board
 	NOT(tm);
 
 	tm->type = TRANS_MOVE_PLACE_INIT;
-	tm->playerIdx = 0;
+	tm->playerIdx = pidx;
 	mkAdjust(&tm->adjust, p);
 	clrMoveModePlace(&tm->data.place, b);
 }
@@ -792,7 +794,7 @@ void update(struct Env *e)
 	NOT(e);
 
 	if (e->transMove.type == TRANS_MOVE_INVALID) {
-		clrTransMove(&e->transMove, 0, &e->game.player[e->game.turn], &e->game.board);
+		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 		c.type = CMD_INVALID;
 		updateTransMove(&e->transMove, &c, &e->game.board);
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
@@ -837,7 +839,12 @@ void update(struct Env *e)
 	if (a.type != ACTION_INVALID) {
 		printf("[PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
 		nextTurn(&e->game);
-	}
+		e->transMove.type = TRANS_MOVE_INVALID;
+	} else {
+		if (m.type != MOVE_INVALID) {
+			printActionErr(a.type);
+		}
+	} 
 }
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 {

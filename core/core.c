@@ -445,15 +445,15 @@ bool pathValid(struct Path *p, struct Dict *d)
 
 	switch (p->type) {
 	case PATH_DOT: {
-		if (!dirValid(&p->data.dot.right, &p->board, d)) {
+		puts("DOT_START");
+		if (!(dirValid(&p->data.dot.right, &p->board, d) || dirValid(&p->data.dot.down, &p->board, d))) {
 			return false;
 		}
-		if (!dirValid(&p->data.dot.down, &p->board, d)) {
-			return false;
-		}
+		puts("DOT_END");
 		break;
 	}
 	case PATH_HORZ: {
+		puts("HORZ_START");
 		if (!dirValid(&p->data.horz.right, &p->board, d)) {
 			return false;
 		}
@@ -463,9 +463,11 @@ bool pathValid(struct Path *p, struct Dict *d)
 				return false;
 			}
 		}
+		puts("HORZ_END");
 		break;
 	}
 	case PATH_VERT: {
+		puts("VERT_START");
 		if (!dirValid(&p->data.vert.down, &p->board, d)) {
 			return false;
 		}
@@ -475,6 +477,7 @@ bool pathValid(struct Path *p, struct Dict *d)
 				return false;
 			}
 		}
+		puts("VERT_END");
 		break;
 	}
 	case PATH_INVALID: /* fall through */
@@ -892,26 +895,42 @@ void mkPlace(struct Action *a, struct Game *g, struct Move *m)
 		a->data.err = err;
 		return;
 	}
+
 	memCpy(&path->board, &g->board, sizeof(struct Board));
 	cpyRackBoard(&path->board, &m->data.place, player);
-	if (num <= 0) {
+
+	assert(num >= 0);
+	switch (num) {
+	case 0: {
 		a->type = ACTION_INVALID;
 		a->data.err = ACTION_ERR_PLACE_NO_RACK;
 		return;
 	}
-	if (num == 1) {
+	case 1: {
 		mkDot(a, m);
-	} else if (num >= 2) {
-		if (isHorz(a, m)) {
-			mkHorz(a, m);
-		} else if (isVert(a, m)) {
-			mkVert(a, m);
-		} else {
-			a->type = ACTION_INVALID;
-			a->data.err = ACTION_ERR_PLACE_NO_DIR;
-			return;
-		}
+		puts("DOOOOTTT");
+		break;
 	}
+	default: {
+		assert(num > 1);
+		if (isHorz(a, m)) {
+			puts("HORRRZZZ");
+			mkHorz(a, m);
+		} else { 
+			if (isVert(a, m)) {
+				puts("VERRTTT");
+				mkVert(a, m);
+			} else {
+				puts("WTFF");
+				a->type = ACTION_INVALID;
+				a->data.err = ACTION_ERR_PLACE_NO_DIR;
+				return;
+			}
+		}
+		break;
+	}
+	}
+
 	if (!pathValid(path, &g->dict)) {
 		a->type = ACTION_INVALID;
 		a->data.err = ACTION_ERR_PLACE_INVALID_PATH;
@@ -930,9 +949,7 @@ void mkDiscard(struct Action *a, struct Game *g, struct Move *m)
 
 	a->type = ACTION_DISCARD;
 	a->data.discard.num = m->data.discard.num;
-	printf("[[%d]]\n", m->data.discard.num);
 	for (i = 0; i < a->data.discard.num; i++) {
-		printf("[%d]\n", a->data.discard.rackIdx[i]);
 		a->data.discard.rackIdx[i] = m->data.discard.rackIdx[i];
 	}
 	/* memCpy(&a->data.discard, &m->data.discard, sizeof(struct Discard)); */
@@ -1026,6 +1043,10 @@ bool applyAction(struct Game *g, struct Action *a)
 		}
 		rackRefill(&g->player[id], &g->bag);
 		rackShift(&g->player[id]);
+		g->player[id].score -= a->data.discard.num;
+		if (g->player[id].score < 0) {
+			g->player[id].score = 0;
+		}
 		break;
 	}
 	case ACTION_SKIP: {
@@ -1061,6 +1082,7 @@ void nextTurn(struct Game *g)
 		g->turn ++;
 		g->turn %= g->playerNum;
 	} while (!g->player[g->turn].active);
+	printf("turn: %d\n", g->turn);
 }
 
 void moveClr(struct Move *m)

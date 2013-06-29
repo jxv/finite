@@ -1,0 +1,34 @@
+P=/opt/gcw0-toolchain/usr/mipsel-gcw0-linux-uclibc/sysroot/usr/bin/
+
+CC=mipsel-gcw0-linux-uclibc-cc
+RM=rm
+
+INC=-I .
+INC+=-I core
+INC+=-I ui
+INC+=-I util
+
+SRC=$(wildcard *.c)
+SRC+=$(wildcard core/*.c)
+SRC+=$(wildcard ui/*.c)
+SRC+=$(wildcard util/*.c)
+
+CFLAG=-ansi
+CFLAG+=-Werror
+CFLAG+=-Wall
+CFLAG+=-pedantic
+CFLAG+=-O3
+CFLAG+=-DDEBUG
+CFLAG+=`$(P)sdl-config --cflags`
+
+LIB=-lc
+LIB=-lpthread
+LIB+=`$(P)sdl-config --libs`
+LIB+=-lSDL_image
+
+OUT=finite
+
+all:
+	$(CC) $(SRC) -o $(OUT) $(CFLAG) $(INC) $(LIB)  
+clean:
+	$(RM) $(OUT)
