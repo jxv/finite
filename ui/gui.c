@@ -92,9 +92,9 @@ void controlsInit(struct Controls *c)
 
 bool init(struct Env *e)
 {
-	int i;
+	int i, j;
 	char str[32];
-	SDL_Surface *tile;
+	SDL_Surface *tile[TILE_LOOK_COUNT];
 
 	NOT(e);
 
@@ -157,26 +157,40 @@ bool init(struct Env *e)
 	if (!fontmapInit(&e->io.black_font, 6, 12, RES_PATH "black_font.png")) {
 		return false;
 	}
-	if ((tile = surfaceLoad(RES_PATH "tile.png")) == NULL) {
+
+	tile[TILE_LOOK_DISABLE] = surfaceLoad(RES_PATH "tile_disable.png");
+	tile[TILE_LOOK_NORMAL] = surfaceLoad(RES_PATH "tile_normal.png");
+	tile[TILE_LOOK_HOLD] = surfaceLoad(RES_PATH "tile_hold.png");
+
+	if (!(tile[TILE_LOOK_DISABLE] && tile[TILE_LOOK_NORMAL] && tile[TILE_LOOK_HOLD])) {
+		surfaceFree(tile[TILE_LOOK_DISABLE]);
+		surfaceFree(tile[TILE_LOOK_NORMAL]);
+		surfaceFree(tile[TILE_LOOK_HOLD]);
 		return false;
-	} else {
-		e->io.wild = surfaceCpy(tile);
-	}
+	} 
+	e->io.wild[TILE_LOOK_DISABLE] = surfaceCpy(tile[TILE_LOOK_DISABLE]);
+	e->io.wild[TILE_LOOK_NORMAL] = surfaceCpy(tile[TILE_LOOK_NORMAL]);
+	e->io.wild[TILE_LOOK_HOLD] = surfaceCpy(tile[TILE_LOOK_HOLD]);
+
 	for (i = 0; i < LETTER_COUNT; i++) {
-		e->io.tile[TILE_WILD][i] = surfaceCpy(tile);
-		if (!e->io.tile[TILE_WILD][i]) {
-			return false;
+		for (j = 0; j < TILE_LOOK_COUNT; j++) {
+			e->io.tile[TILE_WILD][i][j] = surfaceCpy(tile[j]);
+			if (!e->io.tile[TILE_WILD][i][j]) {
+				return false;
+			}
+			e->io.tile[TILE_LETTER][i][j] = surfaceCpy(tile[j]);
+			if (!e->io.tile[TILE_LETTER][i][j]) {
+				return false;
+			}
+			sprintf(str,"%c", i + 'a');
+			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.black_font, str, 3, 0);
+			sprintf(str,"%c", i + 'A');
+			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.black_font, str, 3, 0);
 		}
-		e->io.tile[TILE_LETTER][i] = surfaceCpy(tile);
-		if (!e->io.tile[TILE_LETTER][i]) {
-			return false;
-		}
-		sprintf(str,"%c", i + 'a');
-		strDraw(e->io.tile[TILE_WILD][i], &e->io.black_font, str, 3, 0);
-		sprintf(str,"%c", i + 'A');
-		strDraw(e->io.tile[TILE_LETTER][i], &e->io.black_font, str, 3, 0);
 	}
-	surfaceFree(tile);
+	for (i = 0; i < TILE_LOOK_COUNT; i++) {
+		surfaceFree(tile[i]);
+	}
 	boardInit(&e->game.board);
 	bagInit(&e->game.bag);
 	initGUI(&e->gui);
@@ -192,7 +206,7 @@ bool init(struct Env *e)
 
 void quit(struct Env *e)
 {
-	int i;
+	int i, j;
 
 	NOT(e);
 
@@ -206,10 +220,14 @@ void quit(struct Env *e)
 	surfaceFree(e->io.discard);
 	surfaceFree(e->io.skip);
 	surfaceFree(e->io.play);
-	surfaceFree(e->io.wild);
+	for (i = 0; i < TILE_LOOK_COUNT; i++) {
+		surfaceFree(e->io.wild[i]);
+	}	
 	for (i = 0; i < LETTER_COUNT; i++) {
-		surfaceFree(e->io.tile[TILE_WILD][i]);
-		surfaceFree(e->io.tile[TILE_LETTER][i]);
+		for (j = 0; j < TILE_LOOK_COUNT; j++) {
+			surfaceFree(e->io.tile[TILE_WILD][i][j]);
+			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
+		}
 	}
 	fontmapQuit(&e->io.white_font);
 	fontmapQuit(&e->io.black_font);
@@ -318,6 +336,9 @@ void printCmd(struct Cmd *c)
 	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
 	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
 	case CMD_PLAY: puts("[cmd:play]"); break;
+	case CMD_BOARD_CANCEL: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
+	case CMD_RACK_CANCEL: printf("[cmd:rack-cancel %d]", c->data.rack); break;
+	case CMD_CHOICE_CANCEL: puts("[cmd:choice-cancel]"); break;
 	case CMD_QUIT: puts("[cmd:quit]"); break;
 	/*case CMD_INVALID:	puts("[cmd:invalid]"); break; // very noisy */
 	default: break;
@@ -535,6 +556,12 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 		clrMoveModePlace(mmp, b);
 		return true;
 	}
+	case CMD_BOARD_CANCEL: 
+	case CMD_RACK_CANCEL:
+	case CMD_CHOICE_CANCEL: {
+		tm->type = mmp->num == 0 ? TRANS_MOVE_PLACE_INIT : TRANS_MOVE_PLACE;
+		return true;
+	}
 	default: break;
 	}
 	return false;
@@ -579,6 +606,8 @@ bool updateTransMoveDiscardInit(struct TransMove *tm, struct Cmd *c, struct Boar
 
 bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 {
+	struct MoveModeDiscard *mmd;
+
 	NOT(tm);
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_DISCARD);
@@ -587,27 +616,38 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 	assert(c->type != CMD_MODE_DOWN);
 	assert(c->type != CMD_QUIT);
 	
+	mmd = &tm->data.discard;
+	
 	switch (c->type) {
 	case CMD_RACK: {
-		tm->data.discard.rack[c->data.rack] = !tm->data.discard.rack[c->data.rack];
-		if (tm->data.discard.rack[c->data.rack]) {
-			tm->data.discard.num++;
+		mmd->rack[c->data.rack] = !mmd->rack[c->data.rack];
+		if (mmd->rack[c->data.rack]) {
+			mmd->num++;
 		} else {
-			tm->data.discard.num--;
+			mmd->num--;
 		}
-		if (tm->data.discard.num == 0) {
+		if (mmd->num == 0) {
 			tm->type = TRANS_MOVE_DISCARD_INIT;
-			clrMoveModeDiscard(&tm->data.discard);
+			clrMoveModeDiscard(mmd);
 		}
 		return true;
 	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_DISCARD_INIT;
-		clrMoveModeDiscard(&tm->data.discard);
+		clrMoveModeDiscard(mmd);
 		return true;
 	}
 	case CMD_PLAY: {
 		tm->type = TRANS_MOVE_DISCARD_PLAY;
+		return true;
+	}
+	case CMD_RACK_CANCEL: {
+		if (mmd->rack[c->data.rack]) {
+			assert(mmd->num > 0);
+			mmd->num--;
+			mmd->rack[c->data.rack] = false;
+		}
+		tm->type = mmd->num == 0 ? TRANS_MOVE_DISCARD_INIT : TRANS_MOVE_DISCARD;
 		return true;
 	}
 	default: break;

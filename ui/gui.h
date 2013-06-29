@@ -45,6 +45,9 @@ typedef enum
 	CMD_MODE_UP,
 	CMD_MODE_DOWN,
 	CMD_PLAY,
+	CMD_BOARD_CANCEL,
+	CMD_RACK_CANCEL,
+	CMD_CHOICE_CANCEL,
 	CMD_QUIT,
 	CMD_COUNT
 } CmdType;
@@ -66,6 +69,14 @@ typedef enum
 	TRANS_MOVE_COUNT
 } TransMoveType;
 
+typedef enum
+{
+	TILE_LOOK_DISABLE = 0,
+	TILE_LOOK_NORMAL,
+	TILE_LOOK_HOLD,
+	TILE_LOOK_COUNT
+} TileLookType;
+
 struct Font
 {
 	int width;
@@ -77,8 +88,8 @@ struct IO
 {
 	SDL_Surface *screen;
 	SDL_Surface *back;
-	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT];
-	SDL_Surface *wild;
+	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
+	SDL_Surface *wild[TILE_LOOK_COUNT];
 	SDL_Surface *lockon;
 	SDL_Surface *recall;
 	SDL_Surface *recallDisable;

@@ -25,7 +25,7 @@ void mkRackWidget(struct GridWidget *gw)
 {
 	NOT(gw);
 	
-	gw->width  = RACK_SIZE;
+	gw->width = RACK_SIZE;
 	gw->height = 1;
 	mkGridWidgetByDim(gw);
 }
@@ -34,7 +34,7 @@ void mkChoiceWidget(struct GridWidget *gw)
 {
 	NOT(gw);
 	
-	gw->width  = CHOICE_COUNT;
+	gw->width = CHOICE_COUNT;
 	gw->height = 1;
 	mkGridWidgetByDim(gw);
 }
@@ -95,6 +95,11 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 	if (c->right.type == KEY_STATE_PRESSED) {
 		bw->index.x++;
 		bw->index.x %= BOARD_X;
+		return;
+	}
+	if (c->a.type == KEY_STATE_PRESSED) {
+		cmd->type = CMD_BOARD_CANCEL;
+		cmd->data.board = bw->index;
 	}
 }
 
@@ -157,6 +162,10 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	if (c->right.type == KEY_STATE_PRESSED) {
 		cw->index.x++;
 		cw->index.x %= CHOICE_COUNT;
+		return;
+	}
+	if (c->a.type == KEY_STATE_PRESSED) {
+		cmd->type = CMD_CHOICE_CANCEL;
 	}
 }
 
@@ -195,6 +204,11 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 	if (c->right.type == KEY_STATE_PRESSED) {
 		rw->index.x++;
 		rw->index.x %= RACK_SIZE;
+		return;
+	}
+	if (c->a.type == KEY_STATE_PRESSED) {
+		cmd->type = CMD_RACK_CANCEL;
+		cmd->data.rack = rw->index.x;
 	}
 }
 
@@ -367,22 +381,26 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != TILE_NONE) {
-				ts = io->tile[t->type][t->letter];
+				ts = io->tile[t->type][t->letter][TILE_LOOK_NORMAL];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 			}
 		}
 	}
 
-	if (!(tm->type == TRANS_MOVE_PLACE || tm->type == TRANS_MOVE_PLACE_HOLD)) {
-		return;
-	}
-	for (i = 0; i < RACK_SIZE; i++) {
-		idx = tm->data.place.boardIdx[i];
-		if (validBoardIdx(idx)) {
-			t = &p->tile[tm->adjust.data.tile[tm->data.place.rackIdx[idx.y][idx.x]].idx];
-			ts = io->tile[t->type][t->letter];
-			surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_HOLD: {
+		for (i = 0; i < RACK_SIZE; i++) {
+			idx = tm->data.place.boardIdx[i];
+			if (validBoardIdx(idx)) {
+				t = &p->tile[tm->adjust.data.tile[tm->data.place.rackIdx[idx.y][idx.x]].idx];
+				ts = io->tile[t->type][t->letter][TILE_LOOK_HOLD];
+				surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
+			}
 		}
+		break;
+	}
+	default: break;
 	}
 }
 
@@ -395,11 +413,51 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 	NOT(tm);
 	NOT(p);
 
-	for (i = 0; i < RACK_SIZE; i++) {
-		t = &p->tile[tm->adjust.data.tile[i].idx];
-		if (t->type != TILE_NONE) {
-			surfaceDraw(io->screen, io->tile[t->type][t->letter], i * dim.x + 164, 220);
+
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE: {
+		for (i = 0; i < RACK_SIZE; i++) {
+			t = &p->tile[tm->adjust.data.tile[i].idx];
+			if (t->type != TILE_NONE && !validBoardIdx(tm->data.place.boardIdx[i])) {
+				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
+			}
 		}
+		break;
+	}
+	case TRANS_MOVE_PLACE_HOLD: {
+		for (i = 0; i < RACK_SIZE; i++) {
+			t = &p->tile[tm->adjust.data.tile[i].idx];
+			if (t->type != TILE_NONE && tm->data.place.idx != i && !validBoardIdx(tm->data.place.boardIdx[i])) {
+				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
+			}
+			if (t->type != TILE_NONE && tm->data.place.idx == i) {
+				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_HOLD], i * dim.x + 164, 220);
+			}
+		}
+		break;
+	}
+	case TRANS_MOVE_DISCARD: {
+		for (i = 0; i < RACK_SIZE; i++) {
+			t = &p->tile[tm->adjust.data.tile[i].idx];
+			if (t->type != TILE_NONE) {
+				if (tm->data.discard.rack[i]) {
+					surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_DISABLE], i * dim.x + 164, 220);
+				} else {
+					surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
+				}
+			}
+		}
+		break;
+	}
+	default: {
+		for (i = 0; i < RACK_SIZE; i++) {
+			t = &p->tile[tm->adjust.data.tile[i].idx];
+			if (t->type != TILE_NONE) {
+				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
+			}
+		}
+		break;
+	}
 	}
 }
 
