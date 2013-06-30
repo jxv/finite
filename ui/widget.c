@@ -68,7 +68,7 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
-	if (c->b.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
+	if (c->a.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
 		cmd->type = CMD_BOARD;
 		cmd->data.board = bw->index;
 		return;
@@ -97,7 +97,7 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 		bw->index.x %= BOARD_X;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED) {
+	if (c->x.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_BOARD_CANCEL;
 		cmd->data.board = bw->index;
 	}
@@ -125,7 +125,7 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 		return;
 	}
 	if (cw->button[cw->index.y][cw->index.x]) {
-		if (c->b.type == KEY_STATE_PRESSED) {
+		if (c->a.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
 			case CHOICE_RECALL: cmd->type = CMD_RECALL; break;
 			case CHOICE_PLAY: cmd->type = CMD_PLAY; break;
@@ -164,7 +164,7 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 		cw->index.x %= CHOICE_COUNT;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED) {
+	if (c->x.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_CHOICE_CANCEL;
 	}
 }
@@ -190,7 +190,7 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 		cmd->type = CMD_FOCUS_NEXT;
 		return;
 	}
-	if (c->b.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
+	if (c->a.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
 		cmd->type = CMD_RACK;
 		cmd->data.rack = rw->index.x;
 		return;
@@ -206,7 +206,7 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 		rw->index.x %= RACK_SIZE;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED) {
+	if (c->x.type == KEY_STATE_PRESSED) {
 		cmd->type = CMD_RACK_CANCEL;
 		cmd->data.rack = rw->index.x;
 	}
