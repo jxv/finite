@@ -409,6 +409,7 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 
 	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * 14 + 106, idx.y * 14 + 6);
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != TILE_NONE) {
 				ts = io->tile[t->type][t->letter][TILE_LOOK_NORMAL];

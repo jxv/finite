@@ -108,6 +108,7 @@ struct IO
 	SDL_Surface *skipDisable;
 	SDL_Surface *play;
 	SDL_Surface *playDisable;
+	SDL_Surface *sq[SQ_COUNT];
 	struct Font white_font;
 	struct Font black_font;
 };

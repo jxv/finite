@@ -158,6 +158,19 @@ bool init(struct Env *e)
 		return false;
 	}
 
+	e->io.sq[SQ_NORMAL] = surfaceLoad(RES_PATH "sq_normal.png");
+	e->io.sq[SQ_DBL_LET] = surfaceLoad(RES_PATH "sq_dl.png");
+	e->io.sq[SQ_DBL_WRD] = surfaceLoad(RES_PATH "sq_dw.png");
+	e->io.sq[SQ_TRP_LET] = surfaceLoad(RES_PATH "sq_tl.png");
+	e->io.sq[SQ_TRP_WRD] = surfaceLoad(RES_PATH "sq_tw.png");
+	e->io.sq[SQ_FREE] = surfaceLoad(RES_PATH "sq_free.png");
+
+	for (i = 0; i < SQ_COUNT; i++) {
+		if (e->io.sq[i] == NULL) { 
+			return false;
+		}
+	}
+
 	tile[TILE_LOOK_DISABLE] = surfaceLoad(RES_PATH "tile_disable.png");
 	tile[TILE_LOOK_NORMAL] = surfaceLoad(RES_PATH "tile_normal.png");
 	tile[TILE_LOOK_HOLD] = surfaceLoad(RES_PATH "tile_hold.png");
@@ -202,6 +215,7 @@ bool init(struct Env *e)
 	controlsInit(&e->controls);
 	e->transMove.type = TRANS_MOVE_INVALID;
 	e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
+	e->gui.gameGui.bottomLast = GUI_FOCUS_CHOICE;
 	e->gui.gameGui.choiceWidget.index.x = 1;
 	return true;
 }
@@ -222,6 +236,9 @@ void quit(struct Env *e)
 	surfaceFree(e->io.discard);
 	surfaceFree(e->io.skip);
 	surfaceFree(e->io.play);
+	for (i = 0; i < SQ_COUNT; i++) {
+		surfaceFree(e->io.sq[i]);
+	}
 	for (i = 0; i < TILE_LOOK_COUNT; i++) {
 		surfaceFree(e->io.wild[i]);
 	}	
@@ -347,7 +364,7 @@ void printCmd(struct Cmd *c)
 	case CMD_TILE_PREV: puts("[cmd:tile-prev]"); break;
 	case CMD_TILE_NEXT: puts("[cmd:tile-next]"); break;
 	case CMD_QUIT: puts("[cmd:quit]"); break;
-	/*case CMD_INVALID:	puts("[cmd:invalid]"); break; // very noisy */
+	/*case CMD_INVALID: puts("[cmd:invalid]"); break; // very noisy */
 	default: break;
 	}
 }
