@@ -330,10 +330,13 @@ void printCmd(struct Cmd *c)
 	NOT(c);
 
 	switch (c->type) {
-	case CMD_FOCUS_PREV: puts("[cmd:focus-prev]"); break;
-	case CMD_FOCUS_NEXT: puts("[cmd:focus-next]"); break;
-	case CMD_BOARD: printf("[cmd:board (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
+	case CMD_FOCUS_TOP: puts("[cmd:focus-top]"); break;
+	case CMD_FOCUS_BOTTOM: puts("[cmd:focus-bottom]"); break;
+	case CMD_BOARD_SELECT: printf("[cmd:board-select (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
+	case CMD_RACK_SELECT: printf("[cmd:rack-select %d]\n", c->data.rack); break;
+	case CMD_BOARD: printf("[cmd:board (%d, %d)]\n", c->data.board.x, c->data.board.y); break;
 	case CMD_RACK: printf("[cmd:rack %d]\n", c->data.rack); break;
+	case CMD_CHOICE: printf("[cmd:choice %d]\n", c->data.choice); break;
 	case CMD_RECALL: puts("[cmd:recall]"); break;
 	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
 	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
@@ -341,6 +344,8 @@ void printCmd(struct Cmd *c)
 	case CMD_BOARD_CANCEL: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
 	case CMD_RACK_CANCEL: printf("[cmd:rack-cancel %d]", c->data.rack); break;
 	case CMD_CHOICE_CANCEL: puts("[cmd:choice-cancel]"); break;
+	case CMD_TILE_PREV: puts("[cmd:tile-prev]"); break;
+	case CMD_TILE_NEXT: puts("[cmd:tile-next]"); break;
 	case CMD_QUIT: puts("[cmd:quit]"); break;
 	/*case CMD_INVALID:	puts("[cmd:invalid]"); break; // very noisy */
 	default: break;
@@ -409,13 +414,13 @@ bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c)
 	NOT(tm);
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_PLACE_INIT);
-	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_BOARD_SELECT);
 	assert(c->type != CMD_RECALL);
 	assert(c->type != CMD_PLAY);
 	assert(c->type != CMD_QUIT);
 
 	switch (c->type) {
-	case CMD_RACK: {
+	case CMD_RACK_SELECT: {
 		if (tm->adjust.data.tile[c->data.rack].type != TILE_NONE) {
 			tm->data.place.idx = c->data.rack;
 			tm->type = TRANS_MOVE_PLACE_HOLD;
@@ -452,7 +457,7 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	mmp = &tm->data.place;
 	
 	switch (c->type) {
-	case CMD_BOARD:	{
+	case CMD_BOARD_SELECT:	{
 		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
 			tm->type = TRANS_MOVE_PLACE_HOLD;
 			mmp->idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
@@ -464,7 +469,7 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 		}
 		break;
 	}
-	case CMD_RACK: {
+	case CMD_RACK_SELECT: {
 		if (tm->adjust.data.tile[c->data.rack].type != TILE_NONE && !validBoardIdx(mmp->boardIdx[c->data.rack])) {
 			mmp->idx = c->data.rack;
 			tm->type = TRANS_MOVE_PLACE_HOLD;
@@ -503,7 +508,7 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 	mmp = &tm->data.place;
 	
 	switch (c->type) {
-	case CMD_BOARD:	{
+	case CMD_BOARD_SELECT: {
 		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
 			int idx = mmp->idx;
 			mmp->boardIdx[mmp->idx] = c->data.board;
@@ -519,7 +524,7 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 		}
 		return true;
 	}
-	case CMD_RACK: {
+	case CMD_RACK_SELECT: {
 		assert(c->data.rack >= 0);
 		assert(c->data.rack < RACK_SIZE);
 		t = tm->adjust.data.tile[c->data.rack].type;
@@ -564,6 +569,21 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 		tm->type = mmp->num == 0 ? TRANS_MOVE_PLACE_INIT : TRANS_MOVE_PLACE;
 		return true;
 	}
+	case CMD_TILE_PREV: {
+		do {
+			mmp->idx += RACK_SIZE;
+			mmp->idx--;
+			mmp->idx %= RACK_SIZE;
+		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
+		return true;
+	}
+	case CMD_TILE_NEXT: {
+		do {
+			mmp->idx++;
+			mmp->idx %= RACK_SIZE;
+		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
+		return true;
+	}
 	default: break;
 	}
 	return false;
@@ -577,13 +597,13 @@ bool updateTransMoveDiscardInit(struct TransMove *tm, struct Cmd *c, struct Boar
 	NOT(c);
 	NOT(b);
 	assert(tm->type == TRANS_MOVE_DISCARD_INIT);
-	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_BOARD_SELECT);
 	assert(c->type != CMD_RECALL);
 	assert(c->type != CMD_PLAY);
 	assert(c->type != CMD_QUIT);
 	
 	switch (c->type) {
-	case CMD_RACK: {
+	case CMD_RACK_SELECT: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			tm->data.discard.rack[i] = false;
 		}
@@ -613,7 +633,7 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 	NOT(tm);
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_DISCARD);
-	assert(c->type != CMD_BOARD);
+	assert(c->type != CMD_BOARD_SELECT);
 	assert(c->type != CMD_MODE_UP);
 	assert(c->type != CMD_MODE_DOWN);
 	assert(c->type != CMD_QUIT);
@@ -621,7 +641,7 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 	mmd = &tm->data.discard;
 	
 	switch (c->type) {
-	case CMD_RACK: {
+	case CMD_RACK_SELECT: {
 		mmd->rack[c->data.rack] = !mmd->rack[c->data.rack];
 		if (mmd->rack[c->data.rack]) {
 			mmd->num++;
@@ -662,8 +682,8 @@ bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	NOT(tm);
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_SKIP);
-	assert(c->type != CMD_BOARD);
-	assert(c->type != CMD_RACK);
+	assert(c->type != CMD_BOARD_SELECT);
+	assert(c->type != CMD_RACK_SELECT);
 	assert(c->type != CMD_RECALL);
 	
 	switch (c->type) {
@@ -810,18 +830,40 @@ void update(struct Env *e)
 	}
 
 	switch (c.type) {
-	case CMD_FOCUS_PREV: {
-		e->gui.gameGui.focus += GUI_FOCUS_COUNT;
-		e->gui.gameGui.focus--;
-		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
+	case CMD_FOCUS_TOP: {
+		e->gui.gameGui.focus = GUI_FOCUS_BOARD;
 		break;
 	}
-	case CMD_FOCUS_NEXT: {
-		e->gui.gameGui.focus++;
-		e->gui.gameGui.focus %= GUI_FOCUS_COUNT;
+	case CMD_FOCUS_BOTTOM: {
+		if (e->gui.gameGui.bottomLast != GUI_FOCUS_CHOICE) {
+			e->gui.gameGui.focus = GUI_FOCUS_RACK;
+		} else {
+			e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
+		}
+		break;
+	}
+	case CMD_BOARD: {
+		e->gui.gameGui.focus = GUI_FOCUS_BOARD;
+		e->gui.gameGui.boardWidget.index = c.data.board;
+		break;
+	}
+	case CMD_RACK: {
+		e->gui.gameGui.focus = GUI_FOCUS_RACK;
+		e->gui.gameGui.rackWidget.index.x = c.data.rack;
+		e->gui.gameGui.rackWidget.index.y = 0;
+		break;
+	}
+	case CMD_CHOICE: {
+		e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
+		e->gui.gameGui.choiceWidget.index.x = c.data.choice;
+		e->gui.gameGui.choiceWidget.index.y = 0;
 		break;
 	}
 	default: break;
+	}
+	if (e->gui.gameGui.focus != GUI_FOCUS_BOARD) {
+		
+		e->gui.gameGui.bottomLast = e->gui.gameGui.focus;
 	}
 
 	printCmd(&c);
@@ -846,6 +888,7 @@ void update(struct Env *e)
 		}
 	} 
 }
+
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 {
 	const int w = 14, h = 14;

@@ -37,10 +37,13 @@ typedef enum
 typedef enum
 {
 	CMD_INVALID = -1,
-	CMD_FOCUS_PREV = 0,
-	CMD_FOCUS_NEXT,
+	CMD_FOCUS_TOP = 0,
+	CMD_FOCUS_BOTTOM,
+	CMD_BOARD_SELECT,
+	CMD_RACK_SELECT,
 	CMD_BOARD,
 	CMD_RACK,
+	CMD_CHOICE,
 	CMD_RECALL,
 	CMD_MODE_UP,
 	CMD_MODE_DOWN,
@@ -48,6 +51,8 @@ typedef enum
 	CMD_BOARD_CANCEL,
 	CMD_RACK_CANCEL,
 	CMD_CHOICE_CANCEL,
+	CMD_TILE_PREV,
+	CMD_TILE_NEXT,
 	CMD_QUIT,
 	CMD_COUNT
 } CmdType;
@@ -133,6 +138,7 @@ struct Cmd
 	union {
 	struct Coor board;
 	int rack;
+	int choice;
 	} data;
 };
 
@@ -156,6 +162,7 @@ typedef enum
 struct GameGUI
 {
 	GUIFocusType focus;
+	GUIFocusType bottomLast;
 	struct GridWidget rackWidget;
 	struct GridWidget boardWidget;
 	struct GridWidget choiceWidget;

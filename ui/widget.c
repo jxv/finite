@@ -61,15 +61,19 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 	cmd->type = CMD_INVALID;
 
 	if (c->l.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_PREV;
+		cmd->type = CMD_TILE_PREV;
 		return;
 	}
 	if (c->r.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_NEXT;
+		cmd->type = CMD_TILE_NEXT;
+		return;
+	}
+	if (c->b.type == KEY_STATE_PRESSED) {
+		cmd->type = CMD_FOCUS_BOTTOM;
 		return;
 	}
 	if (c->a.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
-		cmd->type = CMD_BOARD;
+		cmd->type = CMD_BOARD_SELECT;
 		cmd->data.board = bw->index;
 		return;
 	}
@@ -117,11 +121,15 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	cmd->type = CMD_INVALID;
 
 	if (c->l.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_PREV;
+		cmd->type = CMD_TILE_PREV;
 		return;
 	}
 	if (c->r.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_NEXT;
+		cmd->type = CMD_TILE_NEXT;
+		return;
+	}
+	if (c->b.type == KEY_STATE_PRESSED) {
+		cmd->type = CMD_FOCUS_TOP;
 		return;
 	}
 	if (cw->button[cw->index.y][cw->index.x]) {
@@ -154,14 +162,23 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 		}
 	}
 	if (c->left.type == KEY_STATE_PRESSED) {
-		cw->index.x += CHOICE_COUNT; 
 		cw->index.x--;
-		cw->index.x %= CHOICE_COUNT;
+		assert(cw->index.x + 1 >= 0);
+		if (cw->index.x < 0) {
+			cw->index.x = 0;
+			cmd->type = CMD_RACK;
+			cmd->data.rack = RACK_SIZE - 1;
+		}
 		return;
 	}
 	if (c->right.type == KEY_STATE_PRESSED) {
 		cw->index.x++;
-		cw->index.x %= CHOICE_COUNT;
+		assert(cw->index.x <= CHOICE_COUNT);
+		if (cw->index.x == CHOICE_COUNT) {
+			cw->index.x = CHOICE_COUNT - 1;
+			cmd->type = CMD_RACK;
+			cmd->data.rack = 0;
+		}
 		return;
 	}
 	if (c->x.type == KEY_STATE_PRESSED) {
@@ -183,27 +200,40 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 	cmd->type = CMD_INVALID;
 
 	if (c->l.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_PREV;
+		cmd->type = CMD_TILE_PREV;
 		return;
 	}
 	if (c->r.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_NEXT;
+		cmd->type = CMD_TILE_NEXT;
 		return;
 	}
 	if (c->a.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
-		cmd->type = CMD_RACK;
+		cmd->type = CMD_RACK_SELECT;
 		cmd->data.rack = rw->index.x;
 		return;
 	}
+	if (c->b.type == KEY_STATE_PRESSED) {
+		cmd->type = CMD_FOCUS_TOP;
+		return;
+	}
 	if (c->left.type == KEY_STATE_PRESSED) {
-		rw->index.x += RACK_SIZE; 
 		rw->index.x--;
-		rw->index.x %= RACK_SIZE;
+		assert(rw->index.x + 1 >= 0);
+		if (rw->index.x < 0) {
+			rw->index.x = 0;
+			cmd->type = CMD_CHOICE;
+			cmd->data.choice = CHOICE_COUNT - 1;
+		}
 		return;
 	}
 	if (c->right.type == KEY_STATE_PRESSED) {
 		rw->index.x++;
-		rw->index.x %= RACK_SIZE;
+		assert(rw->index.x <= RACK_SIZE);
+		if (rw->index.x == RACK_SIZE) {
+			rw->index.x = RACK_SIZE - 1;
+			cmd->type = CMD_CHOICE;
+			cmd->data.choice = 0;
+		}
 		return;
 	}
 	if (c->x.type == KEY_STATE_PRESSED) {
