@@ -316,6 +316,8 @@ bool endGame(struct Game *);
 int fdWinner(struct Game *);
 bool validRackIdx(int);
 bool validBoardIdx(struct Coor);
+int rackCount(struct Player*);
+int adjustTileCount(struct Adjust*);
 
 #endif
 

@@ -908,20 +908,16 @@ void mkPlace(struct Action *a, struct Game *g, struct Move *m)
 	}
 	case 1: {
 		mkDot(a, m);
-		puts("DOOOOTTT");
 		break;
 	}
 	default: {
 		assert(num > 1);
 		if (isHorz(a, m)) {
-			puts("HORRRZZZ");
 			mkHorz(a, m);
 		} else { 
 			if (isVert(a, m)) {
-				puts("VERRTTT");
 				mkVert(a, m);
 			} else {
-				puts("WTFF");
 				a->type = ACTION_INVALID;
 				a->data.err = ACTION_ERR_PLACE_NO_DIR;
 				return;
@@ -1175,5 +1171,37 @@ bool validRackIdx(int id)
 bool validBoardIdx(struct Coor c)
 {
 	return c.x >= 0 && c.y >= 0 && c.x < BOARD_X && c.y < BOARD_Y;
+}
+
+int rackCount(struct Player *p)
+{
+	int i, count;
+
+	NOT(p);
+	
+	count = 0;
+	for (i = 0; i < RACK_SIZE; i++) {
+		assert(p->tile[i].type == TILE_NONE || p->tile[i].type == TILE_WILD || p->tile[i].type == TILE_LETTER);
+		if (p->tile[i].type != TILE_NONE) {
+			count++;
+		}
+	}
+	return count;
+}
+
+int adjustTileCount(struct Adjust *a)
+{
+	int i, count;
+
+	NOT(a);
+	
+	count = 0;
+	for (i = 0; i < RACK_SIZE; i++) {
+		assert(a->data.tile[i].type == TILE_NONE || a->data.tile[i].type == TILE_WILD || a->data.tile[i].type == TILE_LETTER);
+		if (a->data.tile[i].type != TILE_NONE) {
+			count++;
+		}
+	}
+	return count;
 }
 
