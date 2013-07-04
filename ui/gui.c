@@ -441,7 +441,6 @@ void findNextMoveModePlaceIdx(struct TransMove *tm)
 	} while (validBoardIdx(mmp->boardIdx[mmp->idx]) || tm->adjust.data.tile[mmp->idx].type == TILE_NONE);
 }
 
-
 bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	struct MoveModePlace *mmp;
@@ -451,8 +450,6 @@ bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c, struct Board 
 	NOT(c);
 	NOT(b);
 	assert(tm->type == TRANS_MOVE_PLACE_INIT);
-	assert(c->type != CMD_MODE_UP);
-	assert(c->type != CMD_MODE_DOWN);
 	assert(c->type != CMD_PLAY);
 	assert(c->type != CMD_QUIT);
 	
@@ -510,14 +507,6 @@ bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c, struct Board 
 		}
 		return true;
 	}
-/*
-	case CMD_BOARD_CANCEL: 
-	case CMD_RACK_CANCEL:
-	case CMD_CHOICE_CANCEL: {
-		tm->type = mmp->num == 0 ? TRANS_MOVE_PLACE_INIT : TRANS_MOVE_PLACE;
-		return true;
-	}
-*/
 	case CMD_TILE_PREV: {
 		do {
 			mmp->idx += RACK_SIZE;
@@ -618,14 +607,22 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 		clrMoveModePlace(mmp, b);
 		return true;
 	}
-/*
-	case CMD_BOARD_CANCEL: 
-	case CMD_RACK_CANCEL:
-	case CMD_CHOICE_CANCEL: {
-		tm->type = mmp->num == 0 ? TRANS_MOVE_PLACE_INIT : TRANS_MOVE_PLACE;
-		return true;
+	case CMD_BOARD_CANCEL: {
+		struct Coor bIdx;
+		int rIdx;
+		
+		bIdx = c->data.board;
+		rIdx = mmp->rackIdx[bIdx.y][bIdx.x];
+	
+		if (validRackIdx(rIdx)) {
+			mmp->rackIdx[bIdx.y][bIdx.x] = -1;
+			mmp->boardIdx[rIdx].x = -1;
+			mmp->boardIdx[rIdx].y = -1;
+			mmp->num--;
+			return true;
+		}
+		break;
 	}
-*/
 	case CMD_TILE_PREV: {
 		do {
 			mmp->idx += RACK_SIZE;
@@ -639,6 +636,10 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 			mmp->idx++;
 			mmp->idx %= RACK_SIZE;
 		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
+		return true;
+	}
+	case CMD_PLAY: {
+		tm->type = TRANS_MOVE_PLACE_PLAY;
 		return true;
 	}
 	default: break;
@@ -676,10 +677,6 @@ bool updateTransMovePlaceEnd(struct TransMove *tm, struct Cmd *c, struct Board *
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE_INIT;
 		clrMoveModePlace(mmp, b);
-		return true;
-	}
-	case CMD_PLAY: {
-		tm->type = TRANS_MOVE_PLACE_PLAY;
 		return true;
 	}
 	default: break;
