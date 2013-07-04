@@ -553,12 +553,15 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 	switch (c->type) {
 	case CMD_BOARD_SELECT: {
 		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
-			int idx = mmp->idx;
-			mmp->boardIdx[mmp->idx] = c->data.board;
-			mmp->idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
-			mmp->rackIdx[c->data.board.y][c->data.board.x] = idx;
-			mmp->boardIdx[mmp->idx].y = -1;
-			mmp->boardIdx[mmp->idx].x = -1;
+			int a0, a1;
+			struct TileAdjust b0, b1;
+			a0 = mmp->rackIdx[c->data.board.y][c->data.board.x];
+			a1 = mmp->idx;
+			b0 = tm->adjust.data.tile[a0];
+			b1 = tm->adjust.data.tile[a1];
+
+			tm->adjust.data.tile[a0] = b1;
+			tm->adjust.data.tile[a1] = b0;
 		} else {
 			mmp->rackIdx[c->data.board.y][c->data.board.x] = mmp->idx;
 			mmp->boardIdx[mmp->idx] = c->data.board;
