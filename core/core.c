@@ -262,10 +262,8 @@ void adjustSwap(struct Adjust *a, int i, int j)
 
 	NOT(a);
 	assert(a->type == ADJUST_RACK);
-	assert(i >= 0);
-	assert(i < RACK_SIZE);
-	assert(j >= 0);
-	assert(j < RACK_SIZE);
+	VALID_RACK_SIZE(i);
+	VALID_RACK_SIZE(j);
 
 	tmp = a->data.tile[i];
 	a->data.tile[i] = a->data.tile[j];
@@ -445,15 +443,12 @@ bool pathValid(struct Path *p, struct Dict *d)
 
 	switch (p->type) {
 	case PATH_DOT: {
-		puts("DOT_START");
 		if (!(dirValid(&p->data.dot.right, &p->board, d) || dirValid(&p->data.dot.down, &p->board, d))) {
 			return false;
 		}
-		puts("DOT_END");
 		break;
 	}
 	case PATH_HORZ: {
-		puts("HORZ_START");
 		if (!dirValid(&p->data.horz.right, &p->board, d)) {
 			return false;
 		}
@@ -463,11 +458,9 @@ bool pathValid(struct Path *p, struct Dict *d)
 				return false;
 			}
 		}
-		puts("HORZ_END");
 		break;
 	}
 	case PATH_VERT: {
-		puts("VERT_START");
 		if (!dirValid(&p->data.vert.down, &p->board, d)) {
 			return false;
 		}
@@ -477,7 +470,6 @@ bool pathValid(struct Path *p, struct Dict *d)
 				return false;
 			}
 		}
-		puts("VERT_END");
 		break;
 	}
 	case PATH_INVALID: /* fall through */
@@ -1078,7 +1070,6 @@ void nextTurn(struct Game *g)
 		g->turn ++;
 		g->turn %= g->playerNum;
 	} while (!g->player[g->turn].active);
-	printf("turn: %d\n", g->turn);
 }
 
 void moveClr(struct Move *m)

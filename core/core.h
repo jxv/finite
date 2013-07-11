@@ -23,6 +23,7 @@
 #define VALID_BOARD_X(x) RANGE(x, 0, BOARD_X - 1)
 #define VALID_BOARD_Y(y) RANGE(y, 0, BOARD_Y - 1)
 #define VALID_BOARD_SIZE(s) RANGE(s, 0, BOARD_SIZE - 1)
+#define VALID_RACK_SIZE(r) RANGE(r, 0, RACK_SIZE - 1)
 
 typedef enum
 {

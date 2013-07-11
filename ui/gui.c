@@ -375,11 +375,9 @@ void printTransMove(struct TransMove *tm)
 
 	switch (tm->type) {
 	case TRANS_MOVE_NONE: puts("[trans-move:none]"); break;
-	case TRANS_MOVE_PLACE_INIT: puts("[trans-move:place-init]"); break;
-	case TRANS_MOVE_PLACE_HOLD: puts("[trans-move:place-hold]"); break;
+	case TRANS_MOVE_PLACE: puts("[trans-move:place-hold]"); break;
 	case TRANS_MOVE_PLACE_END: puts("[trans-move:place-end]"); break;
 	case TRANS_MOVE_PLACE_PLAY: puts("[trans-move:place-play]"); break;
-	case TRANS_MOVE_DISCARD_INIT: puts("[trans-move:discard-init]"); break;
 	case TRANS_MOVE_DISCARD: puts("[trans-move:discard]"); break;
 	case TRANS_MOVE_DISCARD_PLAY: puts("[trans-move:discard-play]"); break;
 	case TRANS_MOVE_SKIP: puts("[trans-move:skip]"); break;
@@ -431,7 +429,7 @@ void findNextMoveModePlaceIdx(struct TransMove *tm)
 	struct MoveModePlace *mmp;
 
 	NOT(tm);
-	assert(tm->type == TRANS_MOVE_PLACE_INIT || tm->type == TRANS_MOVE_PLACE_HOLD);
+	assert(tm->type == TRANS_MOVE_PLACE);
 
 	mmp = &tm->data.place;
 
@@ -441,118 +439,36 @@ void findNextMoveModePlaceIdx(struct TransMove *tm)
 	} while (validBoardIdx(mmp->boardIdx[mmp->idx]) || tm->adjust.data.tile[mmp->idx].type == TILE_NONE);
 }
 
-bool updateTransMovePlaceInit(struct TransMove *tm, struct Cmd *c, struct Board *b)
+bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	struct MoveModePlace *mmp;
-	TileType t;
 
 	NOT(tm);
 	NOT(c);
 	NOT(b);
-	assert(tm->type == TRANS_MOVE_PLACE_INIT);
-	assert(c->type != CMD_PLAY);
+	assert(tm->type == TRANS_MOVE_PLACE);
 	assert(c->type != CMD_QUIT);
 	
 	mmp = &tm->data.place;
 	
 	switch (c->type) {
 	case CMD_BOARD_SELECT: {
-		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
-			int idx = mmp->idx;
-			mmp->boardIdx[mmp->idx] = c->data.board;
-			mmp->idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
-			mmp->rackIdx[c->data.board.y][c->data.board.x] = idx;
-			mmp->boardIdx[mmp->idx].y = -1;
-			mmp->boardIdx[mmp->idx].x = -1;
-		} else {
-			mmp->rackIdx[c->data.board.y][c->data.board.x] = mmp->idx;
+		int *idx;
+
+		idx = &mmp->rackIdx[c->data.board.y][c->data.board.x];
+		if (!validRackIdx(*idx)) {
+			*idx = mmp->idx;
 			mmp->boardIdx[mmp->idx] = c->data.board;
 			mmp->num++;
+			assert(mmp->num > 0 && mmp->num <= adjustTileCount(&tm->adjust));
 			if (adjustTileCount(&tm->adjust) == mmp->num) {
 				tm->type = TRANS_MOVE_PLACE_END;
 			} else {
-				assert(mmp->num < adjustTileCount(&tm->adjust));
-				tm->type = TRANS_MOVE_PLACE_HOLD;
 				findNextMoveModePlaceIdx(tm);
 			}
-		}
-		return true;
-	}
-	case CMD_RACK_SELECT: {
-		assert(c->data.rack >= 0);
-		assert(c->data.rack < RACK_SIZE);
-		t = tm->adjust.data.tile[c->data.rack].type;
-		assert(t == TILE_NONE || t == TILE_LETTER || t == TILE_WILD);
-		if (t == TILE_NONE) {
-			/* come back here later, rack is nearing empty at this point */
-			assert(mmp->num >= 0);
-			assert(mmp->num < RACK_SIZE);
-			if (tm->data.place.num == 0) {
-				tm->type = TRANS_MOVE_PLACE_INIT;
-			} else {
-				tm->type = TRANS_MOVE_PLACE_HOLD;
-			}
 		} else {
-			if (mmp->idx != c->data.rack) {
-				adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
-				if (validBoardIdx(mmp->boardIdx[c->data.rack])) {
-					mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = -1;
-					mmp->boardIdx[mmp->idx] = mmp->boardIdx[c->data.rack];
-					mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = mmp->idx;
-					mmp->boardIdx[c->data.rack].x = -1;
-					mmp->boardIdx[c->data.rack].y = -1;
-				}
-				mmp->idx = c->data.rack;
-			} 
 		}
-		return true;
-	}
-	case CMD_TILE_PREV: {
-		do {
-			mmp->idx += RACK_SIZE;
-			mmp->idx--;
-			mmp->idx %= RACK_SIZE;
-		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
-		return true;
-	}
-	case CMD_TILE_NEXT: {
-		do {
-			mmp->idx++;
-			mmp->idx %= RACK_SIZE;
-		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
-		return true;
-	}
-	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_SKIP;
-		return true;
-	}
-	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_DISCARD_INIT;
-		return true;
-	}
-	default: break;
-	}
-	return false;
-}
-
-bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board *b)
-{
-	struct MoveModePlace *mmp;
-	TileType t;
-
-	NOT(tm);
-	NOT(c);
-	NOT(b);
-	assert(tm->type == TRANS_MOVE_PLACE_HOLD);
-	assert(c->type != CMD_MODE_UP);
-	assert(c->type != CMD_MODE_DOWN);
-	assert(c->type != CMD_QUIT);
-	
-	mmp = &tm->data.place;
-	
-	switch (c->type) {
-	case CMD_BOARD_SELECT: {
-		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
+		/* if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
 			int a0, a1;
 			struct TileAdjust b0, b1;
 			a0 = mmp->rackIdx[c->data.board.y][c->data.board.x];
@@ -570,26 +486,44 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 				tm->type = TRANS_MOVE_PLACE_END;
 			} else {
 				assert(mmp->num < adjustTileCount(&tm->adjust));
-				tm->type = TRANS_MOVE_PLACE_HOLD;
+				tm->type = TRANS_MOVE_PLACE;
 				findNextMoveModePlaceIdx(tm);
 			}
-		}
+		} */
 		return true;
 	}
 	case CMD_RACK_SELECT: {
+		TileType t;
+
+		assert(c->data.rack >= 0);
+		assert(c->data.rack < RACK_SIZE);
+		t = tm->adjust.data.tile[c->data.rack].type;
+		assert(t == TILE_NONE || t == TILE_LETTER || t == TILE_WILD);
+		if (t != TILE_NONE && mmp->idx != c->data.rack) {
+			/* either use adjustswap or validboardix-if-statement, not both*/
+			adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
+			if (validBoardIdx(mmp->boardIdx[c->data.rack])) {
+				int *idx;
+				idx = &mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x];
+				*idx = -1;
+				mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = -1;
+				mmp->boardIdx[mmp->idx] = mmp->boardIdx[c->data.rack];
+				mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = mmp->idx;
+				mmp->boardIdx[c->data.rack].x = -1;
+				mmp->boardIdx[c->data.rack].y = -1;
+			}
+			mmp->idx = c->data.rack;
+		} 
+
+		/* TileType t;
 		assert(c->data.rack >= 0);
 		assert(c->data.rack < RACK_SIZE);
 		t = tm->adjust.data.tile[c->data.rack].type;
 		assert(t == TILE_NONE || t == TILE_LETTER || t == TILE_WILD);
 		if (t == TILE_NONE) {
-			/* come back here later, rack is nearing empty at this point */
+			// come back here later, rack is nearing empty at this point
 			assert(mmp->num >= 0);
 			assert(mmp->num < RACK_SIZE);
-			if (tm->data.place.num == 0) {
-				tm->type = TRANS_MOVE_PLACE_INIT;
-			} else {
-				tm->type = TRANS_MOVE_PLACE_HOLD;
-			}
 		} else {
 			if (mmp->idx != c->data.rack) {
 				adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
@@ -602,11 +536,11 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 				}
 				mmp->idx = c->data.rack;
 			} 
-		}
+		} */
 		return true;
 	}
 	case CMD_RECALL: {
-		tm->type = TRANS_MOVE_PLACE_INIT;
+		tm->type = TRANS_MOVE_PLACE;
 		clrMoveModePlace(mmp, b);
 		return true;
 	}
@@ -641,6 +575,15 @@ bool updateTransMovePlaceHold(struct TransMove *tm, struct Cmd *c, struct Board 
 		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
 		return true;
 	}
+	case CMD_MODE_UP: {
+		tm->type = TRANS_MOVE_SKIP;
+		return true;
+	}
+	case CMD_MODE_DOWN: {
+		tm->type = TRANS_MOVE_DISCARD;
+		clrMoveModeDiscard(&tm->data.discard);
+		return true;
+	}
 	case CMD_PLAY: {
 		tm->type = TRANS_MOVE_PLACE_PLAY;
 		return true;
@@ -658,27 +601,26 @@ bool updateTransMovePlaceEnd(struct TransMove *tm, struct Cmd *c, struct Board *
 	NOT(c);
 	NOT(b);
 	assert(tm->type == TRANS_MOVE_PLACE_END);
-	assert(c->type != CMD_MODE_UP);
-	assert(c->type != CMD_MODE_DOWN);
 	assert(c->type != CMD_QUIT);
 
 	mmp = &tm->data.place;
 	
 	switch (c->type) {
 	case CMD_BOARD_SELECT:	{
+		/* 
 		if (validRackIdx(mmp->rackIdx[c->data.board.y][c->data.board.x])) {
-			tm->type = TRANS_MOVE_PLACE_HOLD;
+			tm->type = TRANS_MOVE_PLACE;
 			mmp->idx = mmp->rackIdx[c->data.board.y][c->data.board.x];
 			mmp->rackIdx[c->data.board.y][c->data.board.x] = -1;
 			mmp->boardIdx[mmp->idx].x = -1;
 			mmp->boardIdx[mmp->idx].y = -1;
 			mmp->num--;
 			return true;
-		}
+		} */
 		break;
 	}
 	case CMD_RECALL: {
-		tm->type = TRANS_MOVE_PLACE_INIT;
+		tm->type = TRANS_MOVE_PLACE;
 		clrMoveModePlace(mmp, b);
 		return true;
 	}
@@ -687,44 +629,7 @@ bool updateTransMovePlaceEnd(struct TransMove *tm, struct Cmd *c, struct Board *
 	return false;
 }
 
-bool updateTransMoveDiscardInit(struct TransMove *tm, struct Cmd *c, struct Board *b)
-{
-	int i;
-
-	NOT(tm);
-	NOT(c);
-	NOT(b);
-	assert(tm->type == TRANS_MOVE_DISCARD_INIT);
-	assert(c->type != CMD_BOARD_SELECT);
-	assert(c->type != CMD_RECALL);
-	assert(c->type != CMD_PLAY);
-	assert(c->type != CMD_QUIT);
-	
-	switch (c->type) {
-	case CMD_RACK_SELECT: {
-		for (i = 0; i < RACK_SIZE; i++) {
-			tm->data.discard.rack[i] = false;
-		}
-		tm->data.discard.rack[c->data.rack] = true;
-		tm->data.discard.num = 1;
-		tm->type = TRANS_MOVE_DISCARD;
-		return true;
-	}
-	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_PLACE_INIT;
-		clrMoveModePlace(&tm->data.place, b);
-		return true;
-	}
-	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_SKIP;
-		return true;
-	}
-	default: break;
-	}
-	return false;
-}
-
-bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
+bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c, struct Board *b)
 {
 	struct MoveModeDiscard *mmd;
 
@@ -732,8 +637,6 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 	NOT(c);
 	assert(tm->type == TRANS_MOVE_DISCARD);
 	assert(c->type != CMD_BOARD_SELECT);
-	assert(c->type != CMD_MODE_UP);
-	assert(c->type != CMD_MODE_DOWN);
 	assert(c->type != CMD_QUIT);
 	
 	mmd = &tm->data.discard;
@@ -747,18 +650,25 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 			mmd->num--;
 		}
 		if (mmd->num == 0) {
-			tm->type = TRANS_MOVE_DISCARD_INIT;
 			clrMoveModeDiscard(mmd);
 		}
 		return true;
 	}
 	case CMD_RECALL: {
-		tm->type = TRANS_MOVE_DISCARD_INIT;
 		clrMoveModeDiscard(mmd);
 		return true;
 	}
 	case CMD_PLAY: {
 		tm->type = TRANS_MOVE_DISCARD_PLAY;
+		return true;
+	}
+	case CMD_MODE_UP: {
+		tm->type = TRANS_MOVE_PLACE;
+		clrMoveModePlace(&tm->data.place, b);
+		return true;
+	}
+	case CMD_MODE_DOWN: {
+		tm->type = TRANS_MOVE_SKIP;
 		return true;
 	}
 	case CMD_RACK_CANCEL: {
@@ -767,7 +677,6 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c)
 			mmd->num--;
 			mmd->rack[c->data.rack] = false;
 		}
-		tm->type = mmd->num == 0 ? TRANS_MOVE_DISCARD_INIT : TRANS_MOVE_DISCARD;
 		return true;
 	}
 	default: break;
@@ -786,12 +695,12 @@ bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	
 	switch (c->type) {
 	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_DISCARD_INIT;
+		tm->type = TRANS_MOVE_DISCARD;
 		clrMoveModeDiscard(&tm->data.discard);
 		return true;
 	}
 	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_PLACE_INIT;
+		tm->type = TRANS_MOVE_PLACE;
 		clrMoveModePlace(&tm->data.place, b);
 		return true;
 	}
@@ -810,11 +719,9 @@ bool updateTransMove(struct TransMove *tm, struct Cmd *c, struct Board *b)
 	NOT(c);
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE_INIT: return updateTransMovePlaceInit(tm, c, b);
-	case TRANS_MOVE_PLACE_HOLD: return updateTransMovePlaceHold(tm, c, b);
+	case TRANS_MOVE_PLACE: return updateTransMovePlace(tm, c, b);
 	case TRANS_MOVE_PLACE_END: return updateTransMovePlaceEnd(tm, c, b);
-	case TRANS_MOVE_DISCARD_INIT: return updateTransMoveDiscardInit(tm, c, b);
-	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c);
+	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c, b);
 	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c, b);
 	case TRANS_MOVE_QUIT: /* fall through */
 	case TRANS_MOVE_NONE:
@@ -828,7 +735,7 @@ void clrTransMove(struct TransMove *tm, int pidx, struct Player *p, struct Board
 {
 	NOT(tm);
 
-	tm->type = TRANS_MOVE_PLACE_INIT;
+	tm->type = TRANS_MOVE_PLACE;
 	tm->playerIdx = pidx;
 	mkAdjust(&tm->adjust, p);
 	clrMoveModePlace(&tm->data.place, b);
@@ -836,27 +743,27 @@ void clrTransMove(struct TransMove *tm, int pidx, struct Player *p, struct Board
 
 void moveModePlaceToMovePlace(struct MovePlace *mp, struct MoveModePlace *mmp, struct Adjust *a)
 {
-	int i, j, k, idx;
+	int i, ridx, j, k;
+	struct Coor idx;
 
 	NOT(mp);
 	NOT(mmp);
 	NOT(a);
 
 	mp->num = mmp->num;
-	for (i = 0, j = 0; i < RACK_SIZE; i++) {
-		k = a->data.tile[i].idx;
-		if (!validBoardIdx(mmp->boardIdx[k])) {
+	for (i = 0, k = 0; i < RACK_SIZE; i++) {
+		j = a->data.tile[i].idx;
+		idx = mmp->boardIdx[j];
+		if (!validBoardIdx(idx)) {
 			continue;
 		}
-		idx = mmp->rackIdx[mmp->boardIdx[k].y][mmp->boardIdx[k].x];
-		if (!validRackIdx(idx)) {
-			continue;
-		}
-		mp->rackIdx[j] = idx;
-		mp->coor[j] = mmp->boardIdx[i];
-		j++;
+		ridx = a->data.tile[mmp->rackIdx[idx.y][idx.x]].idx;
+		VALID_RACK_SIZE(ridx);
+		mp->rackIdx[k] = ridx;
+		mp->coor[k] = mmp->boardIdx[j];
+		k++;
 	}
-	assert(mp->num == j);
+	assert(mp->num == k);
 }
 
 void moveModeDiscardToMoveDiscard(struct MoveDiscard *md, struct MoveModeDiscard *mmd, struct Adjust *a)
@@ -974,6 +881,7 @@ void update(struct Env *e)
 	}
 
 	transMoveToMove(&m, &e->transMove);
+
 	mkAction(&a, &e->game, &m);
 	applyAction(&e->game, &a);
 	if (a.type != ACTION_INVALID) {

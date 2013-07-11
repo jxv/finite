@@ -3,6 +3,7 @@
 
 #include "core.h"
 
+void printLetter(LetterType);
 void printWord(struct Word *);
 void printDict(struct Dict *);
 void printTile(struct Tile *);

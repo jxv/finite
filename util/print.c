@@ -3,6 +3,14 @@
 #include "core.h"
 #include "print.h"
 
+void printLetter(LetterType l)
+{
+	assert(l >= LETTER_A);
+	assert(l <= LETTER_Z);
+
+	putchar('A' + l - LETTER_A);
+}
+
 void printWord(struct Word *w)
 {
 	char str[BOARD_SIZE];
