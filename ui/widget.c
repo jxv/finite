@@ -389,8 +389,8 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
 	case TRANS_MOVE_PLACE_END: {
+		int j;
 		for (i = 0; i < RACK_SIZE; i++) {
-			int j;
 			j = tm->adjust.data.tile[i].idx;
 			idx = tm->data.place.boardIdx[j];
 			if (validBoardIdx(idx)) {
@@ -409,21 +409,30 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 {
 	int i;
 	struct Tile *t;
+	TileType tt;
+	SDL_Surface *s;
 
 	NOT(io);
 	NOT(tm);
 	NOT(p);
 
-
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type != TILE_NONE && tm->data.place.idx != i && !validBoardIdx(tm->data.place.boardIdx[i])) {
-				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
+			if (t->type == TILE_NONE) {
+				continue;
 			}
-			if (t->type != TILE_NONE && tm->data.place.idx == i) {
-				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_HOLD], i * dim.x + 164, 220);
+			s = NULL;
+			if (tm->data.place.idx != i) {
+				if (!validBoardIdx(tm->data.place.boardIdx[i])) {
+					s = t->type == TILE_WILD ? io->wild[TILE_LOOK_NORMAL] : io->tile[t->type][t->letter][TILE_LOOK_NORMAL];
+				}
+			} else {
+				s = t->type == TILE_WILD ? io->wild[TILE_LOOK_HOLD] : io->tile[t->type][t->letter][TILE_LOOK_HOLD];
+			}
+			if (s) {
+				surfaceDraw(io->screen, s, i * dim.x + 164, 220);
 			}
 		}
 		break;
@@ -434,22 +443,24 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 	case TRANS_MOVE_DISCARD: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type != TILE_NONE) {
-				if (tm->data.discard.rack[i]) {
-					surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_DISABLE], i * dim.x + 164, 220);
-				} else {
-					surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
-				}
+			if (t->type == TILE_NONE) {
+				continue;
 			}
+			tt = tm->data.discard.rack[i] ? TILE_LOOK_DISABLE : TILE_LOOK_NORMAL;
+			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
+			surfaceDraw(io->screen, s, i * dim.x + 164, 220);
+			
 		}
 		break;
 	}
 	default: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type != TILE_NONE) {
-				surfaceDraw(io->screen, io->tile[t->type][t->letter][TILE_LOOK_NORMAL], i * dim.x + 164, 220);
+			if (t->type == TILE_NONE) {
+				continue;
 			}
+			s = t->type == TILE_WILD ? io->wild[TILE_LOOK_NORMAL] : io->tile[TILE_LETTER][t->letter][TILE_LOOK_NORMAL];
+			surfaceDraw(io->screen, s, i * dim.x + 164, 220);
 		}
 		break;
 	}

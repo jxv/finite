@@ -174,16 +174,19 @@ bool init(struct Env *e)
 	tile[TILE_LOOK_DISABLE] = surfaceLoad(RES_PATH "tile_disable.png");
 	tile[TILE_LOOK_NORMAL] = surfaceLoad(RES_PATH "tile_normal.png");
 	tile[TILE_LOOK_HOLD] = surfaceLoad(RES_PATH "tile_hold.png");
+	tile[TILE_LOOK_GHOST] = surfaceLoad(RES_PATH "tile_ghost.png");
 
-	if (!(tile[TILE_LOOK_DISABLE] && tile[TILE_LOOK_NORMAL] && tile[TILE_LOOK_HOLD])) {
+	if (!(tile[TILE_LOOK_DISABLE] && tile[TILE_LOOK_NORMAL] && tile[TILE_LOOK_HOLD] && tile[TILE_LOOK_GHOST])) {
 		surfaceFree(tile[TILE_LOOK_DISABLE]);
 		surfaceFree(tile[TILE_LOOK_NORMAL]);
 		surfaceFree(tile[TILE_LOOK_HOLD]);
+		surfaceFree(tile[TILE_LOOK_GHOST]);
 		return false;
 	} 
 	e->io.wild[TILE_LOOK_DISABLE] = surfaceCpy(tile[TILE_LOOK_DISABLE]);
 	e->io.wild[TILE_LOOK_NORMAL] = surfaceCpy(tile[TILE_LOOK_NORMAL]);
 	e->io.wild[TILE_LOOK_HOLD] = surfaceCpy(tile[TILE_LOOK_HOLD]);
+	e->io.wild[TILE_LOOK_GHOST] = surfaceCpy(tile[TILE_LOOK_GHOST]);
 
 	for (i = 0; i < LETTER_COUNT; i++) {
 		for (j = 0; j < TILE_LOOK_COUNT; j++) {
@@ -619,6 +622,32 @@ bool updateTransMovePlaceEnd(struct TransMove *tm, struct Cmd *c, struct Board *
 		} */
 		break;
 	}
+	case CMD_BOARD_CANCEL: {
+		struct Coor bIdx;
+		int rIdx;
+		
+		bIdx = c->data.board;
+		rIdx = mmp->rackIdx[bIdx.y][bIdx.x];
+	
+		if (validRackIdx(rIdx)) {
+			mmp->rackIdx[bIdx.y][bIdx.x] = -1;
+			mmp->boardIdx[rIdx].x = -1;
+			mmp->boardIdx[rIdx].y = -1;
+			mmp->num--;
+			tm->type = TRANS_MOVE_PLACE;
+			return true;
+		}
+		break;
+	}
+	case CMD_MODE_UP: {
+		tm->type = TRANS_MOVE_SKIP;
+		return true;
+	}
+	case CMD_MODE_DOWN: {
+		tm->type = TRANS_MOVE_DISCARD;
+		clrMoveModeDiscard(&tm->data.discard);
+		return true;
+	}
 	case CMD_RECALL: {
 		tm->type = TRANS_MOVE_PLACE;
 		clrMoveModePlace(mmp, b);
@@ -923,6 +952,39 @@ void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 	}
 }
 
+#define POS_X 106
+#define POS_Y 5
+
+void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, struct Player *p, struct GridWidget *bw)
+{
+	int i;
+	struct Coor idx;
+	SDL_Surface *s;
+	struct Tile *t;
+
+	NOT(io);
+	NOT(tm);
+	NOT(p);
+	NOT(bw);
+	
+	if (gf != GUI_FOCUS_BOARD) {
+		return;
+	}
+
+	switch (tm->type) {
+	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_END: {
+		i = tm->adjust.data.tile[tm->data.place.idx].idx;
+		idx = bw->index;
+		t = &p->tile[i];
+		s = t->type == TILE_WILD ? io->wild[TILE_LOOK_GHOST] : io->tile[t->type][t->letter][TILE_LOOK_GHOST];
+		surfaceDraw(io->screen, s, idx.x * 14 + POS_X, idx.y * 14+ POS_Y);
+		break;
+	}
+	default: break;
+	}
+}
+
 void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm)
 {
 	struct Coor pos, dim;
@@ -949,6 +1011,9 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	/* gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim); */
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
+	if (gm->turn == tm->playerIdx) {
+		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
+	}
 	guiDrawLockon(io, &g->gameGui);
 }
 

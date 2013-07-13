@@ -12,7 +12,7 @@ SRC+=$(wildcard ui/*.c)
 SRC+=$(wildcard util/*.c)
 
 CFLAG=-ansi
-CFLAG+=-Werror
+#CFLAG+=-Werror
 CFLAG+=-Wall
 CFLAG+=-pedantic
 CFLAG+=-O3
