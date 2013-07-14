@@ -1126,8 +1126,7 @@ void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, stru
 	}
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE:
-	case TRANS_MOVE_PLACE_END: {
+	case TRANS_MOVE_PLACE: {
 		i = tm->adjust.data.tile[tm->data.place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
