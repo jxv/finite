@@ -77,28 +77,20 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 		cmd->data.board = bw->index;
 		return;
 	}
-	bw->index.y %= BOARD_Y;
-	bw->index.x %= BOARD_X;
 	if (c->up.type == KEY_STATE_PRESSED) {
-		bw->index.y += BOARD_Y;
-		bw->index.y--;
-		bw->index.y %= BOARD_Y;
+		cmd->type = CMD_BOARD_UP;
 		return;
 	}
 	if (c->down.type == KEY_STATE_PRESSED) {
-		bw->index.y++;
-		bw->index.y %= BOARD_Y;
+		cmd->type = CMD_BOARD_DOWN;
 		return;
 	}
 	if (c->left.type == KEY_STATE_PRESSED) {
-		bw->index.x += BOARD_X;
-		bw->index.x--;
-		bw->index.x %= BOARD_X;
+		cmd->type = CMD_BOARD_LEFT;
 		return;
 	}
 	if (c->right.type == KEY_STATE_PRESSED) {
-		bw->index.x++;
-		bw->index.x %= BOARD_X;
+		cmd->type = CMD_BOARD_RIGHT;
 		return;
 	}
 	if (c->x.type == KEY_STATE_PRESSED) {
@@ -135,49 +127,46 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	if (cw->button[cw->index.y][cw->index.x]) {
 		if (c->a.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
-			case CHOICE_RECALL: cmd->type = CMD_RECALL; break;
-			case CHOICE_PLAY: cmd->type = CMD_PLAY; break;
+			case CHOICE_RECALL: cmd->type = CMD_RECALL; return;
+			case CHOICE_PLAY: cmd->type = CMD_PLAY; return;
 			case CHOICE_MODE: /* fall through */
 			default: break;
 			}
-			return;
 		}
 		if (c->up.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
-			case CHOICE_MODE: cmd->type = CMD_MODE_UP; break;
+			case CHOICE_MODE: cmd->type = CMD_MODE_UP; return;
 			case CHOICE_RECALL: /* fall through */
 			case CHOICE_PLAY:
 			default: break;
 			}
-			return;
 		}
 		if (c->down.type == KEY_STATE_PRESSED) {
 			switch (cw->index.x) {
-			case CHOICE_MODE: cmd->type = CMD_MODE_DOWN; break;
+			case CHOICE_MODE: cmd->type = CMD_MODE_DOWN; return;
 			case CHOICE_RECALL: /* fall through */
 			case CHOICE_PLAY:
 			default: break;
 			}
-			return;
 		}
 	}
 	if (c->left.type == KEY_STATE_PRESSED) {
-		cw->index.x--;
-		assert(cw->index.x + 1 >= 0);
-		if (cw->index.x < 0) {
-			cw->index.x = 0;
+		assert(cw->index.x >= 0);
+		if (cw->index.x == 0) {
 			cmd->type = CMD_RACK;
 			cmd->data.rack = RACK_SIZE - 1;
+		} else {
+			cmd->type = CMD_CHOICE_LEFT;
 		}
 		return;
 	}
 	if (c->right.type == KEY_STATE_PRESSED) {
-		cw->index.x++;
-		assert(cw->index.x <= CHOICE_COUNT);
-		if (cw->index.x == CHOICE_COUNT) {
-			cw->index.x = CHOICE_COUNT - 1;
+		assert(cw->index.x < CHOICE_COUNT);
+		if (cw->index.x + 1 == CHOICE_COUNT) {
 			cmd->type = CMD_RACK;
 			cmd->data.rack = 0;
+		} else {
+			cmd->type = CMD_CHOICE_RIGHT;
 		}
 		return;
 	}
@@ -217,22 +206,22 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 		return;
 	}
 	if (c->left.type == KEY_STATE_PRESSED) {
-		rw->index.x--;
-		assert(rw->index.x + 1 >= 0);
-		if (rw->index.x < 0) {
-			rw->index.x = 0;
+		assert(rw->index.x >= 0);
+		if (rw->index.x == 0) {
 			cmd->type = CMD_CHOICE;
 			cmd->data.choice = CHOICE_COUNT - 1;
+		} else {
+			cmd->type = CMD_RACK_LEFT;
 		}
 		return;
 	}
 	if (c->right.type == KEY_STATE_PRESSED) {
-		rw->index.x++;
-		assert(rw->index.x <= RACK_SIZE);
-		if (rw->index.x == RACK_SIZE) {
-			rw->index.x = RACK_SIZE - 1;
+		assert(rw->index.x <=  RACK_SIZE);
+		if (rw->index.x + 1 == RACK_SIZE) {
 			cmd->type = CMD_CHOICE;
 			cmd->data.choice = 0;
+		} else {
+			cmd->type = CMD_RACK_RIGHT;
 		}
 		return;
 	}
@@ -255,6 +244,14 @@ void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm, struct Board
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 				bw->button[idx.y][idx.x] = b->tile[idx.y][idx.x].type == TILE_NONE;
+			}
+		}
+		break;
+	}
+	case TRANS_MOVE_PLACE_WILD: {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				bw->button[idx.y][idx.x] = idx.x == bw->index.x && idx.y == bw->index.y;
 			}
 		}
 		break;
@@ -362,6 +359,87 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 
 }
 
+void updateGameGUI(struct GameGUI *gg, struct Cmd *c, TransMoveType tmt)
+{
+	struct GridWidget *rw, *bw, *cw;
+
+	NOT(gg);
+	NOT(c);
+
+	rw = &gg->rackWidget;
+	bw = &gg->boardWidget;
+	cw = &gg->choiceWidget;
+
+	switch (gg->focus) {
+	case GUI_FOCUS_BOARD: {
+		if (tmt == TRANS_MOVE_PLACE_WILD) {
+			break;
+		}
+		switch (c->type) {
+		case CMD_BOARD_UP: {
+			bw->index.y += BOARD_Y;
+			bw->index.y--;
+			bw->index.y %= BOARD_Y;
+			break;
+		}
+		case CMD_BOARD_DOWN: {
+			bw->index.y++;
+			bw->index.y %= BOARD_Y;
+			break;
+		}
+		case CMD_BOARD_LEFT: {
+			bw->index.x += BOARD_X;
+			bw->index.x--;
+			bw->index.x %= BOARD_X;
+			break;
+		}
+		case CMD_BOARD_RIGHT: {
+			bw->index.x++;
+			bw->index.x %= BOARD_X;
+			break;
+		}
+		default: break;
+		}
+		break;
+	}
+	case GUI_FOCUS_RACK: {
+		switch (c->type) {
+		case CMD_RACK_LEFT: {
+			rw->index.x += RACK_SIZE;
+			rw->index.x--;
+			rw->index.x %= RACK_SIZE;
+			break;
+		}
+		case CMD_RACK_RIGHT: {
+			rw->index.x++;
+			rw->index.x %= RACK_SIZE;
+			break;
+		}
+		default: break;
+		}
+		break;
+	}
+	case GUI_FOCUS_CHOICE: {
+		switch (c->type) {
+		case CMD_CHOICE_LEFT: {
+			cw->index.x += CHOICE_COUNT;
+			cw->index.x--;
+			cw->index.x %= CHOICE_COUNT;
+			break;
+		}
+		case CMD_CHOICE_RIGHT: {
+			cw->index.x++;
+			cw->index.x %= CHOICE_COUNT;
+			break;
+		}
+		default: break;
+		}
+		break;
+	}
+	default: break;
+	}
+}
+
 void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, struct Board *b, struct TransMove *tm, struct Coor pos, struct Coor dim)
 {
 	struct Tile *t;
@@ -388,6 +466,7 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_WILD:
 	case TRANS_MOVE_PLACE_END: {
 		int j;
 		for (i = 0; i < RACK_SIZE; i++) {
@@ -483,6 +562,7 @@ void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw
 
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_WILD:
 	case TRANS_MOVE_PLACE_END: type = MODE_PLACE; break;
 	case TRANS_MOVE_DISCARD: type = MODE_DISCARD; break;
 	case TRANS_MOVE_SKIP: type = MODE_SKIP; break;
