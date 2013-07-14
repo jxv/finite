@@ -2,6 +2,7 @@
 #include "init.h"
 #include "widget.h"
 #include "print.h"
+#include <math.h>
 
 void initGUI(struct GUI *g)
 {
@@ -95,6 +96,8 @@ bool init(struct Env *e)
 	int i, j;
 	char str[32];
 	SDL_Surface *tile[TILE_LOOK_COUNT];
+
+	e->io.time = 0;
 
 	NOT(e);
 
@@ -959,6 +962,7 @@ void update(struct Env *e)
 			printActionErr(a.type);
 		}
 	} 
+	e->io.time += 1.0f / 60.0f;
 }
 
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
@@ -1015,7 +1019,7 @@ void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, stru
 		idx = bw->index;
 		t = &p->tile[i];
 		s = t->type == TILE_WILD ? io->wild[TILE_LOOK_GHOST] : io->tile[t->type][t->letter][TILE_LOOK_GHOST];
-		surfaceDraw(io->screen, s, idx.x * 14 + POS_X, idx.y * 14 + POS_Y);
+		surfaceDraw(io->screen, s, idx.x * TILE_WIDTH + POS_X, idx.y * TILE_HEIGHT + POS_Y);
 		break;
 	}
 	default: break;
@@ -1048,7 +1052,7 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	/* gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim); */
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
-	if (gm->turn == tm->playerIdx) {
+	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floor(io->time * 2.0)) ) < 0.5) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
 	}
 	guiDrawLockon(io, &g->gameGui);
@@ -1082,44 +1086,6 @@ void exec(struct Env *e)
 		delay(st, SDL_GetTicks(), 60);
 	} while (!q);
 }
-
-/*
-void adjustTest(struct Game *g)
-{
-	struct Adjust a;
-
-	mkAdjust(&a, &g->player[0]);
-
-	switch (fdAdjustErr(&a, &g->player[0])) {
-	case ADJUST_ERR_RACK_OUT_OF_RANGE: puts("[adjust err: out of range]"); break;
-	case ADJUST_ERR_RACK_DUPLICATE_INDEX: puts("[adjust err: duplicate tile swap]"); break;
-	case ADJUST_ERR_NONE: puts("[adjust err: none]"); break;
-	default: break;
-	}
-}
-
-void test(struct Env *e)
-{
-	struct Move m;
-	struct Action a;
-	mkAdjust(&e->transMove.adjust, &e->game.player[0]);
-	clrMoveModePlace(&e->transMove.data.place, &e->game.board);
-	e->transMove.type = TRANS_MOVE_PLACE;
-	e->transMove.playerIdx = 0;
-	e->transMove.data.place.num = 2;
-	e->transMove.data.place.rackIdx[7][7] = 1;
-	e->transMove.data.place.rackIdx[8][7] = 3;
-	e->transMove.data.place.boardIdx[1].x = 7;
-	e->transMove.data.place.boardIdx[1].y = 7;
-	e->transMove.data.place.boardIdx[3].x = 7;
-	e->transMove.data.place.boardIdx[3].y = 8;
-	transMoveToMove(&m, &e->transMove);
-	mkAction(&a, &e->game, &m);
-	printAction(&a);
-	clrMoveModePlace(&e->transMove.data.place, &e->game.board);
-	e->transMove.type = TRANS_MOVE_INVALID;
-}
-*/
 
 int gui()
 {

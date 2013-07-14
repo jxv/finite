@@ -99,6 +99,7 @@ struct Font
 
 struct IO
 {
+	float time;
 	SDL_Surface *screen;
 	SDL_Surface *back;
 	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
@@ -218,6 +219,9 @@ struct Env
 };
 
 int gui();
+
+#define TILE_WIDTH 14
+#define TILE_HEIGHT 14
 
 #endif
 
