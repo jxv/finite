@@ -129,6 +129,7 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 			switch (cw->index.x) {
 			case CHOICE_RECALL: cmd->type = CMD_RECALL; return;
 			case CHOICE_PLAY: cmd->type = CMD_PLAY; return;
+			case CHOICE_SHUFFLE: cmd->type = CMD_SHUFFLE; return;
 			case CHOICE_MODE: /* fall through */
 			default: break;
 			}
@@ -334,24 +335,28 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 		cw->button[0][CHOICE_RECALL] = tm->data.place.num > 0;
 		cw->button[0][CHOICE_MODE] = true;
 		cw->button[0][CHOICE_PLAY] = true;
+		cw->button[0][CHOICE_SHUFFLE] = true;
 		break;
 	}
 	case TRANS_MOVE_PLACE_END: {
 		cw->button[0][CHOICE_RECALL] = true;
 		cw->button[0][CHOICE_MODE] = false;
 		cw->button[0][CHOICE_PLAY] = true; 
+		cw->button[0][CHOICE_SHUFFLE] = false;
 		break;
 	}
 	case TRANS_MOVE_DISCARD: {
 		cw->button[0][CHOICE_RECALL] = tm->data.discard.num > 0;
 		cw->button[0][CHOICE_MODE] = true;
 		cw->button[0][CHOICE_PLAY] = true;
+		cw->button[0][CHOICE_SHUFFLE] = true;
 		break;
 	}
 	case TRANS_MOVE_SKIP: {
 		cw->button[0][CHOICE_RECALL] = false;
 		cw->button[0][CHOICE_MODE] = true;
 		cw->button[0][CHOICE_PLAY] = true;
+		cw->button[0][CHOICE_SHUFFLE] = true;
 		break;
 	}
 	default: break;
@@ -486,7 +491,7 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 
 void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, struct Coor pos, struct Coor dim, struct Player *p)
 {
-	int i;
+	int i, offset;
 	struct Tile *t;
 	TileType tt;
 	SDL_Surface *s;
@@ -494,6 +499,8 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 	NOT(io);
 	NOT(tm);
 	NOT(p);
+
+	offset = 176;
 
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE: {
@@ -511,7 +518,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 				s = t->type == TILE_WILD ? io->wild[TILE_LOOK_HOLD] : io->tile[t->type][t->letter][TILE_LOOK_HOLD];
 			}
 			if (s) {
-				surfaceDraw(io->screen, s, i * dim.x + 164, 220);
+				surfaceDraw(io->screen, s, i * dim.x + offset, 220);
 			}
 		}
 		break;
@@ -527,7 +534,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 			}
 			tt = tm->data.discard.rack[i] ? TILE_LOOK_DISABLE : TILE_LOOK_NORMAL;
 			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
-			surfaceDraw(io->screen, s, i * dim.x + 164, 220);
+			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
 			
 		}
 		break;
@@ -539,7 +546,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 				continue;
 			}
 			s = t->type == TILE_WILD ? io->wild[TILE_LOOK_NORMAL] : io->tile[TILE_LETTER][t->letter][TILE_LOOK_NORMAL];
-			surfaceDraw(io->screen, s, i * dim.x + 164, 220);
+			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
 		}
 		break;
 	}
@@ -548,7 +555,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 
 void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw, struct Coor pos, struct Coor dim)
 {
-	bool mode, recall, play;
+	bool mode, recall, play, shuffle;
 	ModeType type;
 
 	NOT(io);
@@ -559,6 +566,7 @@ void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw
 	recall = cw->button[0][CHOICE_RECALL];
 	mode = cw->button[0][CHOICE_MODE]; 
 	play = cw->button[0][CHOICE_PLAY];
+	shuffle = cw->button[0][CHOICE_SHUFFLE];
 
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
@@ -588,6 +596,7 @@ void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw
 	}
 	surfaceDraw(io->screen, recall ? io->recall : io->recallDisable, 105, 220);
 	surfaceDraw(io->screen, play ? io->play : io->playDisable, 133, 220);
+	surfaceDraw(io->screen, shuffle ? io->shuffle : io->shuffleDisable, 147, 220);
 }
 
 void gridWidgetDraw(SDL_Surface *s, struct GridWidget *gw, struct Coor pos, struct Coor dim)

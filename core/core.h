@@ -16,7 +16,7 @@
 #define BOARD_X	15
 #define BOARD_Y	15
 #define BOARD_SIZE MAX(BOARD_Y,BOARD_X)
-#define RACK_SIZE 7
+#define RACK_SIZE 9
 #define BAG_SIZE (100 + 1)	/* needs a dummy element */
 #define MAX_PLAYER 4
 

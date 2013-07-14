@@ -22,6 +22,7 @@ typedef enum
 	CHOICE_RECALL = 0,
 	CHOICE_MODE,
 	CHOICE_PLAY,
+	CHOICE_SHUFFLE,
 	CHOICE_COUNT
 } ChoiceType;
 
@@ -56,6 +57,7 @@ typedef enum
 	CMD_MODE_UP,
 	CMD_MODE_DOWN,
 	CMD_PLAY,
+	CMD_SHUFFLE,
 	CMD_BOARD_CANCEL,
 	CMD_RACK_CANCEL,
 	CMD_CHOICE_CANCEL,
@@ -117,6 +119,8 @@ struct IO
 	SDL_Surface *skipDisable;
 	SDL_Surface *play;
 	SDL_Surface *playDisable;
+	SDL_Surface *shuffle;
+	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
 	struct Font white_font;
 	struct Font black_font;

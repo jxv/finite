@@ -1,8 +1,9 @@
+#include <math.h>
+
 #include "gui.h"
 #include "init.h"
 #include "widget.h"
 #include "print.h"
-#include <math.h>
 
 void initGUI(struct GUI *g)
 {
@@ -154,6 +155,12 @@ bool init(struct Env *e)
 	if ((e->io.playDisable = surfaceLoad(RES_PATH "play_disable.png")) == NULL) {
 		return false;
 	}
+	if ((e->io.shuffle = surfaceLoad(RES_PATH "shuffle.png")) == NULL) {
+		return false;
+	}
+	if ((e->io.shuffleDisable = surfaceLoad(RES_PATH "shuffle_disable.png")) == NULL) {
+		return false;
+	}
 	if (!fontmapInit(&e->io.white_font, 6, 12, RES_PATH "white_font.png")) {
 		return false;
 	}
@@ -237,11 +244,18 @@ void quit(struct Env *e)
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
 	surfaceFree(e->io.recall);
+	surfaceFree(e->io.recallDisable);
 	surfaceFree(e->io.mode);
+	surfaceFree(e->io.modeDisable);
 	surfaceFree(e->io.place);
 	surfaceFree(e->io.discard);
+	surfaceFree(e->io.discardDisable);
 	surfaceFree(e->io.skip);
+	surfaceFree(e->io.skipDisable);
 	surfaceFree(e->io.play);
+	surfaceFree(e->io.playDisable);
+	surfaceFree(e->io.shuffle);
+	surfaceFree(e->io.shuffleDisable);
 	for (i = 0; i < SQ_COUNT; i++) {
 		surfaceFree(e->io.sq[i]);
 	}
@@ -358,10 +372,10 @@ void printCmd(struct Cmd *c)
 	case CMD_BOARD_SELECT: printf("[cmd:board-select (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
 	case CMD_RACK_SELECT: printf("[cmd:rack-select %d]\n", c->data.rack); break;
 	case CMD_BOARD: printf("[cmd:board (%d, %d)]\n", c->data.board.x, c->data.board.y); break;
-	case CMD_BOARD_LEFT: puts("[cmd:board-left"); break;
-	case CMD_BOARD_RIGHT: puts("[cmd:board-right"); break;
-	case CMD_BOARD_UP: puts("[cmd:board-up"); break;
-	case CMD_BOARD_DOWN: puts("[cmd:board-down"); break;
+	case CMD_BOARD_LEFT: puts("[cmd:board-left]"); break;
+	case CMD_BOARD_RIGHT: puts("[cmd:board-right]"); break;
+	case CMD_BOARD_UP: puts("[cmd:board-up]"); break;
+	case CMD_BOARD_DOWN: puts("[cmd:board-down]"); break;
 	case CMD_RACK: printf("[cmd:rack %d]\n", c->data.rack); break;
 	case CMD_RACK_LEFT: puts("[cmd:rack-left]"); break;
 	case CMD_RACK_RIGHT: puts("[cmd:rack-right]"); break;
@@ -372,6 +386,7 @@ void printCmd(struct Cmd *c)
 	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
 	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
 	case CMD_PLAY: puts("[cmd:play]"); break;
+	case CMD_SHUFFLE: puts("[cmd:shuffle]"); break;
 	case CMD_BOARD_CANCEL: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
 	case CMD_RACK_CANCEL: printf("[cmd:rack-cancel %d]", c->data.rack); break;
 	case CMD_CHOICE_CANCEL: puts("[cmd:choice-cancel]"); break;
@@ -489,7 +504,9 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 			}
 		} else {
 			/*
-			
+			swap tiles from rack's idx and board's idx.
+			what to do when swapping a wild tile (rack's idx to board idx)?
+
 			int a0, a1;
 			struct TileAdjust b0, b1;
 			a0 = mmp->rackIdx[c->data.board.y][c->data.board.x];
@@ -573,6 +590,51 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 	}
 	case CMD_PLAY: {
 		tm->type = TRANS_MOVE_PLACE_PLAY;
+		return true;
+	}
+	case CMD_SHUFFLE: {
+		int val[RACK_SIZE], i, j, k;
+		struct TileAdjust tmp;
+		struct Coor coor;
+
+		for (i = 0; i < RACK_SIZE; i++) {
+			val[i] = rand();
+		}
+
+		for (i = 0; i < RACK_SIZE; i++) {
+			for (j = 0; j < RACK_SIZE; j++) {
+				if (val[i] > val[j]) {
+					if (validBoardIdx(tm->data.place.boardIdx[i])) {
+						tm->data.place.rackIdx
+							[tm->data.place.boardIdx[i].y]
+							[tm->data.place.boardIdx[i].x] = j;
+					}
+					if (validBoardIdx(tm->data.place.boardIdx[j])) {
+						tm->data.place.rackIdx
+							[tm->data.place.boardIdx[j].y]
+							[tm->data.place.boardIdx[j].x] = i;
+					}
+
+					coor = tm->data.place.boardIdx[i];
+					tm->data.place.boardIdx[i] = tm->data.place.boardIdx[j];
+					tm->data.place.boardIdx[j] = coor;
+
+					k = val[i];
+					val[i] = val[j];
+					val[j] = k;
+
+					tmp = tm->adjust.data.tile[i];
+					tm->adjust.data.tile[i] = tm->adjust.data.tile[j];
+					tm->adjust.data.tile[j] = tmp;
+					
+					if (tm->data.place.idx == i) {
+						tm->data.place.idx = j;
+					} else if (tm->data.place.idx == j) {
+						tm->data.place.idx = i;
+					}
+				}
+			}
+		}
 		return true;
 	}
 	default: break;
@@ -742,6 +804,34 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c, struct Board *b
 		}
 		return true;
 	}
+	case CMD_SHUFFLE: {
+		int val[RACK_SIZE], i, j, k;
+		bool d;
+		struct TileAdjust tmp;
+
+		for (i = 0; i < RACK_SIZE; i++) {
+			val[i] = rand();
+		}
+
+		for (i = 0; i < RACK_SIZE; i++) {
+			for (j = 0; j < RACK_SIZE; j++) {
+				if (val[i] > val[j]) {
+					k = val[i];
+					val[i] = val[j];
+					val[j] = k;
+
+					tmp = tm->adjust.data.tile[i];
+					tm->adjust.data.tile[i] = tm->adjust.data.tile[j];
+					tm->adjust.data.tile[j] = tmp;
+
+					d = tm->data.discard.rack[i];
+					tm->data.discard.rack[i] = tm->data.discard.rack[j];
+					tm->data.discard.rack[j] = d;
+				}
+			}
+		}
+		return true;
+	}
 	default: break;
 	}
 	return false;
@@ -771,6 +861,29 @@ bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b, s
 	}
 	case CMD_PLAY: {
 		tm->type = TRANS_MOVE_SKIP_PLAY;
+		return true;
+	}
+	case CMD_SHUFFLE: {
+		int val[RACK_SIZE], i, j, k;
+		struct TileAdjust tmp;
+
+		for (i = 0; i < RACK_SIZE; i++) {
+			val[i] = rand();
+		}
+
+		for (i = 0; i < RACK_SIZE; i++) {
+			for (j = 0; j < RACK_SIZE; j++) {
+				if (val[i] > val[j]) {
+					k = val[i];
+					val[i] = val[j];
+					val[j] = k;
+
+					tmp = tm->adjust.data.tile[i];
+					tm->adjust.data.tile[i] = tm->adjust.data.tile[j];
+					tm->adjust.data.tile[j] = tmp;
+				}
+			}
+		}
 		return true;
 	}
 	default: break;
@@ -981,7 +1094,7 @@ void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 	}
 	case GUI_FOCUS_RACK: {
 		idx = gg->rackWidget.index;
-		surfaceDraw(io->screen, io->lockon, 162 + idx.x * w, 220);
+		surfaceDraw(io->screen, io->lockon, 174 + idx.x * w, 220);
 		break;
 	}
 	case GUI_FOCUS_CHOICE: {
