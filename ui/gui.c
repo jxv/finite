@@ -116,6 +116,12 @@ bool init(struct Env *e)
 	if ((e->io.back = surfaceLoad(RES_PATH "back.png")) == NULL) {
 		return false;
 	}
+	if ((e->io.wildUp = surfaceLoad(RES_PATH "wild_up.png")) == NULL) {
+		return false;
+	}
+	if ((e->io.wildDown = surfaceLoad(RES_PATH "wild_down.png")) == NULL) {
+		return false;
+	}
 	if ((e->io.lockon = surfaceLoad(RES_PATH "lockon.png")) == NULL) {
 		return false;
 	}
@@ -243,6 +249,8 @@ void quit(struct Env *e)
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
+	surfaceFree(e->io.wildUp);
+	surfaceFree(e->io.wildDown);
 	surfaceFree(e->io.recall);
 	surfaceFree(e->io.recallDisable);
 	surfaceFree(e->io.mode);
@@ -1134,6 +1142,15 @@ void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, stru
 		surfaceDraw(io->screen, s, idx.x * TILE_WIDTH + POS_X, idx.y * TILE_HEIGHT + POS_Y);
 		break;
 	}
+	case TRANS_MOVE_PLACE_WILD: {
+		i = tm->adjust.data.tile[tm->data.place.idx].idx;
+		idx = bw->index;
+		t = &p->tile[i];
+		/*s = t->type == TILE_WILD ? io->wild[TILE_LOOK_GHOST] : io->tile[t->type][t->letter][TILE_LOOK_GHOST];*/
+		surfaceDraw(io->screen, io->wildUp, idx.x * TILE_WIDTH + POS_X, (idx.y-1) * TILE_HEIGHT + POS_Y + (TILE_HEIGHT/2));
+		surfaceDraw(io->screen, io->wildDown, idx.x * TILE_WIDTH + POS_X, (idx.y+1) * TILE_HEIGHT + POS_Y);
+		break;
+	}
 	default: break;
 	}
 }
@@ -1164,7 +1181,7 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	/* gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim); */
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
-	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floor(io->time * 2.0)) ) < 0.5) {
+	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floor(io->time * 2.0)) ) < (1.0/2.0)) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
 	}
 	guiDrawLockon(io, &g->gameGui);

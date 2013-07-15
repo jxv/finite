@@ -106,6 +106,8 @@ struct IO
 	SDL_Surface *back;
 	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
 	SDL_Surface *wild[TILE_LOOK_COUNT];
+	SDL_Surface *wildUp;
+	SDL_Surface *wildDown;
 	SDL_Surface *lockon;
 	SDL_Surface *recall;
 	SDL_Surface *recallDisable;
