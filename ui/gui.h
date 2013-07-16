@@ -136,6 +136,7 @@ struct KeyState
 
 struct Controls
 {
+	struct KeyState start;
 	struct KeyState up;
 	struct KeyState down;
 	struct KeyState left;
@@ -168,25 +169,55 @@ struct GridWidget
 
 typedef enum
 {
+	GAME_GUI_FOCUS_INVALID = -1,
+	GAME_GUI_FOCUS_BOARD = 0,
+	GAME_GUI_FOCUS_RACK,
+	GAME_GUI_FOCUS_CHOICE,
+	GAME_GUI_FOCUS_COUNT
+} GameGUIFocusType;
+
+typedef enum
+{
+	GAME_MENU_FOCUS_INVALID = -1,
+	GAME_MENU_FOCUS_MAIN,
+	GAME_MENU_FOCUS_COUNT
+} GameMenuFocusType;
+
+typedef enum
+{
 	GUI_FOCUS_INVALID = -1,
-	GUI_FOCUS_BOARD = 0,
-	GUI_FOCUS_RACK,
-	GUI_FOCUS_CHOICE,
+	GUI_FOCUS_MENU,
+	GUI_FOCUS_GAME_GUI,
+	GUI_FOCUS_GAME_MENU,
 	GUI_FOCUS_COUNT
 } GUIFocusType;
 
+struct Menu
+{
+	int idx;
+};
+
 struct GameGUI
 {
-	GUIFocusType focus;
-	GUIFocusType bottomLast;
+	GameGUIFocusType focus;
+	GameGUIFocusType bottomLast;
 	struct GridWidget rackWidget;
 	struct GridWidget boardWidget;
 	struct GridWidget choiceWidget;
 };
 
+struct GameMenu
+{
+	GameMenuFocusType focus;
+	int idx;
+};
+
 struct GUI
 {
+	GUIFocusType focus;
+	struct Menu menu;
 	struct GameGUI gameGui;
+	struct GameMenu gameMenu;
 };
 
 struct MoveModePlace

@@ -12,7 +12,7 @@ void initGUI(struct GUI *g)
 	mkRackWidget(&g->gameGui.rackWidget);
 	mkChoiceWidget(&g->gameGui.choiceWidget);
 	mkBoardWidget(&g->gameGui.boardWidget);
-	g->gameGui.focus = GUI_FOCUS_BOARD;
+	g->gameGui.focus = GAME_GUI_FOCUS_BOARD;
 }
 
 bool fontmapInit(struct Font *f, int w, int h, const char *filename)
@@ -233,9 +233,11 @@ bool init(struct Env *e)
 	e->game.player[1].active = 1;
 	controlsInit(&e->controls);
 	e->transMove.type = TRANS_MOVE_INVALID;
-	e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
-	e->gui.gameGui.bottomLast = GUI_FOCUS_CHOICE;
+	e->gui.gameGui.focus = GAME_GUI_FOCUS_CHOICE;
+	e->gui.gameGui.bottomLast = GAME_GUI_FOCUS_CHOICE;
 	e->gui.gameGui.choiceWidget.index.x = 1;
+
+	e->gui.focus = GUI_FOCUS_GAME_GUI;
 	return true;
 }
 
@@ -357,6 +359,7 @@ bool handleEvent(struct Controls *c)
 		default: break;
 		}
 	}
+	keyStateUpdate(&c->start, ks[SDLK_RETURN]);
 	keyStateUpdate(&c->up, ks[SDLK_UP]);
 	keyStateUpdate(&c->down, ks[SDLK_DOWN]);
 	keyStateUpdate(&c->left, ks[SDLK_LEFT]);
@@ -999,13 +1002,18 @@ bool transMoveToMove(struct Move *m, struct TransMove *tm)
 	return false;
 }
 
-void update(struct Env *e)
+void updateGameGui(struct Env *e)
 {
 	struct Cmd c;
 	struct Move m;
 	struct Action a;
 	
 	NOT(e);
+
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_GAME_MENU;
+		return;
+	}
 	
 	if (e->transMove.type == TRANS_MOVE_INVALID) {
 		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
@@ -1017,46 +1025,46 @@ void update(struct Env *e)
 	}
 	
 	switch (e->gui.gameGui.focus) {
-	case GUI_FOCUS_BOARD: boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_CHOICE: choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GUI_FOCUS_RACK: rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GAME_GUI_FOCUS_BOARD: boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GAME_GUI_FOCUS_CHOICE: choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	case GAME_GUI_FOCUS_RACK: rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
 	default: break;
 	}
 	updateGameGUI(&e->gui.gameGui, &c, e->transMove.type);
 	
 	switch (c.type) {
 	case CMD_FOCUS_TOP: {
-		e->gui.gameGui.focus = GUI_FOCUS_BOARD;
+		e->gui.gameGui.focus = GAME_GUI_FOCUS_BOARD;
 		break;
 	}
 	case CMD_FOCUS_BOTTOM: {
-		if (e->gui.gameGui.bottomLast != GUI_FOCUS_CHOICE) {
-			e->gui.gameGui.focus = GUI_FOCUS_RACK;
+		if (e->gui.gameGui.bottomLast != GAME_GUI_FOCUS_CHOICE) {
+			e->gui.gameGui.focus = GAME_GUI_FOCUS_RACK;
 		} else {
-			e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
+			e->gui.gameGui.focus = GAME_GUI_FOCUS_CHOICE;
 		}
 		break;
 	}
 	case CMD_BOARD: {
-		e->gui.gameGui.focus = GUI_FOCUS_BOARD;
+		e->gui.gameGui.focus = GAME_GUI_FOCUS_BOARD;
 		e->gui.gameGui.boardWidget.index = c.data.board;
 		break;
 	}
 	case CMD_RACK: {
-		e->gui.gameGui.focus = GUI_FOCUS_RACK;
+		e->gui.gameGui.focus = GAME_GUI_FOCUS_RACK;
 		e->gui.gameGui.rackWidget.index.x = c.data.rack;
 		e->gui.gameGui.rackWidget.index.y = 0;
 		break;
 	}
 	case CMD_CHOICE: {
-		e->gui.gameGui.focus = GUI_FOCUS_CHOICE;
+		e->gui.gameGui.focus = GAME_GUI_FOCUS_CHOICE;
 		e->gui.gameGui.choiceWidget.index.x = c.data.choice;
 		e->gui.gameGui.choiceWidget.index.y = 0;
 		break;
 	}
 	default: break;
 	}
-	if (e->gui.gameGui.focus != GUI_FOCUS_BOARD) {
+	if (e->gui.gameGui.focus != GAME_GUI_FOCUS_BOARD) {
 		
 		e->gui.gameGui.bottomLast = e->gui.gameGui.focus;
 	}
@@ -1086,6 +1094,32 @@ void update(struct Env *e)
 	e->io.time += 1.0f / 60.0f;
 }
 
+void updateGameMenu(struct Env *e)
+{
+	NOT(e);
+	
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_GAME_GUI;
+	}
+}
+
+void update(struct Env *e)
+{
+	NOT(e);
+
+	switch (e->gui.focus) {
+	case GUI_FOCUS_GAME_GUI: {
+		updateGameGui(e);
+		break;
+	}
+	case GUI_FOCUS_GAME_MENU: {
+		updateGameMenu(e);
+		break;
+	}
+	default: break;
+	}
+}
+
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 {
 	const int w = 14, h = 14;
@@ -1095,17 +1129,17 @@ void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 	NOT(gg);
 	
 	switch (gg->focus) {
-	case GUI_FOCUS_BOARD: {
+	case GAME_GUI_FOCUS_BOARD: {
 		idx = gg->boardWidget.index;
 		surfaceDraw(io->screen, io->lockon, 104 + idx.x * w, 4 + idx.y * h);
 		break;
 	}
-	case GUI_FOCUS_RACK: {
+	case GAME_GUI_FOCUS_RACK: {
 		idx = gg->rackWidget.index;
 		surfaceDraw(io->screen, io->lockon, 174 + idx.x * w, 220);
 		break;
 	}
-	case GUI_FOCUS_CHOICE: {
+	case GAME_GUI_FOCUS_CHOICE: {
 		idx = gg->choiceWidget.index;
 		surfaceDraw(io->screen, io->lockon, 105 + idx.x * w, 220);
 		break;
@@ -1117,7 +1151,7 @@ void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 #define POS_X 106
 #define POS_Y 5
 
-void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, struct Player *p, struct GridWidget *bw)
+void guiDrawGhostTile(struct IO *io, GameGUIFocusType gf, struct TransMove *tm, struct Player *p, struct GridWidget *bw)
 {
 	int i;
 	struct Coor idx;
@@ -1129,7 +1163,7 @@ void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, stru
 	NOT(p);
 	NOT(bw);
 	
-	if (gf != GUI_FOCUS_BOARD) {
+	if (gf != GAME_GUI_FOCUS_BOARD) {
 		return;
 	}
 
@@ -1146,9 +1180,10 @@ void guiDrawGhostTile(struct IO *io, GUIFocusType gf, struct TransMove *tm, stru
 		i = tm->adjust.data.tile[tm->data.place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
-		/*s = t->type == TILE_WILD ? io->wild[TILE_LOOK_GHOST] : io->tile[t->type][t->letter][TILE_LOOK_GHOST];*/
-		surfaceDraw(io->screen, io->wildUp, idx.x * TILE_WIDTH + POS_X, (idx.y-1) * TILE_HEIGHT + POS_Y + (TILE_HEIGHT/2));
-		surfaceDraw(io->screen, io->wildDown, idx.x * TILE_WIDTH + POS_X, (idx.y+1) * TILE_HEIGHT + POS_Y);
+		surfaceDraw(io->screen, io->wildUp, idx.x * TILE_WIDTH + POS_X,
+			(idx.y-1) * TILE_HEIGHT + POS_Y + (TILE_HEIGHT/2));
+		surfaceDraw(io->screen, io->wildDown, idx.x * TILE_WIDTH + POS_X,
+			(idx.y+1) * TILE_HEIGHT + POS_Y);
 		break;
 	}
 	default: break;
@@ -1168,17 +1203,14 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	
 	pos.x = 106;
 	pos.y = 5;
-	/* gridWidgetDraw(io->screen, &g->gameGui.boardWidget, pos, dim); */
 	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->player[tm->playerIdx], &gm->board, tm, pos, dim);
 	
 	pos.x = 162;
 	pos.y = 222;
-	/* gridWidgetDraw(io->screen, &g->gameGui.rackWidget, pos, dim); */
 	rackWidgetDraw(io, tm, &g->gameGui.rackWidget, pos, dim, &gm->player[tm->playerIdx]);
 	
 	pos.x = 106;
 	pos.y = 222;
-	/* gridWidgetDraw(io->screen, &g->gameGui.choiceWidget, pos, dim); */
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
 	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floor(io->time * 2.0)) ) < (1.0/2.0)) {
@@ -1192,8 +1224,14 @@ void draw(struct Env *e)
 	NOT(e);
 
 	SDL_FillRect(e->io.screen, NULL, 0);
-	surfaceDraw(e->io.screen, e->io.back, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+	switch (e->gui.focus) {
+	case GUI_FOCUS_GAME_GUI: {
+		surfaceDraw(e->io.screen, e->io.back, 0, 0);
+		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+		break;
+	}
+	default: break;
+	}
 	SDL_Flip(e->io.screen);
 }
 

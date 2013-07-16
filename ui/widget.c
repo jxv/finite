@@ -55,7 +55,7 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 	NOT(cmd);
 	NOT(gg);
 	NOT(c);
-	assert(gg->focus == GUI_FOCUS_BOARD);
+	assert(gg->focus == GAME_GUI_FOCUS_BOARD);
 
 	bw = &gg->boardWidget;
 	cmd->type = CMD_INVALID;
@@ -106,7 +106,7 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	NOT(cmd);
 	NOT(gg);
 	NOT(c);
-	assert(gg->focus == GUI_FOCUS_CHOICE);
+	assert(gg->focus == GAME_GUI_FOCUS_CHOICE);
 
 	cw = &gg->choiceWidget;
 	cw->index.y = 0;
@@ -183,7 +183,7 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 	NOT(cmd);
 	NOT(gg);
 	NOT(c);
-	assert(gg->focus == GUI_FOCUS_RACK);
+	assert(gg->focus == GAME_GUI_FOCUS_RACK);
 	
 	rw = &gg->rackWidget;
 	rw->index.y = 0;
@@ -376,7 +376,7 @@ void updateGameGUI(struct GameGUI *gg, struct Cmd *c, TransMoveType tmt)
 	cw = &gg->choiceWidget;
 
 	switch (gg->focus) {
-	case GUI_FOCUS_BOARD: {
+	case GAME_GUI_FOCUS_BOARD: {
 		if (tmt == TRANS_MOVE_PLACE_WILD) {
 			break;
 		}
@@ -407,7 +407,7 @@ void updateGameGUI(struct GameGUI *gg, struct Cmd *c, TransMoveType tmt)
 		}
 		break;
 	}
-	case GUI_FOCUS_RACK: {
+	case GAME_GUI_FOCUS_RACK: {
 		switch (c->type) {
 		case CMD_RACK_LEFT: {
 			rw->index.x += RACK_SIZE;
@@ -424,7 +424,7 @@ void updateGameGUI(struct GameGUI *gg, struct Cmd *c, TransMoveType tmt)
 		}
 		break;
 	}
-	case GUI_FOCUS_CHOICE: {
+	case GAME_GUI_FOCUS_CHOICE: {
 		switch (c->type) {
 		case CMD_CHOICE_LEFT: {
 			cw->index.x += CHOICE_COUNT;
