@@ -5,15 +5,6 @@
 #include "widget.h"
 #include "print.h"
 
-void initGUI(struct GUI *g)
-{
-	NOT(g);
-	
-	mkRackWidget(&g->gameGui.rackWidget);
-	mkChoiceWidget(&g->gameGui.choiceWidget);
-	mkBoardWidget(&g->gameGui.boardWidget);
-	g->gameGui.focus = GAME_GUI_FOCUS_BOARD;
-}
 
 bool fontmapInit(struct Font *f, int w, int h, const char *filename)
 {
@@ -90,6 +81,52 @@ void controlsInit(struct Controls *c)
 	keystateInit(&c->y);
 	keystateInit(&c->l);
 	keystateInit(&c->r);
+}
+
+void initGame1vs1Human(struct Game *g)
+{
+	NOT(g);
+
+	boardInit(&g->board);
+	bagInit(&g->bag);
+	g->playerNum = 2;
+	playerInit(&g->player[0], &g->bag);
+	playerInit(&g->player[1], &g->bag);
+	g->player[0].active = true;
+	g->player[1].active = true;
+}
+
+void initMenu(struct Menu *m)
+{
+	NOT(m);
+}
+
+void initGameMenu(struct GameMenu *gm)
+{
+	NOT(gm);
+
+	gm->focus = GAME_MENU_FOCUS_MAIN;
+}
+
+void initGameGUI(struct GameGUI *gg)
+{
+	NOT(gg);
+	
+	mkRackWidget(&gg->rackWidget);
+	mkChoiceWidget(&gg->choiceWidget);
+	mkBoardWidget(&gg->boardWidget);
+	gg->focus = GAME_GUI_FOCUS_CHOICE;
+	gg->bottomLast = GAME_GUI_FOCUS_CHOICE;
+	gg->choiceWidget.index.x = 1;
+}
+
+void initGUI(struct GUI *g)
+{
+	initMenu(&g->menu);
+	initGameMenu(&g->gameMenu);
+	initGameGUI(&g->gameGui);
+
+	g->focus = GUI_FOCUS_MENU;
 }
 
 bool init(struct Env *e)
@@ -223,21 +260,12 @@ bool init(struct Env *e)
 	for (i = 0; i < TILE_LOOK_COUNT; i++) {
 		surfaceFree(tile[i]);
 	}
-	boardInit(&e->game.board);
-	bagInit(&e->game.bag);
-	initGUI(&e->gui);
-	e->game.playerNum = 2;
-	playerInit(&e->game.player[0], &e->game.bag);
-	playerInit(&e->game.player[1], &e->game.bag);
-	e->game.player[0].active = 1;
-	e->game.player[1].active = 1;
 	controlsInit(&e->controls);
-	e->transMove.type = TRANS_MOVE_INVALID;
-	e->gui.gameGui.focus = GAME_GUI_FOCUS_CHOICE;
-	e->gui.gameGui.bottomLast = GAME_GUI_FOCUS_CHOICE;
-	e->gui.gameGui.choiceWidget.index.x = 1;
 
-	e->gui.focus = GUI_FOCUS_GAME_GUI;
+	e->transMove.type = TRANS_MOVE_INVALID;
+
+	initGame1vs1Human(&e->game);
+	initGUI(&e->gui);
 	return true;
 }
 
@@ -514,10 +542,6 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 				tm->type = TRANS_MOVE_PLACE_WILD;
 			}
 		} else {
-			/*
-			swap tiles from rack's idx and board's idx.
-			what to do when swapping a wild tile (rack's idx to board idx)?
-
 			int a0, a1;
 			struct TileAdjust b0, b1;
 			a0 = mmp->rackIdx[c->data.board.y][c->data.board.x];
@@ -526,8 +550,9 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 			b1 = tm->adjust.data.tile[a1];
 			tm->adjust.data.tile[a0] = b1;
 			tm->adjust.data.tile[a1] = b0;
-			
-			*/
+			if (tm->adjust.data.tile[a0].type == TILE_WILD) {
+				tm->type = TRANS_MOVE_PLACE_WILD;
+			}
 		}
 		return true;
 	}
@@ -1002,6 +1027,24 @@ bool transMoveToMove(struct Move *m, struct TransMove *tm)
 	return false;
 }
 
+void updateMenu(struct Env *e)
+{
+	struct Cmd c;
+	
+	NOT(e);
+	
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_GAME_MENU;
+
+		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
+		c.type = CMD_INVALID;
+		updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
+		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
+		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	}
+}
+
 void updateGameGui(struct Env *e)
 {
 	struct Cmd c;
@@ -1108,6 +1151,10 @@ void update(struct Env *e)
 	NOT(e);
 
 	switch (e->gui.focus) {
+	case GUI_FOCUS_MENU: {
+		updateMenu(e);
+		break;
+	}
 	case GUI_FOCUS_GAME_GUI: {
 		updateGameGui(e);
 		break;
