@@ -22,8 +22,8 @@ CFLAG+=-DDEBUG
 CFLAG+=`$(P)sdl-config --cflags`
 
 LIB=-lc
-LIB=-lm
-LIB=-lpthread
+LIB+=-lm
+LIB+=-lpthread
 LIB+=`$(P)sdl-config --libs`
 LIB+=-lSDL_image
 
