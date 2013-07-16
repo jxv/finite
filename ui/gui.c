@@ -1260,7 +1260,7 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	pos.y = 222;
 	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
-	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floor(io->time * 2.0)) ) < (1.0/2.0)) {
+	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floorf(io->time * 2.0)) ) < (1.0/2.0)) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
 	}
 	guiDrawLockon(io, &g->gameGui);
