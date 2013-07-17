@@ -443,7 +443,13 @@ bool pathValid(struct Path *p, struct Dict *d)
 
 	switch (p->type) {
 	case PATH_DOT: {
-		if (!(dirValid(&p->data.dot.right, &p->board, d) || dirValid(&p->data.dot.down, &p->board, d))) {
+		bool a0, a1, b0, b1;
+		a0 = dirValid(&p->data.dot.right, &p->board, d);
+		b0 = dirValid(&p->data.dot.down, &p->board, d);
+		a1 = p->data.dot.right.len > 1;
+		b1 = p->data.dot.down.len > 1;
+
+		if (!((a0 && !(b0 || b1)) || (b0 && !(a0 || a1)) || (a0 && b0))) {
 			return false;
 		}
 		break;
