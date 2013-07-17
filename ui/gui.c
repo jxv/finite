@@ -71,6 +71,7 @@ void controlsInit(struct Controls *c)
 {
 	NOT(c);
 	
+	keystateInit(&c->start);
 	keystateInit(&c->up);
 	keystateInit(&c->down);
 	keystateInit(&c->right);
@@ -127,6 +128,19 @@ void initGUI(struct GUI *g)
 	initGameGUI(&g->gameGui);
 
 	g->focus = GUI_FOCUS_MENU;
+}
+
+SDL_Surface *createText(struct Font *f, char *str)
+{
+	SDL_Surface *text;
+
+	NOT(f);
+	NOT(str);
+	
+	text = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * strlen(str), f->height, SCREEN_BPP, 0xff, 0xff, 0xff, 0xff);
+	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0xff, 0xff));
+	strDraw(text, f, str, 0, 0);
+	return text;
 }
 
 bool init(struct Env *e)
@@ -260,6 +274,23 @@ bool init(struct Env *e)
 	for (i = 0; i < TILE_LOOK_COUNT; i++) {
 		surfaceFree(tile[i]);
 	}
+
+	e->io.fader = surfaceCpy(e->io.screen);
+
+	e->io.menuChoice[0] = createText(&e->io.white_font, "START");
+	for (i = 0; i < MENU_CHOICE_COUNT; i++) {
+		if (!e->io.menuChoice[i]) {
+			return false;
+		}
+	}
+
+	e->io.gameMenuChoice[0] = createText(&e->io.white_font, "RESUME");
+	for (i = 0; i < GAME_MENU_CHOICE_COUNT; i++) {
+		if (!e->io.gameMenuChoice[i]) {
+			return false;
+		}
+	}
+
 	controlsInit(&e->controls);
 
 	e->transMove.type = TRANS_MOVE_INVALID;
@@ -305,6 +336,12 @@ void quit(struct Env *e)
 			surfaceFree(e->io.tile[TILE_WILD][i][j]);
 			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
 		}
+	}
+	for (i = 0; i < MENU_CHOICE_COUNT; i++) {
+		surfaceFree(e->io.menuChoice[i]);
+	}
+	for (i = 0; i < GAME_MENU_CHOICE_COUNT; i++) {
+		surfaceFree(e->io.gameMenuChoice[i]);
 	}
 	fontmapQuit(&e->io.white_font);
 	fontmapQuit(&e->io.black_font);
@@ -1273,9 +1310,23 @@ void draw(struct Env *e)
 
 	SDL_FillRect(e->io.screen, NULL, 0);
 	switch (e->gui.focus) {
+	case GUI_FOCUS_MENU: {
+		SDL_FillRect(e->io.screen, NULL, SDL_MapRGB(e->io.screen->format, 0xff, 0x00, 0x00));
+		surfaceDraw(e->io.screen, e->io.menuChoice[0], 0, 0);
+		break;
+	}
 	case GUI_FOCUS_GAME_GUI: {
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+		break;
+	}
+	case GUI_FOCUS_GAME_MENU: {
+		surfaceDraw(e->io.screen, e->io.back, 0, 0);
+		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 200);
+		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
+		surfaceDraw(e->io.screen, e->io.gameMenuChoice[0], 0, 0);
 		break;
 	}
 	default: break;

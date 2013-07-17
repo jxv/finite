@@ -1,19 +1,12 @@
 #include "dbg.h"
 #include "sdl.h"
 
-
-#define ALPHA_R	0xff
-#define	ALPHA_G	0x00
-#define ALPHA_B	0xff
-
-
 void surfaceFree(SDL_Surface *s)
 {
 	if (s) {
 		 SDL_FreeSurface(s);
 	}
 }
-
 
 SDL_Surface *surfaceLoad(const char *filename)
 {
@@ -37,7 +30,6 @@ SDL_Surface *surfaceLoad(const char *filename)
 	return s;
 } 
 
-
 void delay(int st, int et, int fps)
 {
 	int ms;
@@ -51,7 +43,6 @@ void delay(int st, int et, int fps)
 	}
 }
 
-
 void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
 {
 	SDL_Rect offset;
@@ -62,7 +53,6 @@ void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
 	offset.y = y;
 	SDL_BlitSurface(s1, NULL, s0, &offset);
 }
-
 
 SDL_Surface *surfaceCpy(SDL_Surface *s)
 {

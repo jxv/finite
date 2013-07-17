@@ -5,7 +5,9 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-
+#define ALPHA_R		0xff
+#define ALPHA_G		0x00
+#define ALPHA_B		0xff
 #define SCREEN_BPP	32
 
 

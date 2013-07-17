@@ -92,6 +92,21 @@ typedef enum
 	TILE_LOOK_COUNT
 } TileLookType;
 
+typedef enum
+{
+	MENU_CHOICE_INAVLID = -1,
+	MENU_CHOICE_START = 0,
+	MENU_CHOICE_COUNT
+} MenuChoiceType;
+
+
+typedef enum
+{
+	GAME_MENU_CHOICE_INVALID = -1,
+	GAME_MENU_CHOICE_RESUME = 0,
+	GAME_MENU_CHOICE_COUNT
+} GameMenuChoiceType;
+
 struct Font
 {
 	int width;
@@ -104,6 +119,7 @@ struct IO
 	float time;
 	SDL_Surface *screen;
 	SDL_Surface *back;
+	SDL_Surface *fader;
 	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
 	SDL_Surface *wild[TILE_LOOK_COUNT];
 	SDL_Surface *wildUp;
@@ -124,6 +140,8 @@ struct IO
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
+	SDL_Surface *menuChoice[MENU_CHOICE_COUNT];
+	SDL_Surface *gameMenuChoice[GAME_MENU_CHOICE_COUNT];
 	struct Font white_font;
 	struct Font black_font;
 };
