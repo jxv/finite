@@ -340,7 +340,7 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 	}
 	case TRANS_MOVE_PLACE_END: {
 		cw->button[0][CHOICE_RECALL] = true;
-		cw->button[0][CHOICE_MODE] = false;
+		cw->button[0][CHOICE_MODE] = true;
 		cw->button[0][CHOICE_PLAY] = true; 
 		cw->button[0][CHOICE_SHUFFLE] = false;
 		break;
@@ -503,7 +503,8 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 	offset = 176;
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: {
+	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_WILD: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
 			if (t->type == TILE_NONE) {

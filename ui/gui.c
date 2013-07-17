@@ -552,6 +552,7 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 			tm->adjust.data.tile[a1] = b0;
 			if (tm->adjust.data.tile[a0].type == TILE_WILD) {
 				tm->type = TRANS_MOVE_PLACE_WILD;
+				mmp->idx = a0;
 			}
 		}
 		return true;
