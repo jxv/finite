@@ -106,7 +106,7 @@ void initGameMenu(struct GameMenu *gm)
 {
 	NOT(gm);
 
-	gm->focus = GAME_MENU_FOCUS_MAIN;
+	gm->focus = GAME_MENU_FOCUS_RESUME;
 }
 
 void initGameGUI(struct GameGUI *gg)
@@ -218,10 +218,10 @@ bool init(struct Env *e)
 	if ((e->io.shuffleDisable = surfaceLoad(RES_PATH "shuffle_disable.png")) == NULL) {
 		return false;
 	}
-	if (!fontmapInit(&e->io.white_font, 6, 12, RES_PATH "white_font.png")) {
+	if (!fontmapInit(&e->io.whiteFont, 6, 12, RES_PATH "whiteFont.png")) {
 		return false;
 	}
-	if (!fontmapInit(&e->io.black_font, 6, 12, RES_PATH "black_font.png")) {
+	if (!fontmapInit(&e->io.blackFont, 6, 12, RES_PATH "blackFont.png")) {
 		return false;
 	}
 
@@ -266,9 +266,9 @@ bool init(struct Env *e)
 				return false;
 			}
 			sprintf(str,"%c", i + 'a');
-			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.black_font, str, 3, 0);
+			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.blackFont, str, 3, 0);
 			sprintf(str,"%c", i + 'A');
-			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.black_font, str, 3, 0);
+			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.blackFont, str, 3, 0);
 		}
 	}
 	for (i = 0; i < TILE_LOOK_COUNT; i++) {
@@ -277,19 +277,22 @@ bool init(struct Env *e)
 
 	e->io.fader = surfaceCpy(e->io.screen);
 
-	e->io.menuChoice[0] = createText(&e->io.white_font, "START");
-	for (i = 0; i < MENU_CHOICE_COUNT; i++) {
-		if (!e->io.menuChoice[i]) {
+	e->io.menuFocus[MENU_FOCUS_START] = createText(&e->io.whiteFont, "START");
+	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
+		if (!e->io.menuFocus[i]) {
 			return false;
 		}
 	}
 
-	e->io.gameMenuChoice[0] = createText(&e->io.white_font, "RESUME");
-	for (i = 0; i < GAME_MENU_CHOICE_COUNT; i++) {
-		if (!e->io.gameMenuChoice[i]) {
+	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createText(&e->io.whiteFont, "RESUME");
+	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createText(&e->io.whiteFont, "QUIT");
+	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
+		if (!e->io.gameMenuFocus[i]) {
 			return false;
 		}
 	}
+
+	e->io.rightArrow = createText(&e->io.whiteFont, ">");
 
 	controlsInit(&e->controls);
 
@@ -337,14 +340,15 @@ void quit(struct Env *e)
 			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
 		}
 	}
-	for (i = 0; i < MENU_CHOICE_COUNT; i++) {
-		surfaceFree(e->io.menuChoice[i]);
+	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
+		surfaceFree(e->io.menuFocus[i]);
 	}
-	for (i = 0; i < GAME_MENU_CHOICE_COUNT; i++) {
-		surfaceFree(e->io.gameMenuChoice[i]);
+	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
+		surfaceFree(e->io.gameMenuFocus[i]);
 	}
-	fontmapQuit(&e->io.white_font);
-	fontmapQuit(&e->io.black_font);
+	surfaceFree(e->io.rightArrow);
+	fontmapQuit(&e->io.whiteFont);
+	fontmapQuit(&e->io.blackFont);
 	SDL_Quit();
 }
 
@@ -1180,7 +1184,28 @@ void updateGameMenu(struct Env *e)
 	NOT(e);
 	
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_GUI;
+		switch (e->gui.gameMenu.focus) {
+		case GAME_MENU_FOCUS_RESUME: {
+			e->gui.focus = GUI_FOCUS_GAME_GUI;
+			break;
+		}
+		case GAME_MENU_FOCUS_QUIT: {
+			/* quit here */
+			break;
+		}
+		default: break;
+		}
+		return;
+	}
+	if (e->controls.up.type == KEY_STATE_PRESSED) {
+		e->gui.gameMenu.focus += GAME_MENU_FOCUS_COUNT;
+		e->gui.gameMenu.focus--;
+		e->gui.gameMenu.focus %= GAME_MENU_FOCUS_COUNT;
+		return;
+	}
+	if (e->controls.down.type == KEY_STATE_PRESSED) {
+		e->gui.gameMenu.focus++;
+		e->gui.gameMenu.focus %= GAME_MENU_FOCUS_COUNT;
 	}
 }
 
@@ -1312,7 +1337,7 @@ void draw(struct Env *e)
 	switch (e->gui.focus) {
 	case GUI_FOCUS_MENU: {
 		SDL_FillRect(e->io.screen, NULL, SDL_MapRGB(e->io.screen->format, 0xff, 0x00, 0x00));
-		surfaceDraw(e->io.screen, e->io.menuChoice[0], 0, 0);
+		surfaceDraw(e->io.screen, e->io.menuFocus[0], 0, 0);
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {
@@ -1321,12 +1346,16 @@ void draw(struct Env *e)
 		break;
 	}
 	case GUI_FOCUS_GAME_MENU: {
+		int i;
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 200);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-		surfaceDraw(e->io.screen, e->io.gameMenuChoice[0], 0, 0);
+		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
+			surfaceDraw(e->io.screen, e->io.gameMenuFocus[i], 150, i * 12 + 80);
+		}
+		surfaceDraw(e->io.screen, e->io.rightArrow, 150 - 8, e->gui.gameMenu.focus * 12 + 80);
 		break;
 	}
 	default: break;

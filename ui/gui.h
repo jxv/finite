@@ -94,18 +94,18 @@ typedef enum
 
 typedef enum
 {
-	MENU_CHOICE_INAVLID = -1,
-	MENU_CHOICE_START = 0,
-	MENU_CHOICE_COUNT
-} MenuChoiceType;
-
+	MENU_FOCUS_INAVLID = -1,
+	MENU_FOCUS_START = 0,
+	MENU_FOCUS_COUNT
+} MenuFocusType;
 
 typedef enum
 {
-	GAME_MENU_CHOICE_INVALID = -1,
-	GAME_MENU_CHOICE_RESUME = 0,
-	GAME_MENU_CHOICE_COUNT
-} GameMenuChoiceType;
+	GAME_MENU_FOCUS_INVALID = -1,
+	GAME_MENU_FOCUS_RESUME = 0,
+	GAME_MENU_FOCUS_QUIT,
+	GAME_MENU_FOCUS_COUNT
+} GameMenuFocusType;
 
 struct Font
 {
@@ -119,6 +119,7 @@ struct IO
 	float time;
 	SDL_Surface *screen;
 	SDL_Surface *back;
+	SDL_Surface *rightArrow;
 	SDL_Surface *fader;
 	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
 	SDL_Surface *wild[TILE_LOOK_COUNT];
@@ -140,10 +141,10 @@ struct IO
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
-	SDL_Surface *menuChoice[MENU_CHOICE_COUNT];
-	SDL_Surface *gameMenuChoice[GAME_MENU_CHOICE_COUNT];
-	struct Font white_font;
-	struct Font black_font;
+	SDL_Surface *menuFocus[MENU_FOCUS_COUNT];
+	SDL_Surface *gameMenuFocus[GAME_MENU_FOCUS_COUNT];
+	struct Font whiteFont;
+	struct Font blackFont;
 };
 
 struct KeyState
@@ -196,13 +197,6 @@ typedef enum
 
 typedef enum
 {
-	GAME_MENU_FOCUS_INVALID = -1,
-	GAME_MENU_FOCUS_MAIN,
-	GAME_MENU_FOCUS_COUNT
-} GameMenuFocusType;
-
-typedef enum
-{
 	GUI_FOCUS_INVALID = -1,
 	GUI_FOCUS_MENU,
 	GUI_FOCUS_GAME_GUI,
@@ -213,6 +207,7 @@ typedef enum
 struct Menu
 {
 	int idx;
+	MenuFocusType focus;
 };
 
 struct GameGUI
