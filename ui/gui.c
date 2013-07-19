@@ -20,9 +20,10 @@ bool fontmapInit(struct Font *f, int w, int h, const char *filename)
 void fontmapQuit(struct Font *f)
 {
 	NOT(f);
-	NOT(f->map);
 
-	surfaceFree(f->map);
+	if (f->map) {
+		surfaceFree(f->map);
+	}
 }
 
 void strDraw(SDL_Surface *s, struct Font *f, const char *str, int x, int y)
@@ -126,7 +127,7 @@ void initGUI(struct GUI *g)
 	initMenu(&g->menu);
 	initGameMenu(&g->gameMenu);
 	initGameGUI(&g->gameGui);
-
+	g->gameAreYouSureQuit = false;
 	g->focus = GUI_FOCUS_MENU;
 }
 
@@ -218,10 +219,10 @@ bool init(struct Env *e)
 	if ((e->io.shuffleDisable = surfaceLoad(RES_PATH "shuffle_disable.png")) == NULL) {
 		return false;
 	}
-	if (!fontmapInit(&e->io.whiteFont, 6, 12, RES_PATH "whiteFont.png")) {
+	if (!fontmapInit(&e->io.whiteFont, 6, 12, RES_PATH "white_font.png")) {
 		return false;
 	}
-	if (!fontmapInit(&e->io.blackFont, 6, 12, RES_PATH "blackFont.png")) {
+	if (!fontmapInit(&e->io.blackFont, 6, 12, RES_PATH "black_font.png")) {
 		return false;
 	}
 
@@ -277,15 +278,15 @@ bool init(struct Env *e)
 
 	e->io.fader = surfaceCpy(e->io.screen);
 
-	e->io.menuFocus[MENU_FOCUS_START] = createText(&e->io.whiteFont, "START");
+	e->io.menuFocus[MENU_FOCUS_START] = createText(&e->io.whiteFont, "Start");
 	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
 		if (!e->io.menuFocus[i]) {
 			return false;
 		}
 	}
 
-	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createText(&e->io.whiteFont, "RESUME");
-	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createText(&e->io.whiteFont, "QUIT");
+	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createText(&e->io.whiteFont, "Resume");
+	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createText(&e->io.whiteFont, "Quit");
 	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
 		if (!e->io.gameMenuFocus[i]) {
 			return false;
@@ -293,11 +294,13 @@ bool init(struct Env *e)
 	}
 
 	e->io.rightArrow = createText(&e->io.whiteFont, ">");
+	e->io.areYouSureQuit = createText(&e->io.whiteFont, "Are you sure you want to quit?");
+	e->io.yes = createText(&e->io.whiteFont, "Yes");
+	e->io.no = createText(&e->io.whiteFont, "No");
 
 	controlsInit(&e->controls);
 
 	e->transMove.type = TRANS_MOVE_INVALID;
-
 	initGame1vs1Human(&e->game);
 	initGUI(&e->gui);
 	return true;
@@ -347,7 +350,11 @@ void quit(struct Env *e)
 		surfaceFree(e->io.gameMenuFocus[i]);
 	}
 	surfaceFree(e->io.rightArrow);
+	surfaceFree(e->io.areYouSureQuit);
+	surfaceFree(e->io.yes);
+	surfaceFree(e->io.no);
 	fontmapQuit(&e->io.whiteFont);
+	puts("hff");
 	fontmapQuit(&e->io.blackFont);
 	SDL_Quit();
 }
@@ -1069,6 +1076,12 @@ bool transMoveToMove(struct Move *m, struct TransMove *tm)
 	return false;
 }
 
+void quitGame(struct Env *e)
+{
+	NOT(e);
+	puts("I ain't quitting you");
+}
+
 void updateMenu(struct Env *e)
 {
 	struct Cmd c;
@@ -1190,7 +1203,7 @@ void updateGameMenu(struct Env *e)
 			break;
 		}
 		case GAME_MENU_FOCUS_QUIT: {
-			/* quit here */
+			e->gui.focus = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
 			break;
 		}
 		default: break;
@@ -1209,6 +1222,27 @@ void updateGameMenu(struct Env *e)
 	}
 }
 
+void updateGameAreYouSureQuit(struct Env *e)
+{
+	NOT(e);
+	if (e->controls.up.type == KEY_STATE_PRESSED || e->controls.down.type == KEY_STATE_PRESSED) {
+		e->gui.gameAreYouSureQuit = !e->gui.gameAreYouSureQuit;
+		return;
+	}
+	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
+		if (e->gui.gameAreYouSureQuit) {
+			quitGame(e);
+		} else {
+			e->gui.focus = GUI_FOCUS_GAME_MENU;
+		}
+		return;
+	}
+	if (e->controls.b.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_GAME_MENU;
+		return;
+	}
+}
+
 void update(struct Env *e)
 {
 	NOT(e);
@@ -1224,6 +1258,10 @@ void update(struct Env *e)
 	}
 	case GUI_FOCUS_GAME_MENU: {
 		updateGameMenu(e);
+		break;
+	}
+	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: {
+		updateGameAreYouSureQuit(e);
 		break;
 	}
 	default: break;
@@ -1329,6 +1367,29 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	guiDrawLockon(io, &g->gameGui);
 }
 
+
+void drawGameAreYouSureQuit(struct Env *e)
+{
+	const int orgX = 150 - 8;
+	const int orgY = 80;
+
+	NOT(e);
+
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+	SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+	SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 218);
+	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
+	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX - e->io.whiteFont.width * 11, orgY - e->io.whiteFont.height);
+	surfaceDraw(e->io.screen, e->io.yes, orgX, orgY);
+	surfaceDraw(e->io.screen, e->io.no, orgX, orgY + e->io.whiteFont.height);
+	if (e->gui.gameAreYouSureQuit) {
+		surfaceDraw(e->io.screen, e->io.rightArrow, orgX - e->io.whiteFont.width, orgY);
+	} else {
+		surfaceDraw(e->io.screen, e->io.rightArrow, orgX - e->io.whiteFont.width, orgY + e->io.whiteFont.height);
+	}
+}
+
 void draw(struct Env *e)
 {
 	NOT(e);
@@ -1350,14 +1411,15 @@ void draw(struct Env *e)
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
-		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 200);
+		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-			surfaceDraw(e->io.screen, e->io.gameMenuFocus[i], 150, i * 12 + 80);
+			surfaceDraw(e->io.screen, e->io.gameMenuFocus[i], 150, i * e->io.whiteFont.height + 80);
 		}
-		surfaceDraw(e->io.screen, e->io.rightArrow, 150 - 8, e->gui.gameMenu.focus * 12 + 80);
+		surfaceDraw(e->io.screen, e->io.rightArrow, 150 - 8, e->gui.gameMenu.focus * e->io.whiteFont.height + 80);
 		break;
 	}
+	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: drawGameAreYouSureQuit(e); break;
 	default: break;
 	}
 	SDL_Flip(e->io.screen);

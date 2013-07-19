@@ -143,6 +143,9 @@ struct IO
 	SDL_Surface *sq[SQ_COUNT];
 	SDL_Surface *menuFocus[MENU_FOCUS_COUNT];
 	SDL_Surface *gameMenuFocus[GAME_MENU_FOCUS_COUNT];
+	SDL_Surface *areYouSureQuit;
+	SDL_Surface *yes;
+	SDL_Surface *no;
 	struct Font whiteFont;
 	struct Font blackFont;
 };
@@ -201,6 +204,7 @@ typedef enum
 	GUI_FOCUS_MENU,
 	GUI_FOCUS_GAME_GUI,
 	GUI_FOCUS_GAME_MENU,
+	GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT,
 	GUI_FOCUS_COUNT
 } GUIFocusType;
 
@@ -231,6 +235,7 @@ struct GUI
 	struct Menu menu;
 	struct GameGUI gameGui;
 	struct GameMenu gameMenu;
+	bool gameAreYouSureQuit;
 };
 
 struct MoveModePlace
