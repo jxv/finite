@@ -976,6 +976,17 @@ bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b, s
 	return false;
 }
 
+bool updateTransMoveQuit(struct TransMove *tm, struct Cmd *c, struct Board *b, struct Player *p)
+{
+	NOT(tm);
+	NOT(c);
+	NOT(b);
+	NOT(p);
+
+	p->active = false;
+	return true;
+}
+
 bool updateTransMove(struct TransMove *tm, struct Cmd *c, struct Board *b, struct Player *p)
 {
 	NOT(tm);
@@ -989,7 +1000,7 @@ bool updateTransMove(struct TransMove *tm, struct Cmd *c, struct Board *b, struc
 	case TRANS_MOVE_PLACE_END: return updateTransMovePlaceEnd(tm, c, b, p);
 	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c, b, p);
 	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c, b, p);
-	case TRANS_MOVE_QUIT: /* fall through */
+	case TRANS_MOVE_QUIT: return updateTransMoveQuit(tm, c, b, p);
 	case TRANS_MOVE_NONE:
 	case TRANS_MOVE_INVALID: 
 	default: tm->type = TRANS_MOVE_INVALID; break;
@@ -1079,7 +1090,9 @@ bool transMoveToMove(struct Move *m, struct TransMove *tm)
 void quitGame(struct Env *e)
 {
 	NOT(e);
-	puts("I ain't quitting you");
+	
+	e->transMove.type = TRANS_MOVE_QUIT;
+	e->gui.focus = GUI_FOCUS_GAME_GUI;
 }
 
 void updateMenu(struct Env *e)
@@ -1182,6 +1195,7 @@ void updateGameGui(struct Env *e)
 	applyAction(&e->game, &a);
 	if (a.type != ACTION_INVALID) {
 		printf("[PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
+		applyAdjust(&e->game.player[a.playerIdx], &e->transMove.adjust);
 		nextTurn(&e->game);
 		e->transMove.type = TRANS_MOVE_INVALID;
 	} else {
