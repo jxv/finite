@@ -1196,7 +1196,11 @@ void updateGameGui(struct Env *e)
 	if (a.type != ACTION_INVALID) {
 		printf("[PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
 		applyAdjust(&e->game.player[a.playerIdx], &e->transMove.adjust);
-		nextTurn(&e->game);
+		if (endGame(&e->game)) {
+			e->gui.focus = GUI_FOCUS_GAME_OVER;
+		} else {
+			nextTurn(&e->game);
+		}
 		e->transMove.type = TRANS_MOVE_INVALID;
 	} else {
 		if (m.type != MOVE_INVALID) {
@@ -1257,27 +1261,25 @@ void updateGameAreYouSureQuit(struct Env *e)
 	}
 }
 
+void updateGameOver(struct Env *e)
+{
+	NOT(e);
+	
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		return;
+	}
+}
+
 void update(struct Env *e)
 {
 	NOT(e);
 
 	switch (e->gui.focus) {
-	case GUI_FOCUS_MENU: {
-		updateMenu(e);
-		break;
-	}
-	case GUI_FOCUS_GAME_GUI: {
-		updateGameGui(e);
-		break;
-	}
-	case GUI_FOCUS_GAME_MENU: {
-		updateGameMenu(e);
-		break;
-	}
-	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: {
-		updateGameAreYouSureQuit(e);
-		break;
-	}
+	case GUI_FOCUS_MENU: updateMenu(e); break;
+	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
+	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
+	case GUI_FOCUS_GAME_OVER: updateGameOver(e); break;
+	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(e); break;
 	default: break;
 	}
 }
@@ -1352,6 +1354,23 @@ void guiDrawGhostTile(struct IO *io, GameGUIFocusType gf, struct TransMove *tm, 
 	}
 }
 
+void guiDrawBoard(struct IO *io, struct GridWidget *bw, struct Game *g, struct TransMove *tm)
+{
+	struct Coor pos, dim;
+	
+	NOT(io);
+	NOT(bw);
+	NOT(g);
+	NOT(tm);
+
+	dim.x = TILE_WIDTH;
+	dim.y = TILE_HEIGHT;
+	
+	pos.x = 106;
+	pos.y = 5;
+	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, pos, dim);
+}
+
 void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm)
 {
 	struct Coor pos, dim;
@@ -1362,10 +1381,8 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	
 	dim.x = 14;
 	dim.y = 14;
-	
-	pos.x = 106;
-	pos.y = 5;
-	boardWidgetDraw(io, &g->gameGui.boardWidget, &gm->player[tm->playerIdx], &gm->board, tm, pos, dim);
+
+	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm);
 	
 	pos.x = 162;
 	pos.y = 222;
@@ -1431,6 +1448,11 @@ void draw(struct Env *e)
 			surfaceDraw(e->io.screen, e->io.gameMenuFocus[i], 150, i * e->io.whiteFont.height + 80);
 		}
 		surfaceDraw(e->io.screen, e->io.rightArrow, 150 - 8, e->gui.gameMenu.focus * e->io.whiteFont.height + 80);
+		break;
+	}
+	case GUI_FOCUS_GAME_OVER: {
+		surfaceDraw(e->io.screen, e->io.back, 0, 0);
+		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
 		break;
 	}
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: drawGameAreYouSureQuit(e); break;
