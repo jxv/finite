@@ -303,6 +303,9 @@ bool init(struct Env *e)
 	e->transMove.type = TRANS_MOVE_INVALID;
 	initGame1vs1Human(&e->game);
 	initGUI(&e->gui);
+
+	aiFindMove(NULL, e->game.player, &e->game.board);
+
 	return true;
 }
 
@@ -354,7 +357,6 @@ void quit(struct Env *e)
 	surfaceFree(e->io.yes);
 	surfaceFree(e->io.no);
 	fontmapQuit(&e->io.whiteFont);
-	puts("hff");
 	fontmapQuit(&e->io.blackFont);
 	SDL_Quit();
 }
@@ -1118,6 +1120,7 @@ void updateGameGui(struct Env *e)
 	struct Cmd c;
 	struct Move m;
 	struct Action a;
+	struct Log l;
 	
 	NOT(e);
 
@@ -1191,8 +1194,14 @@ void updateGameGui(struct Env *e)
 
 	transMoveToMove(&m, &e->transMove);
 
-	mkAction(&a, &e->game, &m);
+	mkAction(&a, &e->game, &m, NULL);
 	applyAction(&e->game, &a);
+
+	if (c.type == CMD_PLAY || c.type == CMD_QUIT) {
+		mkLog(&a, &l);
+		printLog(&l);
+	}
+
 	if (a.type != ACTION_INVALID) {
 		printf("[PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
 		applyAdjust(&e->game.player[a.playerIdx], &e->transMove.adjust);
@@ -1365,10 +1374,27 @@ void guiDrawBoard(struct IO *io, struct GridWidget *bw, struct Game *g, struct T
 
 	dim.x = TILE_WIDTH;
 	dim.y = TILE_HEIGHT;
-	
 	pos.x = 106;
 	pos.y = 5;
+
 	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, pos, dim);
+}
+
+void guiDrawRack(struct IO *io, struct GridWidget *rw, struct Game *g, struct TransMove *tm)
+{
+	struct Coor pos, dim;
+	
+	NOT(io);
+	NOT(rw);
+	NOT(g);
+	NOT(tm);
+
+	dim.x = TILE_WIDTH;
+	dim.y = TILE_HEIGHT;
+	pos.x = 162;
+	pos.y = 222;
+
+	rackWidgetDraw(io, tm, rw, pos, dim, &g->player[tm->playerIdx]);
 }
 
 void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm)
@@ -1383,10 +1409,7 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 	dim.y = 14;
 
 	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm);
-	
-	pos.x = 162;
-	pos.y = 222;
-	rackWidgetDraw(io, tm, &g->gameGui.rackWidget, pos, dim, &gm->player[tm->playerIdx]);
+	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
 	
 	pos.x = 106;
 	pos.y = 222;

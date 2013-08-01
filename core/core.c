@@ -395,10 +395,9 @@ bool wordValid(struct Word *w, struct Dict *d)
 	return false;
 }
 
-bool dirValid(struct Dir *dir, struct Board *b, struct Dict *dict)
+bool dirValid(struct Dir *dir, struct Board *b, struct Dict *dict, struct Word *w)
 {
 	int x, y, i;
-	struct Word w;
 
 	NOT(dir);
 	NOT(b);
@@ -406,12 +405,12 @@ bool dirValid(struct Dir *dir, struct Board *b, struct Dict *dict)
 
 	x = dir->x;
 	y = dir->y;
-	w.len = dir->len;
+	w->len = dir->len;
 	switch (dir->type) {
 	case DIR_RIGHT: {
-		for (i = 0; i < w.len; i++) {
+		for (i = 0; i < w->len; i++) {
 			if (b->tile[y][x + i].type != TILE_NONE) {
-				w.letter[i] = b->tile[y][x + i].letter;
+				w->letter[i] = b->tile[y][x + i].letter;
 			} else {
 				return false;
 			}
@@ -419,9 +418,9 @@ bool dirValid(struct Dir *dir, struct Board *b, struct Dict *dict)
 		break;
 	}
 	case DIR_DOWN: {
-		for (i = 0; i < w.len; i++) {
+		for (i = 0; i < w->len; i++) {
 			if (b->tile[y + i][x].type != TILE_NONE) {
-				w.letter[i] = b->tile[y + i][x].letter;
+				w->letter[i] = b->tile[y + i][x].letter;
 			} else {
 				return false;
 			}
@@ -431,12 +430,92 @@ bool dirValid(struct Dir *dir, struct Board *b, struct Dict *dict)
 	case DIR_INVALID: /* fall through */
 	default: return false;
 	}
-	return wordValid(&w, dict);
+	return true;
 }
 
-bool pathValid(struct Path *p, struct Dict *d)
+bool pathValid(struct Path *p, struct Dict *d, bool (*rule)(struct Word *, PathType, DirType))
 {
 	int i;
+	struct Word w0, w1;
+	bool result;
+
+	NOT(p);
+	NOT(d);
+
+	result = true;
+	switch (p->type) {
+	case PATH_DOT: {
+		bool a0, a1, b0, b1;
+		a0 = dirValid(&p->data.dot.right, &p->board, d, &w0);
+		b0 = dirValid(&p->data.dot.down, &p->board, d, &w1);
+
+		a0 = a0 ? wordValid(&w0, d) : a0;
+		b0 = b0 ? wordValid(&w1, d) : b0;
+
+		a0 = a0 && rule ? rule(&w0, p->type, DIR_RIGHT) : a0;
+		b0 = b0 && rule ? rule(&w1, p->type, DIR_DOWN) : b0;
+
+		a1 = p->data.dot.right.len > 1;
+		b1 = p->data.dot.down.len > 1;
+
+		if (!((a0 && !(b0 || b1)) || (b0 && !(a0 || a1)) || (a0 && b0))) {
+			result = false;	
+		}
+		break;
+	}
+	case PATH_HORZ: {
+		if (!dirValid(&p->data.horz.right, &p->board, d, &w0)) {
+			result = false;
+		} else if (!wordValid(&w0, d)) {
+			result = false;
+		} else if (rule && !rule(&w0, p->type, DIR_RIGHT)) {
+			result = false;
+		}
+		for (i = 0; i < BOARD_X; i++) {
+			if (p->data.horz.down[i].type == DIR_DOWN) {
+				if (!dirValid(&p->data.horz.down[i], &p->board, d, &w1)) {
+					result = false;
+				} else if (w1.len > 1 && !wordValid(&w1, d)) {
+					result = false;
+				} else if (w1.len > 1 && rule && !rule(&w1, p->type, DIR_DOWN)) {
+					result = false;
+				}
+			}
+		}
+		break;
+	}
+	case PATH_VERT: {
+		if (!dirValid(&p->data.vert.down, &p->board, d, &w0)) {
+			result = false;
+		} else if (!wordValid(&w0, d)) {
+			result = false;
+		} else if (rule && !rule(&w0, p->type, DIR_DOWN)) {
+			result = false;
+		}
+		for (i = 0; i < BOARD_Y; i++) {
+			if (p->data.vert.right[i].type == DIR_RIGHT) {
+				if(!dirValid(&p->data.vert.right[i], &p->board, d, &w1)) {
+					result = false;
+				} else if (w1.len > 1 && !wordValid(&w1, d)) {
+					result = false;
+				} else if (w1.len > 1 && rule && !rule(&w1, p->type, DIR_RIGHT)) {
+					result = false;
+				}
+			}
+		}
+		break;
+	}
+	case PATH_INVALID: /* fall through */
+	default: result = false; break; 
+	}
+	return result; 
+}
+
+/*
+PathErrType pathValidWithErr(struct Path *p, struct Dict *d)
+{
+	int i;
+	struct Word w0, w1;
 
 	NOT(p);
 	NOT(d);
@@ -444,8 +523,10 @@ bool pathValid(struct Path *p, struct Dict *d)
 	switch (p->type) {
 	case PATH_DOT: {
 		bool a0, a1, b0, b1;
-		a0 = dirValid(&p->data.dot.right, &p->board, d);
-		b0 = dirValid(&p->data.dot.down, &p->board, d);
+		a0 = dirValid(&p->data.dot.right, &p->board, d, &w0);
+		b0 = dirValid(&p->data.dot.down, &p->board, d, &w1);
+		a0 = a0 ? wordValid(&w0, d) : a0;
+		b0 = b0 ? wordValid(&w1, d) : b0;
 		a1 = p->data.dot.right.len > 1;
 		b1 = p->data.dot.down.len > 1;
 
@@ -455,34 +536,49 @@ bool pathValid(struct Path *p, struct Dict *d)
 		break;
 	}
 	case PATH_HORZ: {
-		if (!dirValid(&p->data.horz.right, &p->board, d)) {
-			return false;
+		if (!dirValid(&p->data.horz.right, &p->board, d, &w0)) {
+			return PATH_ERR_NON_CONT;
+		}
+		if (!wordValid(&w0, d)) {
+			return PATH_ERR_INVALID_WORD;
 		}
 		for (i = 0; i < BOARD_X; i++) {
-			if (p->data.horz.down[i].type == DIR_DOWN &&
-			   (!dirValid(&p->data.horz.down[i], &p->board, d))) {
-				return false;
+			if (p->data.horz.down[i].type == DIR_DOWN) {
+				if (!dirValid(&p->data.horz.down[i], &p->board, d, &w1)) {
+					return PATH_ERR_NON_CONT;
+				}
+				if (!wordValid(&w1, d)) {
+					return PATH_ERR_INVALID_WORD;
+				}
 			}
 		}
 		break;
 	}
 	case PATH_VERT: {
-		if (!dirValid(&p->data.vert.down, &p->board, d)) {
-			return false;
+		if (!dirValid(&p->data.vert.down, &p->board, d, &w0)) {
+			return PATH_ERR_NON_CONT; 
+		}
+		if (!wordValid(&w0, d)) {
+			return PATH_ERR_INVALID_WORD;
 		}
 		for (i = 0; i < BOARD_Y; i++) {
-			if (p->data.vert.right[i].type == DIR_RIGHT && 
-			   (!dirValid(&p->data.vert.right[i], &p->board, d))) {
-				return false;
+			if (p->data.vert.right[i].type == DIR_RIGHT) {
+				if(!dirValid(&p->data.vert.right[i], &p->board, d, &w1)) {
+					return PATH_ERR_NON_CONT;
+				}
+				if (!wordValid(&w1, d)) {
+					return PATH_ERR_INVALID_WORD;
+				}
 			}
 		}
 		break;
 	}
-	case PATH_INVALID: /* fall through */
-	default: return false;
+	case PATH_INVALID:
+	default: return PATH_ERR_INVALID_PATH;
 	}
-	return true;
+	return PATH_ERR_NONE;
 }
+*/
 
 bool tilesAdjacent(struct Board *b, struct MovePlace *mp, struct Player *p)
 {
@@ -867,7 +963,14 @@ ActionErrType fdPlaceErr(struct MovePlace *mp,struct Player *p, struct Board *b)
 	return ACTION_ERR_NONE;
 }
 
-void mkPlace(struct Action *a, struct Game *g, struct Move *m)
+bool ruleZ4Char(struct Word *w, PathType pt, DirType dt)
+{
+	NOT(w);
+	printWord(w);putchar('\n');
+	return w->len == 4 && w->letter[0] == LETTER_Z;
+}
+
+void mkPlace(struct Action *a, struct Game *g, struct Move *m, bool (*rule)(struct Word *, PathType, DirType))
 {
 	int num, i;
 	struct Path *path;
@@ -925,7 +1028,7 @@ void mkPlace(struct Action *a, struct Game *g, struct Move *m)
 	}
 	}
 
-	if (!pathValid(path, &g->dict)) {
+	if (!pathValid(path, &g->dict, NULL)) {
 		a->type = ACTION_INVALID;
 		a->data.err = ACTION_ERR_PLACE_INVALID_PATH;
 		return;
@@ -933,9 +1036,8 @@ void mkPlace(struct Action *a, struct Game *g, struct Move *m)
 	a->data.place.score = pathScore(path);
 }
 
-void mkDiscard(struct Action *a, struct Game *g, struct Move *m)
+void mkDiscard(struct Action *a, struct Game *g, struct Move *m, bool (*rule)(struct Game *, struct MoveDiscard *))
 {
-	int i;
 
 	NOT(a);
 	NOT(g);
@@ -943,13 +1045,37 @@ void mkDiscard(struct Action *a, struct Game *g, struct Move *m)
 
 	a->type = ACTION_DISCARD;
 	a->data.discard.num = m->data.discard.num;
-	for (i = 0; i < a->data.discard.num; i++) {
-		a->data.discard.rackIdx[i] = m->data.discard.rackIdx[i];
-	}
-	/* memCpy(&a->data.discard, &m->data.discard, sizeof(struct Discard)); */
+	assert(sizeof(a->data.discard) == sizeof(m->data.discard));
+	memCpy(&a->data.discard, &m->data.discard, sizeof(m->data.discard));
 }
 
-void mkAction(struct Action *a, struct Game *g, struct Move *m)
+void mkSkip(struct Action *a, struct Game *g, bool (*rule)(struct Game *))
+{
+	NOT(a);
+	NOT(g);
+	
+	if (rule && !rule(g)) {
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_SKIP_RULE;
+		return;
+	}
+	a->type = ACTION_SKIP;
+}
+
+void mkQuit(struct Action *a, struct Game *g, bool (*rule)(struct Game *))
+{
+	NOT(a);
+	NOT(g);
+	
+	if (rule && !rule(g)) {
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_QUIT_RULE;
+		return;
+	}
+	a->type = ACTION_QUIT;
+}
+
+void mkAction(struct Action *a, struct Game *g, struct Move *m, struct Rule *r)
 {
 	NOT(a);
 	NOT(g);
@@ -957,10 +1083,10 @@ void mkAction(struct Action *a, struct Game *g, struct Move *m)
 
 	a->playerIdx = m->playerIdx;
 	switch (m->type) {
-	case MOVE_PLACE: mkPlace(a, g, m); break;
-	case MOVE_DISCARD: mkDiscard(a, g, m); break;
-	case MOVE_SKIP: a->type = ACTION_SKIP; break;
-	case MOVE_QUIT: a->type = ACTION_QUIT; break;
+	case MOVE_PLACE: mkPlace(a, g, m, r ? r->place : NULL); break;
+	case MOVE_DISCARD: mkDiscard(a, g, m, r ? r->discard : NULL); break;
+	case MOVE_SKIP: mkSkip(a, g, r ? r->skip : NULL); break;
+	case MOVE_QUIT: mkQuit(a, g, r ? r->quit : NULL); break;
 	case MOVE_INVALID: /* fall through */
 	default: a->type = ACTION_INVALID; break;
 	}

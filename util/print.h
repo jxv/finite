@@ -2,6 +2,7 @@
 #define UTIL_PRINT_H
 
 #include "core.h"
+#include "log.h"
 
 void printLetter(LetterType);
 void printWord(struct Word *);
@@ -14,6 +15,7 @@ void printBoard(struct Board *);
 void printRack(struct Player *);
 void printPlace(struct MovePlace *);
 void printActionErr(ActionErrType);
+void printLog(struct Log *);
 
 #endif
 

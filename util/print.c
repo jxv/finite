@@ -166,15 +166,43 @@ void printPlace(struct MovePlace *mp)
 void printActionErr(ActionErrType err)
 {
 	switch (err) {
-	case ACTION_ERR_PLACE_OUT_OF_RANGE: printf("[err: out of range]"); break;
-	case ACTION_ERR_PLACE_SELF_OVERLAP: printf("[err: self overlap]"); break;
-	case ACTION_ERR_PLACE_BOARD_OVERLAP: printf("[err: board overlap]"); break;
-	case ACTION_ERR_PLACE_INVALID_RACK_ID: printf("[err: invalid rack id]"); break;
-	case ACTION_ERR_PLACE_INVALID_SQ: printf("[err: place on free sq. or adjacent to a tile]"); break;
-	case ACTION_ERR_PLACE_NO_RACK: printf("[err: no tiles placed on the board]"); break;
-	case ACTION_ERR_PLACE_NO_DIR: printf("[err: tiles don't form a continuous line]"); break;
-	case ACTION_ERR_PLACE_INVALID_PATH: printf("[err: invalid path, misspelled words?]"); break;
+	case ACTION_ERR_PLACE_OUT_OF_RANGE: puts("[err: out of range]"); break;
+	case ACTION_ERR_PLACE_SELF_OVERLAP: puts("[err: self overlap]"); break;
+	case ACTION_ERR_PLACE_BOARD_OVERLAP: puts("[err: board overlap]"); break;
+	case ACTION_ERR_PLACE_INVALID_RACK_ID: puts("[err: invalid rack id]"); break;
+	case ACTION_ERR_PLACE_INVALID_SQ: puts("[err: place on free sq. or adjacent to a tile]"); break;
+	case ACTION_ERR_PLACE_NO_RACK: puts("[err: no tiles placed on the board]"); break;
+	case ACTION_ERR_PLACE_NO_DIR: puts("[err: tiles don't form a continuous line]"); break;
+	case ACTION_ERR_PLACE_INVALID_PATH: puts("[err: invalid path, misspelled words?]"); break;
 	case ACTION_ERR_NONE: /* fall through */
+	default: break;
+	}
+}
+
+void printLog(struct Log *l)
+{
+	NOT(l);
+
+	switch (l->type) {
+	case ACTION_INVALID: {
+		switch (l->data.err) {
+		case ACTION_ERR_NONE: break;
+		default: break;
+		}
+		break;
+	}
+	case ACTION_PLACE: {
+		break;
+	}
+	case ACTION_DISCARD: {
+		break;
+	}
+	case ACTION_SKIP: {
+		break;
+	}
+	case ACTION_QUIT: {
+		break;
+	}
 	default: break;
 	}
 }

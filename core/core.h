@@ -3,8 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <pthread.h>
+#include <stdbool.h>
 
 #include "dbg.h"
 #include "mem.h"
@@ -24,12 +23,6 @@
 #define VALID_BOARD_Y(y) RANGE(y, 0, BOARD_Y - 1)
 #define VALID_BOARD_SIZE(s) RANGE(s, 0, BOARD_SIZE - 1)
 #define VALID_RACK_SIZE(r) RANGE(r, 0, RACK_SIZE - 1)
-
-typedef enum
-{
-	false = 0,
-	true = 1
-} bool;
 
 typedef enum
 {
@@ -119,8 +112,30 @@ typedef enum
 	ACTION_ERR_PLACE_NO_RACK,
 	ACTION_ERR_PLACE_NO_DIR,
 	ACTION_ERR_PLACE_INVALID_PATH,
+	ACTION_ERR_PLACE_INVALID_WORD,
+	ACTION_ERR_DISCARD_RULE,
+	ACTION_ERR_SKIP_RULE,
+	ACTION_ERR_QUIT_RULE,
 	ACTION_ERR_COUNT
 } ActionErrType;
+
+typedef enum
+{
+	DIR_ERR_NONE = 0,
+	DIR_ERR_NON_CONTINUOUS,
+	DIR_ERR_INVALID_WORD,
+	DIR_ERR_COUNT
+} DirErrType;
+
+typedef enum
+{
+	PATH_ERR_NONE = 0,
+	PATH_ERR_NON_CONT,
+	PATH_ERR_INVALID_WORD,
+	PATH_ERR_INVALID_RULE,
+	PATH_ERR_INVALID_PATH,
+	PATH_ERR_COUNT
+} PathErrType;
 
 typedef enum
 {
@@ -300,11 +315,20 @@ struct Game
 	struct Dict dict;
 };
 
+struct Rule
+{
+	bool (*place)(struct Word *, PathType, DirType);
+	bool (*discard)(struct Game *, struct MoveDiscard *);
+	bool (*skip)(struct Game *);
+	bool (*quit)(struct Game *);
+};
+
+
 void mkAdjust(struct Adjust *, struct Player *);
 void adjustSwap(struct Adjust *, int, int);
 AdjustErrType fdAdjustErr(struct Adjust *, struct Player *);
 void applyAdjust(struct Player *, struct Adjust *);
-void mkAction(struct Action *, struct Game *, struct Move *);
+void mkAction(struct Action *, struct Game *, struct Move *, struct Rule *);
 bool applyAction(struct Game *, struct Action *);
 void nextTurn(struct Game *);
 CmpType cmpWord(struct Word *, struct Word *);
