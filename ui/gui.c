@@ -144,6 +144,27 @@ SDL_Surface *createText(struct Font *f, char *str)
 	return text;
 }
 
+SDL_Surface *createOutlineText(struct Font *fIn, struct Font *fOut, char *str)
+{
+	int i, j;
+
+	SDL_Surface *text;
+
+	NOT(fIn);
+	NOT(fOut);
+	NOT(str);
+	
+	text = SDL_CreateRGBSurface(SDL_SWSURFACE, fIn->width * strlen(str) + 2, fIn->height + 2, SCREEN_BPP, 0xff, 0xff, 0xff, 0xff);
+	/*SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0xff, 0xff));*/
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {	
+			/*strDraw(text, fIn, str, i, j);*/
+		}
+	}
+	strDraw(text, fIn, str, 1, 1); 
+	return text;
+}
+
 bool init(struct Env *e)
 {
 	int i, j;
@@ -288,6 +309,9 @@ bool init(struct Env *e)
 		}
 	}
 
+	
+	e->io.pressStart = createText(&e->io.whiteFont, "PRESS START");
+
 	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createText(&e->io.whiteFont, "Resume");
 	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createText(&e->io.whiteFont, "Quit");
 	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
@@ -334,6 +358,7 @@ void quit(struct Env *e)
 	dictQuit(&e->game.dict);
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
+	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
 	surfaceFree(e->io.wildUp);
@@ -1245,7 +1270,6 @@ void updateGameGui(struct Env *e)
 			printActionErr(a.type);
 		}
 	} 
-	e->io.time += 1.0f / 60.0f;
 }
 
 void updateGameMenu(struct Env *e)
@@ -1321,6 +1345,7 @@ void update(struct Env *e)
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(e); break;
 	default: break;
 	}
+	e->io.time += 1.0f / 60.0f;
 }
 
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
@@ -1482,6 +1507,9 @@ void draw(struct Env *e)
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: {
 		surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
+		if ((e->io.time - floorf(e->io.time)) > 0.5) {
+			surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
+		}
 		break;
 	}
 	case GUI_FOCUS_MENU: {

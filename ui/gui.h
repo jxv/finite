@@ -147,6 +147,7 @@ struct IO
 	SDL_Surface *yes;
 	SDL_Surface *no;
 	SDL_Surface *titleScreen;
+	SDL_Surface *pressStart;
 	struct Font whiteFont;
 	struct Font blackFont;
 };
