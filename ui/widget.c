@@ -472,6 +472,7 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
 	case TRANS_MOVE_PLACE_WILD:
+	case TRANS_MOVE_PLACE_PLAY:
 	case TRANS_MOVE_PLACE_END: {
 		int j;
 		for (i = 0; i < RACK_SIZE; i++) {
@@ -504,6 +505,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
+	case TRANS_MOVE_PLACE_PLAY:
 	case TRANS_MOVE_PLACE_WILD: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
@@ -572,6 +574,7 @@ void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE:
 	case TRANS_MOVE_PLACE_WILD:
+	case TRANS_MOVE_PLACE_PLAY:
 	case TRANS_MOVE_PLACE_END: type = MODE_PLACE; break;
 	case TRANS_MOVE_DISCARD: type = MODE_DISCARD; break;
 	case TRANS_MOVE_SKIP: type = MODE_SKIP; break;

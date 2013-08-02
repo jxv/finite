@@ -775,6 +775,22 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 	return false;
 }
 
+bool updateTransMovePlacePlay(struct TransMove *tm, struct Cmd *c, struct Board *b, struct Player *p)
+{
+	struct MoveModePlace *mmp;
+	
+	NOT(tm);
+	NOT(c);
+	NOT(b);
+	NOT(p);
+	assert(tm->type == TRANS_MOVE_PLACE_PLAY);
+	assert(c->type != CMD_QUIT);
+	mmp = &tm->data.place;
+	tm->type = (adjustTileCount(&tm->adjust) == mmp->num) ? TRANS_MOVE_PLACE_END : TRANS_MOVE_PLACE;
+
+	return true;
+}
+
 bool updateTransMovePlaceWild(struct TransMove *tm, struct Cmd *c, struct Board *b, struct Player *p)
 {
 	struct MoveModePlace *mmp;
@@ -1046,6 +1062,7 @@ bool updateTransMove(struct TransMove *tm, struct Cmd *c, struct Board *b, struc
 	case TRANS_MOVE_PLACE: return updateTransMovePlace(tm, c, b, p);
 	case TRANS_MOVE_PLACE_WILD: return updateTransMovePlaceWild(tm, c, b, p);
 	case TRANS_MOVE_PLACE_END: return updateTransMovePlaceEnd(tm, c, b, p);
+	case TRANS_MOVE_PLACE_PLAY: return updateTransMovePlacePlay(tm, c, b, p);
 	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c, b, p);
 	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c, b, p);
 	case TRANS_MOVE_QUIT: return updateTransMoveQuit(tm, c, b, p);
@@ -1188,6 +1205,7 @@ void updateGameGui(struct Env *e)
 	}
 	
 	if (e->transMove.type == TRANS_MOVE_INVALID) {
+		puts("yes??");
 		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 		c.type = CMD_INVALID;
 		updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
@@ -1504,6 +1522,21 @@ void drawGameAreYouSureQuit(struct Env *e)
 	}
 }
 
+void drawScrollingBackground(struct Env *e)
+{
+	int bgOffset;
+	int secsToLoop;
+	int loopSpeed;
+	
+	NOT(e);
+
+	loopSpeed = 15;
+	secsToLoop = e->io.titleBackground->h / loopSpeed;
+	bgOffset = (int)(e->io.titleBackground->h * e->io.time / secsToLoop) % e->io.titleBackground->h;
+	surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset);
+	surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset - e->io.titleBackground->h);
+}
+
 void draw(struct Env *e)
 {
 	NOT(e);
@@ -1511,14 +1544,7 @@ void draw(struct Env *e)
 	SDL_FillRect(e->io.screen, NULL, 0);
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: {
-		int bgOffset;
-		int secsToLoop;
-		int loopSpeed;
-		loopSpeed = 15;
-		secsToLoop = e->io.titleBackground->h / loopSpeed;
-		bgOffset = (int)(e->io.titleBackground->h * e->io.time / secsToLoop) % e->io.titleBackground->h;
-		surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset);
-		surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset - e->io.titleBackground->h);
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
 		if ((e->io.time - floorf(e->io.time)) > 0.5) {
 			surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
@@ -1526,7 +1552,7 @@ void draw(struct Env *e)
 		break;
 	}
 	case GUI_FOCUS_MENU: {
-		SDL_FillRect(e->io.screen, NULL, SDL_MapRGB(e->io.screen->format, 0xff, 0x00, 0x00));
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.menuFocus[0], 0, 0);
 		break;
 	}
