@@ -6,6 +6,7 @@
 
 #define SCREEN_WIDTH	320
 #define SCREEN_HEIGHT	240
+#define FPS 30
 
 typedef enum
 {
@@ -147,6 +148,7 @@ struct IO
 	SDL_Surface *yes;
 	SDL_Surface *no;
 	SDL_Surface *titleScreen;
+	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
 	struct Font whiteFont;
 	struct Font blackFont;

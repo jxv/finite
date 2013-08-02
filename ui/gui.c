@@ -189,6 +189,9 @@ bool init(struct Env *e)
 	if ((e->io.titleScreen = surfaceLoad(RES_PATH "title_screen.png")) == NULL) {
 		return false;
 	}
+	if ((e->io.titleBackground = surfaceLoad(RES_PATH "title_background.png")) == NULL) {
+		return false;
+	}
 	if ((e->io.back = surfaceLoad(RES_PATH "back.png")) == NULL) {
 		return false;
 	}
@@ -358,6 +361,7 @@ void quit(struct Env *e)
 	dictQuit(&e->game.dict);
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
+	surfaceFree(e->io.titleBackground);
 	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
@@ -1328,6 +1332,7 @@ void updateGameOver(struct Env *e)
 	NOT(e);
 	
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_GAME_MENU;
 		return;
 	}
 }
@@ -1345,7 +1350,7 @@ void update(struct Env *e)
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(e); break;
 	default: break;
 	}
-	e->io.time += 1.0f / 60.0f;
+	e->io.time += 1.0f / ((float)(FPS));
 }
 
 void guiDrawLockon(struct IO *io, struct GameGUI *gg)
@@ -1506,6 +1511,14 @@ void draw(struct Env *e)
 	SDL_FillRect(e->io.screen, NULL, 0);
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: {
+		int bgOffset;
+		int secsToLoop;
+		int loopSpeed;
+		loopSpeed = 15;
+		secsToLoop = e->io.titleBackground->h / loopSpeed;
+		bgOffset = (int)(e->io.titleBackground->h * e->io.time / secsToLoop) % e->io.titleBackground->h;
+		surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset);
+		surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset - e->io.titleBackground->h);
 		surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
 		if ((e->io.time - floorf(e->io.time)) > 0.5) {
 			surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
@@ -1561,7 +1574,7 @@ void exec(struct Env *e)
 		q = handleEvent(&e->controls);
 		update(e);
 		draw(e);
-		delay(st, SDL_GetTicks(), 60);
+		delay(st, SDL_GetTicks(), FPS);
 	} while (!q);
 }
 
