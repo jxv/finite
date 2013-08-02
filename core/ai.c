@@ -212,12 +212,13 @@ void printCont(struct Cont *c)
 	printf("\b-%d]\n", c->num);
 }
 
-bool placementToMovePlace(struct MovePlace *mp, struct Placement *p)
+void placementToMovePlace(struct MovePlace *mp, struct Placement *p)
 {
 	int i;
 
 	NOT(mp);
 	NOT(p);
+	assert(p->type == PLACEMENT_HORIZONTAL || p->type == PLACEMENT_VERTICAL);
 
 	switch (p->type) {
 	case PLACEMENT_HORIZONTAL: {
@@ -240,15 +241,14 @@ bool placementToMovePlace(struct MovePlace *mp, struct Placement *p)
 		}
 		break;
 	}
-	case PLACEMENT_INVALID: /* fall through */
-	default: return false;
+	default: break;
 	}
-
-	return true;	
 }
 
 void mkPlacement(struct Placement *p, struct Combo *cb, struct Cont *cn, DirType dt, int idx)
 {
+	int i;
+
 	NOT(p);
 	NOT(cb);
 	NOT(cn);
@@ -280,16 +280,54 @@ void mkPlacement(struct Placement *p, struct Combo *cb, struct Cont *cn, DirType
 	}
 }
 
+void printPlacement(struct Placement *p)
+{
+	int i;
+
+	NOT(p);
+	
+	switch (p->type) {
+	case PLACEMENT_HORIZONTAL: 
+	case PLACEMENT_VERTICAL: {
+		printf("[type:%s, idx:%d, num:%d] [", p->type == PLACEMENT_HORIZONTAL ? "horz" : "vert", p->idx, p->num);
+		for (i = 0; i < p->num; i++) {
+			printf("(%d-%d),", p->tile[i].rIdx, p->tile[i].bIdx);
+		}
+		printf("\b]\n");
+		break;
+	}
+	default: break;
+	}
+}
+
 void aiFindMove(struct Move *m, struct Player *p, struct Board *b)
 {
 	int i;
 	struct Cont cont;
 	struct Combo combo;
-	/* struct Placement placement; */
+	struct Placement placement;
 
+	NOT(m);
 	NOT(p);
 	NOT(b);
 
+	{
+		initCont(&cont);
+		cont.offset = 6;
+		cont.len = MIN_LEN;
+		syncTaken(&cont, b, DIR_DOWN, 7);
+		findOpenIdx(&cont);
+		initCombo(&combo);
+		combo.rackCount = rackCount(p);
+		combo.pathCount = 7;
+		mkPlacement(&placement, &combo, &cont, DIR_DOWN, 7);
+		printPlacement(&placement);
+		m->playerIdx = 1;
+		m->type = MOVE_PLACE;
+		placementToMovePlace(&m->data.place, &placement);
+		return;
+	}
+	
 	initCont(&cont);
 	cont.offset = 0;
 	cont.len = MIN_LEN;
@@ -304,19 +342,17 @@ void aiFindMove(struct Move *m, struct Player *p, struct Board *b)
 
 /************************************/
 
-	return;
-
 	initCombo(&combo);
 	combo.rackCount = rackCount(p);
 	combo.pathCount = 7;
 	
-	while (stepCombo(&combo)) {
+	do {
 		printf("[");
 		for (i = 0; i < combo.pathCount; i++) {
 			printf("%d, ", combo.pIdx[i]);
 		}
 		printf("\b\b]\n");
-	}
+	} while (stepCombo(&combo));
 
 	/* dummy function */
 	/*

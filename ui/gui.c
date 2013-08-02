@@ -304,7 +304,20 @@ bool init(struct Env *e)
 	initGame1vs1Human(&e->game);
 	initGUI(&e->gui);
 
-	aiFindMove(NULL, e->game.player, &e->game.board);
+/*
+	{
+		struct Move move;
+		struct Action action;
+
+		aiFindMove(&move, e->game.player, &e->game.board);
+		mkAction(&action, &e->game, &move, NULL);
+		printAction(&action);
+		
+		e->game.turn = 1;
+		applyAction(&e->game, &action);
+		e->game.turn = 0;
+	}
+*/
 
 	return true;
 }
