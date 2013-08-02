@@ -128,7 +128,7 @@ void initGUI(struct GUI *g)
 	initGameMenu(&g->gameMenu);
 	initGameGUI(&g->gameGui);
 	g->gameAreYouSureQuit = false;
-	g->focus = GUI_FOCUS_MENU;
+	g->focus = GUI_FOCUS_TITLE;
 }
 
 SDL_Surface *createText(struct Font *f, char *str)
@@ -163,6 +163,9 @@ bool init(struct Env *e)
 		return false;
 	}
 	if (!dictInit(&e->game.dict, RES_PATH "dict.txt")) {
+		return false;
+	}
+	if ((e->io.titleScreen = surfaceLoad(RES_PATH "title_screen.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.back = surfaceLoad(RES_PATH "back.png")) == NULL) {
@@ -330,6 +333,7 @@ void quit(struct Env *e)
 
 	dictQuit(&e->game.dict);
 	surfaceFree(e->io.screen);
+	surfaceFree(e->io.titleScreen);
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
 	surfaceFree(e->io.wildUp);
@@ -1110,6 +1114,14 @@ void quitGame(struct Env *e)
 	e->gui.focus = GUI_FOCUS_GAME_GUI;
 }
 
+void updateTitle(struct Env *e)
+{
+	NOT(e);
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_MENU;
+	}
+}
+
 void updateMenu(struct Env *e)
 {
 	struct Cmd c;
@@ -1125,6 +1137,10 @@ void updateMenu(struct Env *e)
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+		return;
+	}
+	if (e->controls.b.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_TITLE;
 	}
 }
 
@@ -1297,6 +1313,7 @@ void update(struct Env *e)
 	NOT(e);
 
 	switch (e->gui.focus) {
+	case GUI_FOCUS_TITLE: updateTitle(e); break;
 	case GUI_FOCUS_MENU: updateMenu(e); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
 	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
@@ -1463,6 +1480,10 @@ void draw(struct Env *e)
 
 	SDL_FillRect(e->io.screen, NULL, 0);
 	switch (e->gui.focus) {
+	case GUI_FOCUS_TITLE: {
+		surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
+		break;
+	}
 	case GUI_FOCUS_MENU: {
 		SDL_FillRect(e->io.screen, NULL, SDL_MapRGB(e->io.screen->format, 0xff, 0x00, 0x00));
 		surfaceDraw(e->io.screen, e->io.menuFocus[0], 0, 0);

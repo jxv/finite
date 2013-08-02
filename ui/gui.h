@@ -146,6 +146,7 @@ struct IO
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *yes;
 	SDL_Surface *no;
+	SDL_Surface *titleScreen;
 	struct Font whiteFont;
 	struct Font blackFont;
 };
@@ -201,6 +202,7 @@ typedef enum
 typedef enum
 {
 	GUI_FOCUS_INVALID = -1,
+	GUI_FOCUS_TITLE,
 	GUI_FOCUS_MENU,
 	GUI_FOCUS_GAME_GUI,
 	GUI_FOCUS_GAME_MENU,

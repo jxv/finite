@@ -305,13 +305,13 @@ void aiFindMove(struct Move *m, struct Player *p, struct Board *b)
 	int i;
 	struct Cont cont;
 	struct Combo combo;
-	struct Placement placement;
 
 	NOT(m);
 	NOT(p);
 	NOT(b);
 
-	{
+/*	{
+		struct Placement placement;
 		initCont(&cont);
 		cont.offset = 6;
 		cont.len = MIN_LEN;
@@ -327,6 +327,7 @@ void aiFindMove(struct Move *m, struct Player *p, struct Board *b)
 		placementToMovePlace(&m->data.place, &placement);
 		return;
 	}
+*/
 	
 	initCont(&cont);
 	cont.offset = 0;
