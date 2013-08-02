@@ -1,33 +1,34 @@
 CC:=mipsel-gcw0-linux-uclibc-cc
 SYSROOT:=$(shell $(CC) -print-sysroot)
-RM:=rm
+RM:=rm -f
 
 INC:=-I .
 INC+=-I core
 INC+=-I ui
 INC+=-I util
 
-SRC=$(wildcard *.c)
+SRC:=$(wildcard *.c)
 SRC+=$(wildcard core/*.c)
 SRC+=$(wildcard ui/*.c)
 SRC+=$(wildcard util/*.c)
 
-CFLAG:=-ansi
-CFLAG+=-Wall
-CFLAG+=-pedantic
-CFLAG+=-O3
-CFLAG+=-DDEBUG
-CFLAG+=$(shell $(SYSROOT)sdl-config --cflags)
+CFLAGS:=-ansi
+#CFLAGS+=-Wall
+#CFLAGS+=-Werror
+CFLAGS+=-pedantic
+CFLAGS+=-O3
+CFLAGS+=-DDEBUG
+CFLAGS+=$(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 
 LIB:=-lc
 LIB+=-lm
 LIB+=-lpthread
-LIB+=$(shell $(SYSROOT)sdl-config --libs)
+LIB+=$(shell $(SYSROOT)/usr/bin/sdl-config --libs)
 LIB+=-lSDL_image
 
 OUT:=finite
 
 all:
-	$(CC) $(SRC) -o $(OUT) $(CFLAG) $(INC) $(LIB)  
+	$(CC) $(SRC) -o $(OUT) $(CFLAGS) $(INC) $(LIB)  
 clean:
 	$(RM) $(OUT)
