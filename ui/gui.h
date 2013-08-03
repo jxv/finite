@@ -151,7 +151,7 @@ struct IO
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
 	struct HighText menuFocus[MENU_FOCUS_COUNT];
-	SDL_Surface *gameMenuFocus[GAME_MENU_FOCUS_COUNT];
+	struct HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *yes;
 	SDL_Surface *no;
@@ -161,6 +161,7 @@ struct IO
 	struct Font whiteFont;
 	struct Font blackFont;
 	struct Font yellowFont;
+	struct Font darkRedFont;
 };
 
 struct KeyState

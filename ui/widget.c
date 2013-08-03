@@ -515,10 +515,12 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 			s = NULL;
 			if (tm->place.idx != i) {
 				if (!validBoardIdx(tm->place.boardIdx[i])) {
-					s = t->type == TILE_WILD ? io->wild[TILE_LOOK_NORMAL] : io->tile[t->type][t->letter][TILE_LOOK_NORMAL];
+					tt = TILE_LOOK_NORMAL;
+					s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 				}
 			} else {
-				s = t->type == TILE_WILD ? io->wild[TILE_LOOK_HOLD] : io->tile[t->type][t->letter][TILE_LOOK_HOLD];
+				tt = TILE_LOOK_HOLD;
+				s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 			}
 			if (s) {
 				surfaceDraw(io->screen, s, i * dim.x + offset, 220);
@@ -532,6 +534,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 	case TRANS_MOVE_DISCARD: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
+			VALID_TILE(*t);
 			if (t->type == TILE_NONE) {
 				continue;
 			}

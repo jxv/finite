@@ -282,6 +282,10 @@ bool init(struct Env *e)
 	if (!fontmapInit(&e->io.yellowFont, 6, 12, RES_PATH "yellow_font.png")) {
 		return false;
 	}
+	if (!fontmapInit(&e->io.darkRedFont, 6, 12, RES_PATH "darkred_font.png")) {
+		return false;
+	}
+
 
 	e->io.sq[SQ_NORMAL] = surfaceLoad(RES_PATH "sq_normal.png");
 	e->io.sq[SQ_DBL_LET] = surfaceLoad(RES_PATH "sq_dl.png");
@@ -336,9 +340,9 @@ bool init(struct Env *e)
 	e->io.fader = surfaceCpy(e->io.screen);
 
 	e->io.menuFocus[MENU_FOCUS_START].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Start");
-	e->io.menuFocus[MENU_FOCUS_START].highlight = createOutlineText(&e->io.yellowFont, &e->io.blackFont, "Start");
+	e->io.menuFocus[MENU_FOCUS_START].highlight = createOutlineText(&e->io.yellowFont, &e->io.darkRedFont, "Start");
 	e->io.menuFocus[MENU_FOCUS_EXIT].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Exit");
-	e->io.menuFocus[MENU_FOCUS_EXIT].highlight = createOutlineText(&e->io.yellowFont, &e->io.blackFont, "Exit");
+	e->io.menuFocus[MENU_FOCUS_EXIT].highlight = createOutlineText(&e->io.yellowFont, &e->io.darkRedFont, "Exit");
 	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
 		if (!(e->io.menuFocus[i].normal && e->io.menuFocus[i].highlight)) {
 			return false;
@@ -348,10 +352,24 @@ bool init(struct Env *e)
 	
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
-	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Resume");
-	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Quit");
+	{
+		int len[GAME_MENU_FOCUS_COUNT], max;
+		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Quit"};
+
+		max = 0;
+		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
+			e->io.gameMenuFocus[i].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, text[i]);
+			e->io.gameMenuFocus[i].highlight = createOutlineText(&e->io.yellowFont, &e->io.darkRedFont, text[i]);
+			len[i] = strlen(text[i]);
+			max = MAX(len[i], max);
+		}
+		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
+			e->io.gameMenuFocus[i].offset = (max - len[i]) * e->io.whiteFont.width / 2;
+		}
+	}
+
 	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-		if (!e->io.gameMenuFocus[i]) {
+		if (!(e->io.gameMenuFocus[i].normal && e->io.gameMenuFocus[i].highlight)) {
 			return false;
 		}
 	}
@@ -430,7 +448,8 @@ void quit(struct Env *e)
 		surfaceFree(e->io.menuFocus[i].highlight);
 	}
 	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-		surfaceFree(e->io.gameMenuFocus[i]);
+		surfaceFree(e->io.gameMenuFocus[i].normal);
+		surfaceFree(e->io.gameMenuFocus[i].highlight);
 	}
 	surfaceFree(e->io.rightArrow);
 	surfaceFree(e->io.areYouSureQuit);
@@ -438,6 +457,8 @@ void quit(struct Env *e)
 	surfaceFree(e->io.no);
 	fontmapQuit(&e->io.whiteFont);
 	fontmapQuit(&e->io.blackFont);
+	fontmapQuit(&e->io.yellowFont);
+	fontmapQuit(&e->io.darkRedFont);
 	SDL_Quit();
 }
 
@@ -830,6 +851,7 @@ bool updateTransMovePlacePlay(struct TransMove *tm, struct Cmd *c, struct Board 
 	NOT(p);
 	assert(tm->type == TRANS_MOVE_PLACE_PLAY);
 	assert(c->type != CMD_QUIT);
+
 	mmp = &tm->place;
 	tm->type = (adjustTileCount(&tm->adjust) == mmp->num) ? TRANS_MOVE_PLACE_END : TRANS_MOVE_PLACE;
 
@@ -839,6 +861,7 @@ bool updateTransMovePlacePlay(struct TransMove *tm, struct Cmd *c, struct Board 
 bool updateTransMovePlaceWild(struct TransMove *tm, struct Cmd *c, struct Board *b, struct Player *p)
 {
 	struct MoveModePlace *mmp;
+
 	NOT(tm);
 	NOT(c);
 	NOT(b);
@@ -1079,6 +1102,7 @@ void clrTransMove(struct TransMove *tm, int pidx, struct Player *p, struct Board
 	tm->playerIdx = pidx;
 	mkAdjust(&tm->adjust, p);
 	clrMoveModePlace(&tm->place, b);
+	clrMoveModeDiscard(&tm->discard);
 }
 
 void moveModePlaceToMovePlace(struct MovePlace *mp, struct MoveModePlace *mmp, struct Adjust *a)
@@ -1283,6 +1307,7 @@ void updateGameGui(struct Env *e)
 			e->gui.focus = GUI_FOCUS_GAME_OVER;
 		} else {
 			nextTurn(&e->game);
+			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 		}
 		e->transMove.type = TRANS_MOVE_INVALID;
 	} else {
@@ -1385,12 +1410,12 @@ void guiDrawLockon(struct IO *io, struct GameGUI *gg)
 	}
 	case GAME_GUI_FOCUS_RACK: {
 		idx = gg->rackWidget.index;
-		surfaceDraw(io->screen, io->lockon, 174 + idx.x * w, 220);
+		surfaceDraw(io->screen, io->lockon, 174 + idx.x * w, 219);
 		break;
 	}
 	case GAME_GUI_FOCUS_CHOICE: {
 		idx = gg->choiceWidget.index;
-		surfaceDraw(io->screen, io->lockon, 105 + idx.x * w, 220);
+		surfaceDraw(io->screen, io->lockon, 104 + idx.x * w, 219);
 		break;
 	}
 	default: break;
@@ -1568,9 +1593,10 @@ void draw(struct Env *e)
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-			surfaceDraw(e->io.screen, e->io.gameMenuFocus[i], 150, i * e->io.whiteFont.height + 80);
+			SDL_Surface *s;
+			s = i == e->gui.gameMenu.focus ? e->io.gameMenuFocus[i].highlight : e->io.gameMenuFocus[i].normal;
+			surfaceDraw(e->io.screen, s, 150 + e->io.gameMenuFocus[i].offset, i * e->io.whiteFont.height + 80);
 		}
-		surfaceDraw(e->io.screen, e->io.rightArrow, 150 - 8, e->gui.gameMenu.focus * e->io.whiteFont.height + 80);
 		break;
 	}
 	case GUI_FOCUS_GAME_OVER: {

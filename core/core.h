@@ -183,6 +183,15 @@ struct Tile
 	LetterType letter;
 };
 
+#define VALID_TILE_TYPE(tt) (RANGE(tt, 0, TILE_COUNT - 1))
+#define VALID_LETTER_TYPE(lt) (RANGE(lt, 0, LETTER_COUNT - 1))
+#define VALID_TILE(t) do { \
+			VALID_TILE_TYPE((t).type); \
+			if ((t).type != TILE_NONE) { \
+				VALID_LETTER_TYPE((t).letter); \
+			} \
+		} while(0)
+
 struct Loc
 {
 	struct Tile tile;
