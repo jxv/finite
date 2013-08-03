@@ -134,12 +134,25 @@ void initGUI(struct GUI *g)
 SDL_Surface *createText(struct Font *f, char *str)
 {
 	SDL_Surface *text;
+	Uint32 rmask, gmask, bmask, amask;
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	rmask = 0xff000000;
+	gmask = 0x00ff0000;
+	bmask = 0x0000ff00;
+	amask = 0x000000ff;
+#else
+	rmask = 0x000000ff;
+	gmask = 0x0000ff00;
+	bmask = 0x00ff0000;
+	amask = 0xff000000;
+#endif
 
 	NOT(f);
 	NOT(str);
 	
-	text = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * strlen(str), f->height, SCREEN_BPP, 0xff, 0xff, 0xff, 0xff);
-	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0xff, 0xff));
+	text = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * strlen(str), f->height, SCREEN_BPP, rmask, gmask, bmask, amask);
+	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0x00, 0xff));
 	strDraw(text, f, str, 0, 0);
 	return text;
 }
@@ -147,18 +160,32 @@ SDL_Surface *createText(struct Font *f, char *str)
 SDL_Surface *createOutlineText(struct Font *fIn, struct Font *fOut, char *str)
 {
 	int i, j;
-
 	SDL_Surface *text;
+	Uint32 rmask, gmask, bmask, amask;
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	rmask = 0xff000000;
+	gmask = 0x00ff0000;
+	bmask = 0x0000ff00;
+	amask = 0x000000ff;
+#else
+	rmask = 0x000000ff;
+	gmask = 0x0000ff00;
+	bmask = 0x00ff0000;
+	amask = 0xff000000;
+#endif
 
 	NOT(fIn);
 	NOT(fOut);
 	NOT(str);
+	assert(fIn->width == fOut->width);
+	assert(fIn->height == fOut->height);
 	
-	text = SDL_CreateRGBSurface(SDL_SWSURFACE, fIn->width * strlen(str) + 2, fIn->height + 2, SCREEN_BPP, 0xff, 0xff, 0xff, 0xff);
-	/*SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0xff, 0xff));*/
+	text = SDL_CreateRGBSurface(SDL_SWSURFACE, fIn->width * strlen(str) + 2, fIn->height + 2, SCREEN_BPP, rmask, gmask, bmask, amask);
+	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0x00, 0xff));
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {	
-			/*strDraw(text, fIn, str, i, j);*/
+			strDraw(text, fOut, str, i, j);
 		}
 	}
 	strDraw(text, fIn, str, 1, 1); 
@@ -313,7 +340,7 @@ bool init(struct Env *e)
 	}
 
 	
-	e->io.pressStart = createText(&e->io.whiteFont, "PRESS START");
+	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
 	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createText(&e->io.whiteFont, "Resume");
 	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createText(&e->io.whiteFont, "Quit");
@@ -1350,7 +1377,7 @@ void updateGameOver(struct Env *e)
 	NOT(e);
 	
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_MENU;
+		e->gui.focus = GUI_FOCUS_TITLE;
 		return;
 	}
 }
