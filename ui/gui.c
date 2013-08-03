@@ -279,6 +279,9 @@ bool init(struct Env *e)
 	if (!fontmapInit(&e->io.blackFont, 6, 12, RES_PATH "black_font.png")) {
 		return false;
 	}
+	if (!fontmapInit(&e->io.yellowFont, 6, 12, RES_PATH "yellow_font.png")) {
+		return false;
+	}
 
 	e->io.sq[SQ_NORMAL] = surfaceLoad(RES_PATH "sq_normal.png");
 	e->io.sq[SQ_DBL_LET] = surfaceLoad(RES_PATH "sq_dl.png");
@@ -332,9 +335,12 @@ bool init(struct Env *e)
 
 	e->io.fader = surfaceCpy(e->io.screen);
 
-	e->io.menuFocus[MENU_FOCUS_START] = createText(&e->io.whiteFont, "Start");
+	e->io.menuFocus[MENU_FOCUS_START].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Start");
+	e->io.menuFocus[MENU_FOCUS_START].highlight = createOutlineText(&e->io.yellowFont, &e->io.blackFont, "Start");
+	e->io.menuFocus[MENU_FOCUS_EXIT].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Exit");
+	e->io.menuFocus[MENU_FOCUS_EXIT].highlight = createOutlineText(&e->io.yellowFont, &e->io.blackFont, "Exit");
 	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
-		if (!e->io.menuFocus[i]) {
+		if (!(e->io.menuFocus[i].normal && e->io.menuFocus[i].highlight)) {
 			return false;
 		}
 	}
@@ -342,18 +348,18 @@ bool init(struct Env *e)
 	
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
-	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createText(&e->io.whiteFont, "Resume");
-	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createText(&e->io.whiteFont, "Quit");
+	e->io.gameMenuFocus[GAME_MENU_FOCUS_RESUME] = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Resume");
+	e->io.gameMenuFocus[GAME_MENU_FOCUS_QUIT] = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Quit");
 	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
 		if (!e->io.gameMenuFocus[i]) {
 			return false;
 		}
 	}
 
-	e->io.rightArrow = createText(&e->io.whiteFont, ">");
-	e->io.areYouSureQuit = createText(&e->io.whiteFont, "Are you sure you want to quit?");
-	e->io.yes = createText(&e->io.whiteFont, "Yes");
-	e->io.no = createText(&e->io.whiteFont, "No");
+	e->io.rightArrow = createOutlineText(&e->io.whiteFont,  &e->io.blackFont,">");
+	e->io.areYouSureQuit = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Are you sure you want to quit?");
+	e->io.yes = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Yes");
+	e->io.no = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "No");
 
 	controlsInit(&e->controls);
 
@@ -420,7 +426,8 @@ void quit(struct Env *e)
 		}
 	}
 	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
-		surfaceFree(e->io.menuFocus[i]);
+		surfaceFree(e->io.menuFocus[i].normal);
+		surfaceFree(e->io.menuFocus[i].highlight);
 	}
 	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
 		surfaceFree(e->io.gameMenuFocus[i]);
@@ -1580,7 +1587,8 @@ void draw(struct Env *e)
 	}
 	case GUI_FOCUS_MENU: {
 		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.menuFocus[0], 0, 0);
+		surfaceDraw(e->io.screen, e->io.menuFocus[MENU_FOCUS_START].highlight, 120, 100);
+		surfaceDraw(e->io.screen, e->io.menuFocus[MENU_FOCUS_EXIT].normal, 124, 120);
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {

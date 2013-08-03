@@ -97,6 +97,7 @@ typedef enum
 {
 	MENU_FOCUS_INAVLID = -1,
 	MENU_FOCUS_START = 0,
+	MENU_FOCUS_EXIT,
 	MENU_FOCUS_COUNT
 } MenuFocusType;
 
@@ -113,6 +114,13 @@ struct Font
 	int width;
 	int height;
 	SDL_Surface *map;
+};
+
+struct HighText
+{
+	SDL_Surface *normal;
+	SDL_Surface *highlight;
+	int offset;
 };
 
 struct IO
@@ -142,7 +150,7 @@ struct IO
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
-	SDL_Surface *menuFocus[MENU_FOCUS_COUNT];
+	struct HighText menuFocus[MENU_FOCUS_COUNT];
 	SDL_Surface *gameMenuFocus[GAME_MENU_FOCUS_COUNT];
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *yes;
@@ -152,6 +160,7 @@ struct IO
 	SDL_Surface *pressStart;
 	struct Font whiteFont;
 	struct Font blackFont;
+	struct Font yellowFont;
 };
 
 struct KeyState
