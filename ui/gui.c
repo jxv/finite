@@ -805,7 +805,6 @@ bool updateTransMovePlace(struct TransMove *tm, struct Cmd *c, struct Board *b, 
 	}
 	case CMD_MODE_DOWN: {
 		tm->type = TRANS_MOVE_DISCARD;
-		/*clrMoveModeDiscard(&tm->discard);*/
 		return true;
 	}
 	case CMD_PLAY: {
@@ -934,7 +933,6 @@ bool updateTransMovePlaceEnd(struct TransMove *tm, struct Cmd *c, struct Board *
 	}
 	case CMD_MODE_DOWN: {
 		tm->type = TRANS_MOVE_DISCARD;
-		/*clrMoveModeDiscard(&tm->discard);*/
 		return true;
 	}
 	case CMD_RECALL: {
@@ -984,7 +982,6 @@ bool updateTransMoveDiscard(struct TransMove *tm, struct Cmd *c, struct Board *b
 	}
 	case CMD_MODE_UP: {
 		tm->type = TRANS_MOVE_PLACE;
-		/*clrMoveModePlace(&tm->place, b);*/
 		return true;
 	}
 	case CMD_MODE_DOWN: {
@@ -1022,12 +1019,10 @@ bool updateTransMoveSkip(struct TransMove *tm, struct Cmd *c, struct Board *b, s
 	switch (c->type) {
 	case CMD_MODE_UP: {
 		tm->type = TRANS_MOVE_DISCARD;
-		/*clrMoveModeDiscard(&tm->discard);*/
 		return true;
 	}
 	case CMD_MODE_DOWN: {
 		tm->type = TRANS_MOVE_PLACE;
-		/*clrMoveModePlace(&tm->place, b);*/
 		return true;
 	}
 	case CMD_PLAY: {
