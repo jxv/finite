@@ -273,10 +273,12 @@ struct TransMove
 	TransMoveType type;
 	int playerIdx;
 	struct Adjust adjust;
-	union {
+	/* union {
 	struct MoveModePlace place;
 	struct MoveModeDiscard discard;
-	} data;
+	} data; */
+	struct MoveModePlace place;
+	struct MoveModeDiscard discard;
 };
 
 struct Env

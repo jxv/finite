@@ -332,7 +332,7 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 	
 	switch (tm->type) {
 	case TRANS_MOVE_PLACE: {
-		cw->button[0][CHOICE_RECALL] = tm->data.place.num > 0;
+		cw->button[0][CHOICE_RECALL] = tm->place.num > 0;
 		cw->button[0][CHOICE_MODE] = true;
 		cw->button[0][CHOICE_PLAY] = true;
 		cw->button[0][CHOICE_SHUFFLE] = true;
@@ -346,7 +346,7 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 		break;
 	}
 	case TRANS_MOVE_DISCARD: {
-		cw->button[0][CHOICE_RECALL] = tm->data.discard.num > 0;
+		cw->button[0][CHOICE_RECALL] = tm->discard.num > 0;
 		cw->button[0][CHOICE_MODE] = true;
 		cw->button[0][CHOICE_PLAY] = true;
 		cw->button[0][CHOICE_SHUFFLE] = true;
@@ -477,9 +477,9 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 		int j;
 		for (i = 0; i < RACK_SIZE; i++) {
 			j = tm->adjust.data.tile[i].idx;
-			idx = tm->data.place.boardIdx[j];
+			idx = tm->place.boardIdx[j];
 			if (validBoardIdx(idx)) {
-				t = &p->tile[tm->adjust.data.tile[tm->data.place.rackIdx[idx.y][idx.x]].idx];
+				t = &p->tile[tm->adjust.data.tile[tm->place.rackIdx[idx.y][idx.x]].idx];
 				ts = io->tile[t->type][t->letter][TILE_LOOK_HOLD];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 			}
@@ -513,8 +513,8 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 				continue;
 			}
 			s = NULL;
-			if (tm->data.place.idx != i) {
-				if (!validBoardIdx(tm->data.place.boardIdx[i])) {
+			if (tm->place.idx != i) {
+				if (!validBoardIdx(tm->place.boardIdx[i])) {
 					s = t->type == TILE_WILD ? io->wild[TILE_LOOK_NORMAL] : io->tile[t->type][t->letter][TILE_LOOK_NORMAL];
 				}
 			} else {
@@ -535,7 +535,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 			if (t->type == TILE_NONE) {
 				continue;
 			}
-			tt = tm->data.discard.rack[i] ? TILE_LOOK_DISABLE : TILE_LOOK_NORMAL;
+			tt = tm->discard.rack[i] ? TILE_LOOK_DISABLE : TILE_LOOK_NORMAL;
 			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
 			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
 			
