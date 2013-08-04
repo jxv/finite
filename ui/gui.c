@@ -1197,7 +1197,7 @@ void updateMenu(struct Env *e)
 	NOT(e);
 	
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_MENU;
+		e->gui.focus = GUI_FOCUS_GAME_GUI;
 
 		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 		c.type = CMD_INVALID;
@@ -1246,7 +1246,14 @@ void updateGameGui(struct Env *e)
 	
 	switch (c.type) {
 	case CMD_FOCUS_TOP: {
-		e->gui.gameGui.focus = GAME_GUI_FOCUS_BOARD;
+		struct TransMove *tm;
+		tm = &e->transMove;
+		if (		tm->type == TRANS_MOVE_PLACE ||
+				tm->type == TRANS_MOVE_PLACE_WILD ||
+				tm->type == TRANS_MOVE_PLACE_END ||
+				tm->type == TRANS_MOVE_PLACE_PLAY) {
+			e->gui.gameGui.focus = GAME_GUI_FOCUS_BOARD;
+		}
 		break;
 	}
 	case CMD_FOCUS_BOTTOM: {
@@ -1263,6 +1270,9 @@ void updateGameGui(struct Env *e)
 		break;
 	}
 	case CMD_RACK: {
+		if (e->transMove.type == TRANS_MOVE_SKIP) {
+			break;
+		}
 		e->gui.gameGui.focus = GAME_GUI_FOCUS_RACK;
 		e->gui.gameGui.rackWidget.index.x = c.data.rack;
 		e->gui.gameGui.rackWidget.index.y = 0;
