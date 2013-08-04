@@ -127,7 +127,7 @@ void initGUI(struct GUI *g)
 	initMenu(&g->menu);
 	initGameMenu(&g->gameMenu);
 	initGameGUI(&g->gameGui);
-	g->gameAreYouSureQuit = false;
+	g->gameAreYouSureQuit = 0;
 	g->focus = GUI_FOCUS_TITLE;
 }
 
@@ -406,10 +406,14 @@ bool init(struct Env *e)
 		return false;
 	}
 
-	e->io.rightArrow = createOutlineText(&e->io.whiteFont,  &e->io.blackFont,">");
 	e->io.areYouSureQuit = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Are you sure you want to quit?");
-	e->io.yes = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Yes");
-	e->io.no = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "No");
+	{
+		char *text[GAME_MENU_FOCUS_COUNT] = {"Yes", "No"};
+		mkHighTexts(e->io.yesNo, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, YES_NO_COUNT);
+	}
+	if (!areHighTextsLoaded(e->io.yesNo, YES_NO_COUNT)) {
+		return false;
+	}
 
 	controlsInit(&e->controls);
 
@@ -477,10 +481,8 @@ void quit(struct Env *e)
 	}
 	freeHighTexts(e->io.menuFocus, MENU_FOCUS_COUNT);
 	freeHighTexts(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT);
-	surfaceFree(e->io.rightArrow);
 	surfaceFree(e->io.areYouSureQuit);
-	surfaceFree(e->io.yes);
-	surfaceFree(e->io.no);
+	freeHighTexts(e->io.yesNo, YES_NO_COUNT);
 	fontmapQuit(&e->io.whiteFont);
 	fontmapQuit(&e->io.blackFont);
 	fontmapQuit(&e->io.yellowFont);
@@ -1386,12 +1388,19 @@ void updateGameMenu(struct Env *e)
 void updateGameAreYouSureQuit(struct Env *e)
 {
 	NOT(e);
-	if (e->controls.up.type == KEY_STATE_PRESSED || e->controls.down.type == KEY_STATE_PRESSED) {
-		e->gui.gameAreYouSureQuit = !e->gui.gameAreYouSureQuit;
+	if (e->controls.down.type == KEY_STATE_PRESSED) {
+		e->gui.gameAreYouSureQuit++;
+		e->gui.gameAreYouSureQuit %= YES_NO_COUNT;
+		return;
+	}
+	if (e->controls.up.type == KEY_STATE_PRESSED) {
+		e->gui.gameAreYouSureQuit += YES_NO_COUNT;
+		e->gui.gameAreYouSureQuit--;
+		e->gui.gameAreYouSureQuit %= YES_NO_COUNT;
 		return;
 	}
 	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
-		if (e->gui.gameAreYouSureQuit) {
+		if (e->gui.gameAreYouSureQuit == YES) {
 			quitGame(e);
 		} else {
 			e->gui.focus = GUI_FOCUS_GAME_MENU;
@@ -1561,6 +1570,7 @@ void guiDraw(struct IO *io, struct GUI *g, struct Game *gm, struct TransMove *tm
 
 void drawGameAreYouSureQuit(struct Env *e)
 {
+	int i;
 	const int orgX = 150 - 8;
 	const int orgY = 80;
 
@@ -1572,12 +1582,10 @@ void drawGameAreYouSureQuit(struct Env *e)
 	SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 218);
 	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX - e->io.whiteFont.width * 11, orgY - e->io.whiteFont.height);
-	surfaceDraw(e->io.screen, e->io.yes, orgX, orgY);
-	surfaceDraw(e->io.screen, e->io.no, orgX, orgY + e->io.whiteFont.height);
-	if (e->gui.gameAreYouSureQuit) {
-		surfaceDraw(e->io.screen, e->io.rightArrow, orgX - e->io.whiteFont.width, orgY);
-	} else {
-		surfaceDraw(e->io.screen, e->io.rightArrow, orgX - e->io.whiteFont.width, orgY + e->io.whiteFont.height);
+	for (i = 0; i < YES_NO_COUNT; i++) {
+		surfaceDraw(e->io.screen,
+				e->gui.gameAreYouSureQuit == i ? e->io.yesNo[i].highlight : e->io.yesNo[i].normal,
+				orgX, orgY + i * e->io.whiteFont.height);
 	}
 }
 

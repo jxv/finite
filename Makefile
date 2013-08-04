@@ -24,6 +24,7 @@ LIB=-lm
 LIB=-lpthread
 LIB+=`sdl-config --libs`
 LIB+=-lSDL_image
+LIB+=-lopk
 
 OUT=finite
 

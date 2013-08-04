@@ -10,6 +10,13 @@
 
 typedef enum
 {
+	YES = 0,
+	NO = 1,
+	YES_NO_COUNT
+} YES_NO_TYPE;
+
+typedef enum
+{
 	KEY_STATE_UNTOUCHED = 0,
 	KEY_STATE_PRESSED,
 	KEY_STATE_HELD,
@@ -128,7 +135,6 @@ struct IO
 	float time;
 	SDL_Surface *screen;
 	SDL_Surface *back;
-	SDL_Surface *rightArrow;
 	SDL_Surface *fader;
 	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
 	SDL_Surface *wild[TILE_LOOK_COUNT];
@@ -153,8 +159,7 @@ struct IO
 	struct HighText menuFocus[MENU_FOCUS_COUNT];
 	struct HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
 	SDL_Surface *areYouSureQuit;
-	SDL_Surface *yes;
-	SDL_Surface *no;
+	struct HighText yesNo[YES_NO_COUNT];
 	SDL_Surface *titleScreen;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
@@ -251,7 +256,7 @@ struct GUI
 	struct Menu menu;
 	struct GameGUI gameGui;
 	struct GameMenu gameMenu;
-	bool gameAreYouSureQuit;
+	YES_NO_TYPE gameAreYouSureQuit;
 };
 
 struct MoveModePlace
