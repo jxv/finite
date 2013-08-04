@@ -192,6 +192,55 @@ SDL_Surface *createOutlineText(struct Font *fIn, struct Font *fOut, char *str)
 	return text;
 }
 
+void mkHighTexts(struct HighText *ht, struct Font *fIn, struct Font *fOut, struct Font *hfIn, struct Font *hfOut, char **text, int count)
+{
+	int max, i, len;
+
+	NOT(ht);
+	NOT(fIn);
+	NOT(fOut);
+	NOT(hfIn);
+	NOT(hfOut);
+	NOT(text);
+	assert(count > 0);
+	assert(fIn->width == fOut->width && fIn->height == fOut->height);
+	assert(hfIn->width == hfOut->width && hfIn->height == hfOut->height);
+	assert(fIn->width == hfOut->width && fIn->height == hfOut->height);
+
+	max = 0;
+	for (i = 0; i < count; i++) {
+		ht[i].normal = createOutlineText(fIn, fOut, text[i]);
+		ht[i].highlight = createOutlineText(hfIn, hfOut, text[i]);
+		len = strlen(text[i]);
+		max = MAX(len, max);
+	}
+	for (i = 0; i < count; i++) {
+		len = strlen(text[i]);
+		ht[i].offset = (max - len) * fIn->width / 2;
+	}
+}
+
+bool areHighTextsLoaded(struct HighText *ht, int count)
+{
+	int i;
+	for (i = 0; i < count; i++) {
+		if (!(ht[i].normal && ht[i].highlight)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+void freeHighTexts(struct HighText *ht, int count)
+{
+	int i;
+	for (i = 0; i < count; i++) {
+		surfaceFree(ht[i].normal);
+		surfaceFree(ht[i].highlight);
+	}
+}
+
+
 bool init(struct Env *e)
 {
 	int i, j;
@@ -339,39 +388,22 @@ bool init(struct Env *e)
 
 	e->io.fader = surfaceCpy(e->io.screen);
 
-	e->io.menuFocus[MENU_FOCUS_START].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Start");
-	e->io.menuFocus[MENU_FOCUS_START].highlight = createOutlineText(&e->io.yellowFont, &e->io.darkRedFont, "Start");
-	e->io.menuFocus[MENU_FOCUS_EXIT].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Exit");
-	e->io.menuFocus[MENU_FOCUS_EXIT].highlight = createOutlineText(&e->io.yellowFont, &e->io.darkRedFont, "Exit");
-	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
-		if (!(e->io.menuFocus[i].normal && e->io.menuFocus[i].highlight)) {
-			return false;
-		}
-	}
-
-	
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
 	{
-		int len[GAME_MENU_FOCUS_COUNT], max;
-		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Quit"};
-
-		max = 0;
-		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-			e->io.gameMenuFocus[i].normal = createOutlineText(&e->io.whiteFont, &e->io.blackFont, text[i]);
-			e->io.gameMenuFocus[i].highlight = createOutlineText(&e->io.yellowFont, &e->io.darkRedFont, text[i]);
-			len[i] = strlen(text[i]);
-			max = MAX(len[i], max);
-		}
-		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-			e->io.gameMenuFocus[i].offset = (max - len[i]) * e->io.whiteFont.width / 2;
-		}
+		char *text[MENU_FOCUS_COUNT] = {"Start", "Exit"};
+		mkHighTexts(e->io.menuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
+	}
+	if (!areHighTextsLoaded(e->io.menuFocus, MENU_FOCUS_COUNT)) {
+		return false;
 	}
 
-	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-		if (!(e->io.gameMenuFocus[i].normal && e->io.gameMenuFocus[i].highlight)) {
-			return false;
-		}
+	{
+		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Quit"};
+		mkHighTexts(e->io.gameMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, GAME_MENU_FOCUS_COUNT);
+	}
+	if (!areHighTextsLoaded(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT)) {
+		return false;
 	}
 
 	e->io.rightArrow = createOutlineText(&e->io.whiteFont,  &e->io.blackFont,">");
@@ -443,14 +475,8 @@ void quit(struct Env *e)
 			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
 		}
 	}
-	for (i = 0; i < MENU_FOCUS_COUNT; i++) {
-		surfaceFree(e->io.menuFocus[i].normal);
-		surfaceFree(e->io.menuFocus[i].highlight);
-	}
-	for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-		surfaceFree(e->io.gameMenuFocus[i].normal);
-		surfaceFree(e->io.gameMenuFocus[i].highlight);
-	}
+	freeHighTexts(e->io.menuFocus, MENU_FOCUS_COUNT);
+	freeHighTexts(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT);
 	surfaceFree(e->io.rightArrow);
 	surfaceFree(e->io.areYouSureQuit);
 	surfaceFree(e->io.yes);
