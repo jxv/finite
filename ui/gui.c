@@ -390,7 +390,7 @@ bool init(struct Env *e)
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
 	{
-		char *text[MENU_FOCUS_COUNT] = {"Start", "Exit"};
+		char *text[MENU_FOCUS_COUNT] = {"Start", "Options", "Exit"};
 		mkHighTexts(e->io.menuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.menuFocus, MENU_FOCUS_COUNT)) {
@@ -398,7 +398,7 @@ bool init(struct Env *e)
 	}
 
 	{
-		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Quit"};
+		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Options", "Quit"};
 		mkHighTexts(e->io.gameMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, GAME_MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT)) {
@@ -1221,7 +1221,7 @@ void updateMenu(struct Env *e)
 		switch (e->gui.menu.focus) {
 		case MENU_FOCUS_START: {
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
-			e->gui.gameAreYouSureQuit = NO;
+			e->gui.gameAreYouSureQuit = YES;
 			initGame1vs1Human(&e->game);
 			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 			c.type = CMD_INVALID;
@@ -1229,6 +1229,11 @@ void updateMenu(struct Env *e)
 			updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
 			updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 			updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+			break;
+		}
+		case MENU_FOCUS_OPTIONS: {
+			e->gui.options.previous = e->gui.focus;
+			e->gui.focus = GUI_FOCUS_OPTIONS;
 			break;
 		}
 		case MENU_FOCUS_EXIT: {
@@ -1251,6 +1256,15 @@ void updateMenu(struct Env *e)
 	if (e->controls.down.type == KEY_STATE_PRESSED) {
 		e->gui.menu.focus++;
 		e->gui.menu.focus %= MENU_FOCUS_COUNT;
+	}
+}
+
+void updateOptions(struct Env *e)
+{
+	NOT(e);
+	
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = e->gui.options.previous;
 	}
 }
 
@@ -1379,6 +1393,11 @@ void updateGameMenu(struct Env *e)
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
 			break;
 		}
+		case GAME_MENU_FOCUS_OPTIONS: {
+			e->gui.options.previous = e->gui.focus;
+			e->gui.focus = GUI_FOCUS_OPTIONS;
+			break;
+		}
 		case GAME_MENU_FOCUS_QUIT: {
 			e->gui.focus = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
 			break;
@@ -1444,6 +1463,7 @@ void update(struct Env *e)
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: updateTitle(e); break;
 	case GUI_FOCUS_MENU: updateMenu(e); break;
+	case GUI_FOCUS_OPTIONS: updateOptions(e); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
 	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
 	case GUI_FOCUS_GAME_OVER: updateGameOver(e); break;
@@ -1643,6 +1663,10 @@ void draw(struct Env *e)
 		}
 		break;
 	}
+	case GUI_FOCUS_OPTIONS: {
+		drawScrollingBackground(e);
+		break;
+	}
 	case GUI_FOCUS_GAME_GUI: {
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
@@ -1658,7 +1682,7 @@ void draw(struct Env *e)
 		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
 			SDL_Surface *s;
 			s = i == e->gui.gameMenu.focus ? e->io.gameMenuFocus[i].highlight : e->io.gameMenuFocus[i].normal;
-			surfaceDraw(e->io.screen, s, 150 + e->io.gameMenuFocus[i].offset, i * e->io.whiteFont.height + 80);
+			surfaceDraw(e->io.screen, s, 150 + e->io.gameMenuFocus[i].offset, i * e->io.whiteFont.height * 2 + 80);
 		}
 		break;
 	}

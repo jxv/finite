@@ -104,6 +104,7 @@ typedef enum
 {
 	MENU_FOCUS_INAVLID = -1,
 	MENU_FOCUS_START = 0,
+	MENU_FOCUS_OPTIONS,
 	MENU_FOCUS_EXIT,
 	MENU_FOCUS_COUNT
 } MenuFocusType;
@@ -112,6 +113,7 @@ typedef enum
 {
 	GAME_MENU_FOCUS_INVALID = -1,
 	GAME_MENU_FOCUS_RESUME = 0,
+	GAME_MENU_FOCUS_OPTIONS,
 	GAME_MENU_FOCUS_QUIT,
 	GAME_MENU_FOCUS_COUNT
 } GameMenuFocusType;
@@ -222,6 +224,7 @@ typedef enum
 	GUI_FOCUS_INVALID = -1,
 	GUI_FOCUS_TITLE,
 	GUI_FOCUS_MENU,
+	GUI_FOCUS_OPTIONS,
 	GUI_FOCUS_GAME_GUI,
 	GUI_FOCUS_GAME_MENU,
 	GUI_FOCUS_GAME_OVER,
@@ -249,12 +252,20 @@ struct GameMenu
 	int idx;
 };
 
+struct Options
+{
+	int sfxVolume;
+	int musVolume;
+	GUIFocusType previous;
+};
+
 struct GUI
 {
 	GUIFocusType focus;
 	struct Menu menu;
 	struct GameGUI gameGui;
 	struct GameMenu gameMenu;
+	struct Options options;
 	YES_NO_TYPE gameAreYouSureQuit;
 };
 
@@ -286,19 +297,12 @@ struct TransMove
 	struct MoveModeDiscard discard;
 };
 
-struct Option
-{
-	int sfxVolume;
-	int musVolume;
-};
-
 struct Env
 {
 	struct IO io;
 	struct Game game;
 	struct Controls controls;
 	struct GUI gui;
-	struct Option option;
 	struct TransMove transMove;
 	bool quit;
 };
