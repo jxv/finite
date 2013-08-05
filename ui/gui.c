@@ -105,6 +105,15 @@ void initMenu(struct Menu *m)
 	m->focus = MENU_FOCUS_START;
 }
 
+void initOptions(struct Options *o)
+{
+	NOT(o);
+
+	o->sfxVolume = 50;
+	o->musVolume = 100;
+	o->previous = GUI_FOCUS_MENU; 
+}
+
 void initGameMenu(struct GameMenu *gm)
 {
 	NOT(gm);
@@ -127,6 +136,7 @@ void initGameGUI(struct GameGUI *gg)
 void initGUI(struct GUI *g)
 {
 	initMenu(&g->menu);
+	initOptions(&g->options);
 	initGameMenu(&g->gameMenu);
 	initGameGUI(&g->gameGui);
 	g->gameAreYouSureQuit = 0;
@@ -1664,7 +1674,18 @@ void draw(struct Env *e)
 		break;
 	}
 	case GUI_FOCUS_OPTIONS: {
+		SDL_Rect rect;
+		rect.h = 10;
+		rect.x = (320-100)/2 + 50;
 		drawScrollingBackground(e);
+		
+		rect.y = 100;
+		rect.w = e->gui.options.sfxVolume;
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xff, 0xff, 0xff));
+		
+		rect.y += 25;
+		rect.w = e->gui.options.musVolume;
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xff, 0xff, 0xff));
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {
@@ -1700,18 +1721,20 @@ void draw(struct Env *e)
 void exec(struct Env *e)
 {
 	int st;
+	bool q;
 
 	NOT(e);
 
+	q = false;
 	e->game.turn = 0; 
 
 	do {
 		st = SDL_GetTicks();
-		e->quit |= handleEvent(&e->controls);
+		q = handleEvent(&e->controls);
 		update(e);
 		draw(e);
 		delay(st, SDL_GetTicks(), FPS);
-	} while (!e->quit);
+	} while (!e->quit && !q);
 }
 
 int gui()
