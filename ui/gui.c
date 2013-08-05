@@ -1225,6 +1225,8 @@ void updateMenu(struct Env *e)
 		switch (e->gui.menu.focus) {
 		case MENU_FOCUS_START: {
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
+			e->gui.gameAreYouSureQuit = NO;
+			initGame1vs1Human(&e->game);
 			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 			c.type = CMD_INVALID;
 			updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
