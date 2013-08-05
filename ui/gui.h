@@ -231,7 +231,6 @@ typedef enum
 
 struct Menu
 {
-	int idx;
 	MenuFocusType focus;
 };
 
@@ -294,6 +293,7 @@ struct Env
 	struct Controls controls;
 	struct GUI gui;
 	struct TransMove transMove;
+	bool quit;
 };
 
 int gui();

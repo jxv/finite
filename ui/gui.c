@@ -101,6 +101,8 @@ void initGame1vs1Human(struct Game *g)
 void initMenu(struct Menu *m)
 {
 	NOT(m);
+
+	m->focus = MENU_FOCUS_START;
 }
 
 void initGameMenu(struct GameMenu *gm)
@@ -248,6 +250,7 @@ bool init(struct Env *e)
 	SDL_Surface *tile[TILE_LOOK_COUNT];
 
 	e->io.time = 0;
+	e->quit = false;
 
 	NOT(e);
 
@@ -406,7 +409,7 @@ bool init(struct Env *e)
 		return false;
 	}
 
-	e->io.areYouSureQuit = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Are you sure you want to quit?");
+	e->io.areYouSureQuit = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Are you sure?");
 	{
 		char *text[GAME_MENU_FOCUS_COUNT] = {"Yes", "No"};
 		mkHighTexts(e->io.yesNo, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, YES_NO_COUNT);
@@ -555,13 +558,7 @@ bool handleEvent(struct Controls *c)
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_QUIT: return true;
-		case SDL_KEYDOWN: {
-			if (event.key.keysym.sym == SDLK_ESCAPE) {
-				return true;
-			}
-			ks[event.key.keysym.sym] = true;
-			break;
-		}
+		case SDL_KEYDOWN: ks[event.key.keysym.sym] = true; break;
 		case SDL_KEYUP: ks[event.key.keysym.sym] = false; break;
 		default: break;
 		}
@@ -1223,20 +1220,39 @@ void updateMenu(struct Env *e)
 	struct Cmd c;
 	
 	NOT(e);
-	
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_GUI;
 
-		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
-		c.type = CMD_INVALID;
-		updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		switch (e->gui.menu.focus) {
+		case MENU_FOCUS_START: {
+			e->gui.focus = GUI_FOCUS_GAME_GUI;
+			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
+			c.type = CMD_INVALID;
+			updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
+			updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
+			updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+			updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+			break;
+		}
+		case MENU_FOCUS_EXIT: {
+			e->quit = true;
+		}
+		default: break;
+		}
 		return;
 	}
 	if (e->controls.b.type == KEY_STATE_PRESSED) {
 		e->gui.focus = GUI_FOCUS_TITLE;
+		return;
+	}
+	if (e->controls.up.type == KEY_STATE_PRESSED) {
+		e->gui.menu.focus += MENU_FOCUS_COUNT;
+		e->gui.menu.focus--;
+		e->gui.menu.focus %= MENU_FOCUS_COUNT;
+		return;
+	}
+	if (e->controls.down.type == KEY_STATE_PRESSED) {
+		e->gui.menu.focus++;
+		e->gui.menu.focus %= MENU_FOCUS_COUNT;
 	}
 }
 
@@ -1619,9 +1635,14 @@ void draw(struct Env *e)
 		break;
 	}
 	case GUI_FOCUS_MENU: {
+		int i;
 		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.menuFocus[MENU_FOCUS_START].highlight, 120, 100);
-		surfaceDraw(e->io.screen, e->io.menuFocus[MENU_FOCUS_EXIT].normal, 124, 120);
+		for (i = 0; i <MENU_FOCUS_COUNT; i++) {
+			surfaceDraw(e->io.screen,
+				e->gui.menu.focus == i ? e->io.menuFocus[i].highlight : e->io.menuFocus[i].normal, 
+				120 + e->io.menuFocus[i].offset,
+				100 + e->io.whiteFont.height * i * 2);
+		}
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {
@@ -1657,20 +1678,18 @@ void draw(struct Env *e)
 void exec(struct Env *e)
 {
 	int st;
-	bool q;
 
 	NOT(e);
 
 	e->game.turn = 0; 
-	q = false;
 
 	do {
 		st = SDL_GetTicks();
-		q = handleEvent(&e->controls);
+		e->quit |= handleEvent(&e->controls);
 		update(e);
 		draw(e);
 		delay(st, SDL_GetTicks(), FPS);
-	} while (!q);
+	} while (!e->quit);
 }
 
 int gui()
