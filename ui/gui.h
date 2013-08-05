@@ -286,12 +286,19 @@ struct TransMove
 	struct MoveModeDiscard discard;
 };
 
+struct Option
+{
+	int sfxVolume;
+	int musVolume;
+};
+
 struct Env
 {
 	struct IO io;
 	struct Game game;
 	struct Controls controls;
 	struct GUI gui;
+	struct Option option;
 	struct TransMove transMove;
 	bool quit;
 };

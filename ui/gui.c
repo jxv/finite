@@ -138,6 +138,9 @@ SDL_Surface *createText(struct Font *f, char *str)
 	SDL_Surface *text;
 	Uint32 rmask, gmask, bmask, amask;
 
+	NOT(f);
+	NOT(str);
+
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	rmask = 0xff000000;
 	gmask = 0x00ff0000;
@@ -150,9 +153,6 @@ SDL_Surface *createText(struct Font *f, char *str)
 	amask = 0xff000000;
 #endif
 
-	NOT(f);
-	NOT(str);
-	
 	text = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * strlen(str), f->height, SCREEN_BPP, rmask, gmask, bmask, amask);
 	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0x00, 0xff));
 	strDraw(text, f, str, 0, 0);
@@ -165,6 +165,12 @@ SDL_Surface *createOutlineText(struct Font *fIn, struct Font *fOut, char *str)
 	SDL_Surface *text;
 	Uint32 rmask, gmask, bmask, amask;
 
+	NOT(fIn);
+	NOT(fOut);
+	NOT(str);
+	assert(fIn->width == fOut->width);
+	assert(fIn->height == fOut->height);
+	
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	rmask = 0xff000000;
 	gmask = 0x00ff0000;
@@ -177,13 +183,8 @@ SDL_Surface *createOutlineText(struct Font *fIn, struct Font *fOut, char *str)
 	amask = 0xff000000;
 #endif
 
-	NOT(fIn);
-	NOT(fOut);
-	NOT(str);
-	assert(fIn->width == fOut->width);
-	assert(fIn->height == fOut->height);
-	
-	text = SDL_CreateRGBSurface(SDL_SWSURFACE, fIn->width * strlen(str) + 2, fIn->height + 2, SCREEN_BPP, rmask, gmask, bmask, amask);
+	text = SDL_CreateRGBSurface(SDL_SWSURFACE, fIn->width * strlen(str) + 2, fIn->height + 2,
+			SCREEN_BPP, rmask, gmask, bmask, amask);
 	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0x00, 0xff));
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {	
@@ -357,17 +358,12 @@ bool init(struct Env *e)
 	tile[TILE_LOOK_HOLD] = surfaceLoad(RES_PATH "tile_hold.png");
 	tile[TILE_LOOK_GHOST] = surfaceLoad(RES_PATH "tile_ghost.png");
 
-	if (!(tile[TILE_LOOK_DISABLE] && tile[TILE_LOOK_NORMAL] && tile[TILE_LOOK_HOLD] && tile[TILE_LOOK_GHOST])) {
-		surfaceFree(tile[TILE_LOOK_DISABLE]);
-		surfaceFree(tile[TILE_LOOK_NORMAL]);
-		surfaceFree(tile[TILE_LOOK_HOLD]);
-		surfaceFree(tile[TILE_LOOK_GHOST]);
-		return false;
-	} 
-	e->io.wild[TILE_LOOK_DISABLE] = surfaceCpy(tile[TILE_LOOK_DISABLE]);
-	e->io.wild[TILE_LOOK_NORMAL] = surfaceCpy(tile[TILE_LOOK_NORMAL]);
-	e->io.wild[TILE_LOOK_HOLD] = surfaceCpy(tile[TILE_LOOK_HOLD]);
-	e->io.wild[TILE_LOOK_GHOST] = surfaceCpy(tile[TILE_LOOK_GHOST]);
+	for (i = 0; i < TILE_LOOK_COUNT; i++) {
+		e->io.wild[i] = tile[i];
+		if (!e->io.wild[i]) {
+			return false;
+		}
+	}
 
 	for (i = 0; i < LETTER_COUNT; i++) {
 		for (j = 0; j < TILE_LOOK_COUNT; j++) {
