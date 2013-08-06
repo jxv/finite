@@ -1394,7 +1394,7 @@ void updateGameMenu(struct Env *e)
 {
 	NOT(e);
 	
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
+	if (e->controls.start.type == KEY_STATE_PRESSED || e->controls.a.type == KEY_STATE_PRESSED) {
 		switch (e->gui.gameMenu.focus) {
 		case GAME_MENU_FOCUS_RESUME: {
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
