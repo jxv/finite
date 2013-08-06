@@ -391,9 +391,6 @@ bool init(struct Env *e)
 			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.blackFont, str, 3, 0);
 		}
 	}
-	for (i = 0; i < TILE_LOOK_COUNT; i++) {
-		surfaceFree(tile[i]);
-	}
 
 	e->io.fader = surfaceCpy(e->io.screen);
 
