@@ -1,4 +1,5 @@
 #include "common.h"
+#include "print.h"
 
 #define MIN_LEN 2
 
@@ -10,54 +11,54 @@ typedef enum
 	PLACEMENT_COUNT
 } PlacementType;
 
-struct Cont
+typedef struct Cont
 {
 	int offset;
 	int len;
 	bool taken[BOARD_SIZE];
 	int num;
 	int openIdx[RACK_SIZE];
-};
+} Cont;
 
-struct Combo
+typedef struct Combo
 {
 	int rackCount;
 	int pathCount;
 	int rIdx[RACK_SIZE];
 	int pIdx[RACK_SIZE];
-};
+} Combo;
 
-struct PlacementTile
+typedef struct PlacementTile
 {
 	int rIdx;
 	int bIdx;
-};
+} PlacementTile;
 
-struct Placement
+typedef struct Placement
 {
 	PlacementType type;
 	int idx;
 	int num;
 	struct PlacementTile tile[RACK_SIZE];
-};
+} Placement;
 
-bool nextCont(struct Cont *c)
+bool nextCont(Cont *c)
 {
 	NOT(c);
 	
-	if (c->offset == BOARD_SIZE - MIN_LEN) {
-		return false;
-	}
 	if (c->offset + c->len < BOARD_SIZE) {
 		c->len++;
 	} else {
 		c->offset++;
 		c->len = MIN_LEN;
 	}
+	if (c->offset == BOARD_SIZE - MIN_LEN) {
+		return false;
+	}
 	return true;
 }
 
-void syncTaken(struct Cont *c, struct Board *b, DirType dt, int idx)
+void syncTaken(Cont *c, struct Board *b, DirType dt, int idx)
 {
 	int i;
 	
@@ -80,7 +81,7 @@ void syncTaken(struct Cont *c, struct Board *b, DirType dt, int idx)
 	}
 }
 
-bool findOpenIdx(struct Cont *c)
+bool findOpenIdx(Cont *c)
 {
 	int i;
 	
@@ -99,7 +100,7 @@ bool findOpenIdx(struct Cont *c)
 	return true;
 }
 
-void initCont(struct Cont *c)
+void initCont(Cont *c)
 {
 	NOT(c);
 
@@ -107,7 +108,7 @@ void initCont(struct Cont *c)
 	c->len = MIN_LEN;
 }
 
-bool nextCombo(struct Combo *c)
+bool nextCombo(Combo *c)
 {
 	int i;
 	
@@ -129,7 +130,8 @@ bool nextCombo(struct Combo *c)
 	return true;
 }
 
-bool next(struct Combo *c) {
+bool next(Combo *c)
+{
 	int i = 0, k = 0, j = 0, tmp;
 
 	NOT(c);
@@ -158,7 +160,7 @@ bool next(struct Combo *c) {
 	return true;
 }
 
-void printv(struct Combo *c) {
+void printv(Combo *c) {
 	int i;
 
 	printf("[");
@@ -168,7 +170,7 @@ void printv(struct Combo *c) {
 	printf("\b]\n");
 }
 
-bool stepCombo(struct Combo *c)
+bool stepCombo(Combo *c)
 {
 	int i;
 
@@ -186,7 +188,7 @@ bool stepCombo(struct Combo *c)
 	return true;
 }
 
-void initCombo(struct Combo *c)
+void initCombo(Combo *c)
 {
 	int i;
 
@@ -199,7 +201,82 @@ void initCombo(struct Combo *c)
 	c->pathCount = 0;
 }
 
-void printCont(struct Cont *c)
+bool eligibleCont(Cont *c, struct Board *b, DirType dt, int idx, bool firstMove)
+{
+	int i;
+
+	NOT(c);
+	NOT(b);
+	assert(dt >= 0 && dt < DIR_COUNT);
+
+	switch (dt) {
+	case DIR_DOWN: {
+		if (c->offset > 0 && b->tile[c->offset - 1][idx].type != TILE_NONE) {
+			return true;
+		}
+		if (c->offset + c->len < BOARD_Y && b->tile[c->offset + c->len][idx].type != TILE_NONE) {
+			return true;
+		}
+		if (idx > 0) {
+			for (i = c->offset; i < c->offset + c->len; i++) {
+				if (b->tile[i][idx - 1].type != TILE_NONE) {
+					return true;
+				}
+			}
+		}
+		if (idx < BOARD_X - 1) {
+			for (i = c->offset; i < c->offset + c->len; i++) {
+				if (b->tile[i][idx + 1].type != TILE_NONE) {
+					return true;
+				}
+			}
+		}
+		if (firstMove) {
+			for (i = c->offset; i < c->offset + c->len; i++) {
+				if (b->sq[i][idx] == SQ_FREE) {
+					return true;
+				}
+			}
+		}
+		break;
+	}
+	case DIR_RIGHT: {
+		if (c->offset > 0 && b->tile[idx][c->offset - 1].type != TILE_NONE) {
+			return true;
+		}
+		if (c->offset + c->len < BOARD_X && b->tile[idx][c->offset + c->len].type != TILE_NONE) {
+			return true;
+		}
+		if (idx > 0) {
+			for (i = c->offset; i < c->offset + c->len; i++) {
+				if (b->tile[idx - 1][i].type != TILE_NONE) {
+					return true;
+				}
+			}
+		}
+		if (idx < BOARD_Y - 1) {
+			for (i = c->offset; i < c->offset + c->len; i++) {
+				if (b->tile[idx + 1][i].type != TILE_NONE) {
+					return true;
+				}
+			}
+		}
+		if (firstMove) {
+			for (i = c->offset; i < c->offset + c->len; i++) {
+				if (b->sq[idx][i] == SQ_FREE) {
+					return true;
+				}
+			}
+		}
+		break;
+	}
+	default: break;
+	}
+	
+	return false;
+}
+
+void printCont(Cont *c)
 {
 	int i;
 
@@ -212,7 +289,7 @@ void printCont(struct Cont *c)
 	printf("\b-%d]\n", c->num);
 }
 
-void placementToMovePlace(struct MovePlace *mp, struct Placement *p)
+void placementToMovePlace(struct MovePlace *mp, Placement *p)
 {
 	int i;
 
@@ -222,7 +299,8 @@ void placementToMovePlace(struct MovePlace *mp, struct Placement *p)
 
 	switch (p->type) {
 	case PLACEMENT_HORIZONTAL: {
-		assert(p->num > 0 && p->num < RACK_SIZE);
+		assert(p->num > 0); 
+		assert(p->num <= RACK_SIZE);
 		mp->num = p->num;
 		for (i = 0; i < p->num; i++) {
 			mp->rackIdx[i] = p->tile[i].rIdx;
@@ -232,7 +310,8 @@ void placementToMovePlace(struct MovePlace *mp, struct Placement *p)
 		break;
 	}
 	case PLACEMENT_VERTICAL: {
-		assert(p->num > 0 && p->num < RACK_SIZE);
+		assert(p->num > 0);
+	       	assert(p->num <= RACK_SIZE);
 		mp->num = p->num;
 		for (i = 0; i < p->num; i++) {
 			mp->rackIdx[i] = p->tile[i].rIdx;
@@ -245,7 +324,7 @@ void placementToMovePlace(struct MovePlace *mp, struct Placement *p)
 	}
 }
 
-void mkPlacement(struct Placement *p, struct Combo *cb, struct Cont *cn, DirType dt, int idx)
+void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 {
 	int i;
 
@@ -280,7 +359,7 @@ void mkPlacement(struct Placement *p, struct Combo *cb, struct Cont *cn, DirType
 	}
 }
 
-void printPlacement(struct Placement *p)
+void printPlacement(Placement *p)
 {
 	int i;
 
@@ -300,21 +379,24 @@ void printPlacement(struct Placement *p)
 	}
 }
 
-void aiFindMove(struct Move *m, struct Player *p, struct Board *b)
+void aiFindMove(struct Move *m, struct Player *p, struct Board *b, struct Game *g, struct Rule *r)
 {
 	int i;
-	struct Cont cont;
-	struct Combo combo;
+	int maxScore;
+	Cont cont;
+	Combo combo;
+	Placement placement;
+	Move move;
+	Action action;
 
 	NOT(m);
 	NOT(p);
 	NOT(b);
+	NOT(g);
 
-/*	{
-		struct Placement placement;
+	if (0)
+	{
 		initCont(&cont);
-		cont.offset = 6;
-		cont.len = MIN_LEN;
 		syncTaken(&cont, b, DIR_DOWN, 7);
 		findOpenIdx(&cont);
 		initCombo(&combo);
@@ -327,38 +409,61 @@ void aiFindMove(struct Move *m, struct Player *p, struct Board *b)
 		placementToMovePlace(&m->data.place, &placement);
 		return;
 	}
-*/
+
+
+
+	maxScore = 0;
 	
 	initCont(&cont);
 	cont.offset = 0;
 	cont.len = MIN_LEN;
-
-	syncTaken(&cont, b, DIR_DOWN, 0);
-
-	do {
-		findOpenIdx(&cont);
-		printCont(&cont);
-		putchar('\n');
-	} while (nextCont(&cont));
-
-/************************************/
-
-	initCombo(&combo);
 	combo.rackCount = rackCount(p);
-	combo.pathCount = 7;
-	
-	do {
-		printf("[");
-		for (i = 0; i < combo.pathCount; i++) {
-			printf("%d, ", combo.pIdx[i]);
-		}
-		printf("\b\b]\n");
-	} while (stepCombo(&combo));
+
+	for (i = 0; i < BOARD_X; i++) {
+		printf("[%d]idx\n", i);
+		initCont(&cont);
+		syncTaken(&cont, b, DIR_DOWN, i);
+		do {
+			findOpenIdx(&cont);
+			if (!eligibleCont(&cont, b, DIR_DOWN, i, true)) {
+				continue;
+			}
+			initCombo(&combo);
+			combo.pathCount = cont.num;
+			do {
+				/*printv(&combo);*/
+				mkPlacement(&placement, &combo, &cont, DIR_DOWN, i);
+				
+				placementToMovePlace(&move.data.place, &placement);
+				move.type = MOVE_PLACE;
+				move.playerIdx = 1;
+				mkAction(&action, g, &move, r);
+				if (action.type == ACTION_PLACE) {
+					if (action.data.place.score > maxScore) {
+						maxScore = action.data.place.score;
+						placementToMovePlace(&m->data.place, &placement);
+						puts("yes");
+					} else {
+						puts("almost");
+					}
+				}
+				else
+				if (action.type == ACTION_INVALID) {
+					printf("[%d]\n", action.data.err);
+					printActionErr(action.data.err);
+				}
+				/* printPlacement(&placement); */
+			} while (stepCombo(&combo));
+		} while (nextCont(&cont));
+	}
+
+	m->playerIdx = 1;
+	m->type = MOVE_PLACE;
 
 	/* dummy function */
 	/*
 	int i;
-	struct move *it;
+	struct move *itni;
 	for each possible move, it:
 		
 	if (better_move(it, m)) {

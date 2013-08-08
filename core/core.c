@@ -970,7 +970,7 @@ bool ruleZ4Char(struct Word *w, PathType pt, DirType dt)
 	return w->len == 4 && w->letter[0] == LETTER_Z;
 }
 
-void mkPlace(struct Action *a, struct Game *g, struct Move *m, bool (*rule)(struct Word *, PathType, DirType))
+void mkPlace(Action *a, Game *g, Move *m, bool (*rule)(Word *, PathType, DirType))
 {
 	int num, i;
 	struct Path *path;
