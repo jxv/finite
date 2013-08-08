@@ -381,7 +381,7 @@ void printPlacement(Placement *p)
 	}
 }
 
-void aiFindMove(Move *m, Player *p, Game *g, Rule *r)
+void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 {
 	int i, j;
 	int maxScore;
@@ -394,12 +394,14 @@ void aiFindMove(Move *m, Player *p, Game *g, Rule *r)
 	Move move;
 	Action action;
 	Board *b;
+	Player *p;
 
 	NOT(m);
-	NOT(p);
+	assert(pIdx >= 0 && pIdx < MAX_PLAYER);
 	NOT(g);
 
 	b = &g->board;
+	p = &g->player[pIdx];
 
 	bd[0] = BOARD_X;
 	bd[1] = BOARD_Y;
@@ -411,7 +413,8 @@ void aiFindMove(Move *m, Player *p, Game *g, Rule *r)
 	
 	combo.rackCount = rackCount(p);
 	move.type = MOVE_PLACE;
-	move.playerIdx = m->playerIdx;
+	move.playerIdx = pIdx; 
+	m->playerIdx = pIdx;
 
 	firstMove = boardEmpty(b);
 
@@ -441,20 +444,5 @@ void aiFindMove(Move *m, Player *p, Game *g, Rule *r)
 			} while (nextCont(&cont));
 		}
 	}
-
-
-	/* dummy function */
-	/*
-	int i;
-	struct move *itni;
-	for each possible move, it:
-		
-	if (better_move(it, m)) {
-		m := it;
-	}
-	*/
 }
-
-/* TODO: move log, doc the core, ai */
-
 
