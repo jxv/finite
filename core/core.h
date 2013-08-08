@@ -77,6 +77,13 @@ typedef enum
 
 typedef enum
 {
+	PLAYER_HUMAN = 0,
+	PLAYER_AI,
+	PLAYER_COUNT
+} PlayerType;
+
+typedef enum
+{
 	ADJUST_INVALID = -1,
 	ADJUST_RACK = 0,
 	ADJUST_COUNT
@@ -207,6 +214,7 @@ typedef struct Board
 
 typedef struct Player
 {
+	PlayerType type;
 	bool active;
 	int score;
 	struct Tile tile[RACK_SIZE];

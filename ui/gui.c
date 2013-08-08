@@ -5,7 +5,6 @@
 #include "widget.h"
 #include "print.h"
 
-
 bool fontmapInit(Font *f, int w, int h, const char *filename)
 {
 	NOT(f);
@@ -92,8 +91,21 @@ void initGame1vs1Human(Game *g)
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	playerInit(&g->player[0], &g->bag);
-	playerInit(&g->player[1], &g->bag);
+	initPlayerHuman(&g->player[0], &g->bag);
+	initPlayerHuman(&g->player[1], &g->bag);
+	g->player[0].active = true;
+	g->player[1].active = true;
+}
+
+void initGame1vs1HumanAI(Game *g)
+{
+	NOT(g);
+
+	boardInit(&g->board);
+	bagInit(&g->bag);
+	g->playerNum = 2;
+	initPlayerHuman(&g->player[0], &g->bag);
+	initPlayerAI(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 }
@@ -424,7 +436,8 @@ bool init(Env *e)
 	controlsInit(&e->controls);
 
 	e->transMove.type = TRANS_MOVE_INVALID;
-	initGame1vs1Human(&e->game);
+	/* initGame1vs1Human(&e->game); */
+	initGame1vs1HumanAI(&e->game);
 	initGUI(&e->gui);
 
 
@@ -1233,7 +1246,7 @@ void updateMenu(Env *e)
 		case MENU_FOCUS_START: {
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
 			e->gui.gameAreYouSureQuit = YES;
-			initGame1vs1Human(&e->game);
+			initGame1vs1HumanAI(&e->game);
 			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 			c.type = CMD_INVALID;
 			updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
@@ -1277,6 +1290,19 @@ void updateOptions(Env *e)
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
 		e->gui.focus = e->gui.options.previous;
 	}
+}
+
+GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)
+{
+	assert(pt >= 0 && pt < PLAYER_COUNT);
+
+	switch (pt) {
+	case PLAYER_HUMAN: return GUI_FOCUS_GAME_HOTSEAT_PAUSE;
+	case PLAYER_AI: return GUI_FOCUS_GAME_AI_PAUSE;
+	default: break;
+	}
+	assert(false);
+	return GUI_FOCUS_GAME_GUI;
 }
 
 void updateGameGui(Env *e)
@@ -1357,10 +1383,10 @@ void updateGameGui(Env *e)
 		e->gui.gameGui.bottomLast = e->gui.gameGui.focus;
 	}
 
-	printCmd(&c);
+	/* printCmd(&c); */
 
 	if (updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn])) {
-		printTransMove(&e->transMove);
+		/* printTransMove(&e->transMove); */
 		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
 		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
 		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
@@ -1373,7 +1399,7 @@ void updateGameGui(Env *e)
 
 	if (c.type == CMD_PLAY || c.type == CMD_QUIT) {
 		mkLog(&a, &l);
-		printLog(&l);
+		/* printLog(&l); */
 	}
 
 	if (a.type != ACTION_INVALID) {
@@ -1384,12 +1410,12 @@ void updateGameGui(Env *e)
 		} else {
 			nextTurn(&e->game);
 			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
-			e->gui.focus = GUI_FOCUS_GAME_HOTSEAT_PAUSE;
+			e->gui.focus = nextGUIFocusByPlayerType(e->game.player[e->game.turn].type);
 		}
 		e->transMove.type = TRANS_MOVE_INVALID;
 	} else {
 		if (m.type != MOVE_INVALID) {
-			printActionErr(a.type);
+			/* printActionErr(a.type); */
 		}
 	} 
 }
@@ -1440,8 +1466,20 @@ void updateGameHotseatPause(Env *e)
 
 void updateGameAIPause(Env *e)
 {
-	NOT(e);
+	Move m;
+	Action a;
 
+	NOT(e);
+	
+	printf("Starting AI... patience...\n");
+	aiFindMove(&m, e->game.turn, &e->game, NULL);
+	mkAction(&a, &e->game, &m, NULL);
+	applyAction(&e->game, &a);
+	if (a.type != ACTION_INVALID) {
+		printf("[AI_PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
+	}
+	nextTurn(&e->game);
+	e->gui.focus = nextGUIFocusByPlayerType(e->game.player[e->game.turn].type);
 }
 
 void updateGameAreYouSureQuit(Env *e)

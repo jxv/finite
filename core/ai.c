@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "common.h"
 #include "print.h"
 
@@ -290,13 +292,13 @@ void printCont(Cont *c)
 	printf("\b-%d]\n", c->num);
 }
 
-void placementToMovePlace(struct MovePlace *mp, Placement *p)
+bool placementToMovePlace(struct MovePlace *mp, Placement *p)
 {
 	int i;
 
 	NOT(mp);
 	NOT(p);
-	assert(p->type == PLACEMENT_HORIZONTAL || p->type == PLACEMENT_VERTICAL);
+	assert(p->type == PLACEMENT_HORIZONTAL || p->type == PLACEMENT_VERTICAL || p->type == PLACEMENT_INVALID);
 
 	switch (p->type) {
 	case PLACEMENT_HORIZONTAL: {
@@ -321,8 +323,11 @@ void placementToMovePlace(struct MovePlace *mp, Placement *p)
 		}
 		break;
 	}
-	default: break;
+	case PLACEMENT_INVALID:
+	default: return false;
 	}
+
+	return true;
 }
 
 void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
@@ -333,14 +338,22 @@ void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 	NOT(cb);
 	NOT(cn);
 
-	assert(cb->pathCount == cn->num);
+	assert(cn->num >= 0);
+	assert(cb->pathCount >= 0);
+	/* assert(cb->pathCount <= cn->num)
+	assert(cb->pathCount < RACK_SIZE);*/
+
+	if (cb->pathCount == 0) {
+		p->type = PLACEMENT_INVALID;
+		return;
+	}
 
 	switch (dt) {
 	case DIR_DOWN: {
 		p->type = PLACEMENT_VERTICAL;
 		assert(idx >= 0 && idx < BOARD_X);
 		p->idx = idx;
-		p->num = cn->num; 
+		p->num = cb->pathCount; 
 		for (i = 0; i < p->num; i++) {
 			p->tile[i].rIdx = cb->pIdx[i];
 			p->tile[i].bIdx = cn->openIdx[i];
@@ -351,7 +364,7 @@ void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 		p->type = PLACEMENT_HORIZONTAL;
 		assert(idx >= 0 && idx < BOARD_Y);
 		p->num = idx;
-		p->num = cn->num;
+		p->num = cb->pathCount;
 		for (i = 0; i < p->num; i++) {
 			p->tile[i].rIdx = cb->pIdx[i];
 			p->tile[i].bIdx = cn->openIdx[i];
@@ -384,6 +397,7 @@ void printPlacement(Placement *p)
 
 void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 {
+	time_t start, end;
 	int i, j;
 	int maxScore;
 	int dir[2];
@@ -396,6 +410,8 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	Action action;
 	Board *b;
 	Player *p;
+
+	start = time(NULL);
 
 	NOT(m);
 	assert(pIdx >= 0 && pIdx < MAX_PLAYER);
@@ -424,26 +440,39 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 			initCont(&cont);
 			syncTaken(&cont, b, dir[j], i);
 			do {
-				findOpenIdx(&cont);
+				if (!findOpenIdx(&cont)) {
+					continue;
+				}
+				assert(cont.num <= bd[j]);
 				if (!eligibleCont(&cont, b, dir[j], i, firstMove)) {
 					continue;
 				}
 				initCombo(&combo);
 				combo.pathCount = cont.num;
 				do {
+					assert(combo.pathCount <= RACK_SIZE);
 					mkPlacement(&placement, &combo, &cont, dir[j], i);
 					
-					placementToMovePlace(&move.data.place, &placement);
+					if (!placementToMovePlace(&move.data.place, &placement)) {
+						continue;
+					}
 					mkAction(&action, g, &move, r);
 					if (action.type == ACTION_PLACE) {
 						if (action.data.place.score > maxScore) {
 							maxScore = action.data.place.score;
-							placementToMovePlace(&m->data.place, &placement);
+							memCpy(&m->data.place, &move.data.place, sizeof(move.data.place));
 						}
 					}
 				} while (stepCombo(&combo));
 			} while (nextCont(&cont));
 		}
 	}
+
+	if (maxScore == 0) {
+		move.type = MOVE_SKIP;
+	}
+	
+	end = time(NULL);
+	printf("[ai-find-move: %f secs]\n", difftime(end, start));
 }
 

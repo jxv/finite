@@ -5,12 +5,14 @@
 
 #include "init.h"
 
-void boardInit(struct Board *);
-void bagInit(struct Bag *);
-void playerInit(struct Player *, struct Bag *);
-void moveInit(struct Move *);
-bool dictInit(struct Dict *, const char *);
-void dictQuit(struct Dict *);
+void boardInit(Board *);
+void bagInit(Bag *);
+void playerInit(Player *, Bag *);
+void initPlayerHuman(Player *, Bag *);
+void initPlayerAI(Player *, Bag *);
+void moveInit(Move *);
+bool dictInit(Dict *, const char *);
+void dictQuit(Dict *);
 
 #endif
 

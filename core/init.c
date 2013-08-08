@@ -4,7 +4,7 @@
 #include "common.h"
 
 
-void boardInit(struct Board *b)
+void boardInit(Board *b)
 {
 	int x, y;
 
@@ -63,7 +63,7 @@ void boardInit(struct Board *b)
 }
 
 
-void bagShake(struct Bag *b, int offset)
+void bagShake(Bag *b, int offset)
 {
 	int i, j;
 	int val[BAG_SIZE];
@@ -81,7 +81,7 @@ void bagShake(struct Bag *b, int offset)
 		j = i;
 		while (j != b->tail) {
 			if (val[i] > val[j]) {
-				struct Tile tmp = b->tile[i];
+				Tile tmp = b->tile[i];
 				int tmp_v = val[i];
 				val[i] = val[j];
 				val[j] = tmp_v;
@@ -98,7 +98,7 @@ void bagShake(struct Bag *b, int offset)
 	
 }
 
-void bagInit(struct Bag *b)
+void bagInit(Bag *b)
 {
 	int i, j, k;
 
@@ -151,7 +151,7 @@ void bagInit(struct Bag *b)
 }
 
 
-void playerInit(struct Player *p, struct Bag *b)
+void playerInit(Player *p, Bag *b)
 {
 	int i;
 
@@ -166,8 +166,25 @@ void playerInit(struct Player *p, struct Bag *b)
 	p->active = true;
 }
 
+void initPlayerHuman(Player *p, Bag *b)
+{
+	NOT(p);
+	NOT(b);
 
-void moveInit(struct Move *m)
+	playerInit(p, b);
+	p->type = PLAYER_HUMAN;
+}
+
+void initPlayerAI(Player *p, Bag *b)
+{
+	NOT(p);
+	NOT(b);
+
+	playerInit(p, b);
+	p->type = PLAYER_AI;
+}
+
+void moveInit(Move *m)
 {
 	int i;
 	
@@ -187,7 +204,7 @@ void moveInit(struct Move *m)
 }
 
 
-void wordCons(struct Word *w, const char *str)
+void wordCons(Word *w, const char *str)
 {
 	int i;
 	char c;
@@ -205,9 +222,9 @@ void wordCons(struct Word *w, const char *str)
 }
 
 
-void swapWord(struct Word *w0, struct Word *w1)
+void swapWord(Word *w0, Word *w1)
 {
-	struct Word tmp;
+	Word tmp;
 
 	NOT(w0);
 	NOT(w1);
@@ -223,15 +240,15 @@ int cmpWordWrapper(const void *p0, const void *p1)
 	NOT(p0);
 	NOT(p1);
 
-	return cmpWord((struct Word*)p0, (struct Word*)p1);
+	return cmpWord((Word*)p0, (Word*)p1);
 }
 
 
-bool dictInit(struct Dict *d, const char *name)
+bool dictInit(Dict *d, const char *name)
 {
 	long i;
 	FILE *f = NULL;
-	struct Word w;
+	Word w;
 	char buf[BOARD_SIZE + 1];
 	
 	NOT(d);
@@ -257,7 +274,7 @@ bool dictInit(struct Dict *d, const char *name)
 	rewind(f);
 	assert(d->num > 0);
 	/* alloc */
-	d->words = memAlloc(sizeof(struct Word) * d->num);
+	d->words = memAlloc(sizeof(Word) * d->num);
 
 	NOT(d->words);
 
@@ -277,12 +294,12 @@ bool dictInit(struct Dict *d, const char *name)
 	}
 	fclose(f);
 	/* sort */
-	qsort(d->words, d->num, sizeof(struct Word), cmpWordWrapper);
+	qsort(d->words, d->num, sizeof(Word), cmpWordWrapper);
 	return true;
 }
 
 
-void dictQuit(struct Dict *dict)
+void dictQuit(Dict *dict)
 {
 	NOT(dict);
 	memFree(dict->words);
