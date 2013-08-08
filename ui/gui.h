@@ -13,7 +13,7 @@ typedef enum
 	YES = 0,
 	NO = 1,
 	YES_NO_COUNT
-} YES_NO_TYPE;
+} YesNoType;
 
 typedef enum
 {
@@ -158,17 +158,17 @@ typedef struct IO
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
-	struct HighText menuFocus[MENU_FOCUS_COUNT];
-	struct HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
+	HighText menuFocus[MENU_FOCUS_COUNT];
+	HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
 	SDL_Surface *areYouSureQuit;
-	struct HighText yesNo[YES_NO_COUNT];
+	HighText yesNo[YES_NO_COUNT];
 	SDL_Surface *titleScreen;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
-	struct Font whiteFont;
-	struct Font blackFont;
-	struct Font yellowFont;
-	struct Font darkRedFont;
+	Font whiteFont;
+	Font blackFont;
+	Font yellowFont;
+	Font darkRedFont;
 } IO;
 
 typedef struct KeyState
@@ -179,24 +179,24 @@ typedef struct KeyState
 
 typedef struct Controls
 {
-	struct KeyState start;
-	struct KeyState up;
-	struct KeyState down;
-	struct KeyState left;
-	struct KeyState right;
-	struct KeyState a;
-	struct KeyState b;
-	struct KeyState x;
-	struct KeyState y;
-	struct KeyState l;
-	struct KeyState r;
+	KeyState start;
+	KeyState up;
+	KeyState down;
+	KeyState left;
+	KeyState right;
+	KeyState a;
+	KeyState b;
+	KeyState x;
+	KeyState y;
+	KeyState l;
+	KeyState r;
 } Controls;
 
 typedef struct Cmd
 {
 	CmdType type;
 	union {
-	struct Coor board;
+	Coor board;
 	int rack;
 	int choice;
 	} data;
@@ -204,7 +204,7 @@ typedef struct Cmd
 
 typedef struct GridWidget
 {
-	struct Coor index;
+	Coor index;
 	bool **button;
 	int width;
 	int height;
@@ -227,6 +227,8 @@ typedef enum
 	GUI_FOCUS_OPTIONS,
 	GUI_FOCUS_GAME_GUI,
 	GUI_FOCUS_GAME_MENU,
+	GUI_FOCUS_GAME_HOTSEAT_PAUSE,
+	GUI_FOCUS_GAME_AI_PAUSE,
 	GUI_FOCUS_GAME_OVER,
 	GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT,
 	GUI_FOCUS_COUNT
@@ -241,9 +243,9 @@ typedef struct GameGUI
 {
 	GameGUIFocusType focus;
 	GameGUIFocusType bottomLast;
-	struct GridWidget rackWidget;
-	struct GridWidget boardWidget;
-	struct GridWidget choiceWidget;
+	GridWidget rackWidget;
+	GridWidget boardWidget;
+	GridWidget choiceWidget;
 } GameGUI;
 
 typedef struct GameMenu
@@ -262,11 +264,11 @@ typedef struct Options
 typedef struct GUI
 {
 	GUIFocusType focus;
-	struct Menu menu;
-	struct GameGUI gameGui;
-	struct GameMenu gameMenu;
-	struct Options options;
-	YES_NO_TYPE gameAreYouSureQuit;
+	Menu menu;
+	GameGUI gameGui;
+	GameMenu gameMenu;
+	Options options;
+	YesNoType gameAreYouSureQuit;
 } GUI;
 
 typedef struct MoveModePlace
@@ -275,7 +277,7 @@ typedef struct MoveModePlace
 	int idx;
 	bool taken[BOARD_Y][BOARD_X];
 	int rackIdx[BOARD_Y][BOARD_X];
-	struct Coor boardIdx[RACK_SIZE];
+	Coor boardIdx[RACK_SIZE];
 } MoveModePlace;
 
 typedef struct MoveModeDiscard
@@ -288,22 +290,18 @@ typedef struct TransMove
 {
 	TransMoveType type;
 	int playerIdx;
-	struct Adjust adjust;
-	/* union {
-	struct MoveModePlace place;
-	struct MoveModeDiscard discard;
-	} data; */
-	struct MoveModePlace place;
-	struct MoveModeDiscard discard;
+	Adjust adjust;
+	MoveModePlace place;
+	MoveModeDiscard discard;
 } TransMove;
 
 typedef struct Env
 {
-	struct IO io;
-	struct Game game;
-	struct Controls controls;
-	struct GUI gui;
-	struct TransMove transMove;
+	IO io;
+	Game game;
+	Controls controls;
+	GUI gui;
+	TransMove transMove;
 	bool quit;
 } Env;
 

@@ -160,7 +160,8 @@ bool next(Combo *c)
 	return true;
 }
 
-void printv(Combo *c) {
+void printCombo(Combo *c)
+{
 	int i;
 
 	printf("[");

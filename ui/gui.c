@@ -428,7 +428,7 @@ bool init(Env *e)
 	initGUI(&e->gui);
 
 
-
+/*
 	{
 		Move move;
 		Action action;
@@ -441,7 +441,7 @@ bool init(Env *e)
 		applyAction(&e->game, &action);
 		e->game.turn = 0;
 	}
-
+*/
 	return true;
 }
 
@@ -1384,6 +1384,7 @@ void updateGameGui(Env *e)
 		} else {
 			nextTurn(&e->game);
 			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
+			e->gui.focus = GUI_FOCUS_GAME_HOTSEAT_PAUSE;
 		}
 		e->transMove.type = TRANS_MOVE_INVALID;
 	} else {
@@ -1428,9 +1429,25 @@ void updateGameMenu(Env *e)
 	}
 }
 
+void updateGameHotseatPause(Env *e)
+{
+	NOT(e);
+
+	if (e->controls.start.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_GAME_GUI;
+	}
+}
+
+void updateGameAIPause(Env *e)
+{
+	NOT(e);
+
+}
+
 void updateGameAreYouSureQuit(Env *e)
 {
 	NOT(e);
+
 	if (e->controls.down.type == KEY_STATE_PRESSED) {
 		e->gui.gameAreYouSureQuit++;
 		e->gui.gameAreYouSureQuit %= YES_NO_COUNT;
@@ -1476,6 +1493,8 @@ void update(Env *e)
 	case GUI_FOCUS_OPTIONS: updateOptions(e); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
 	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
+	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(e); break;
+	case GUI_FOCUS_GAME_AI_PAUSE: updateGameAIPause(e); break;
 	case GUI_FOCUS_GAME_OVER: updateGameOver(e); break;
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(e); break;
 	default: break;
@@ -1705,6 +1724,15 @@ void draw(Env *e)
 			s = i == e->gui.gameMenu.focus ? e->io.gameMenuFocus[i].highlight : e->io.gameMenuFocus[i].normal;
 			surfaceDraw(e->io.screen, s, 150 + e->io.gameMenuFocus[i].offset, i * e->io.whiteFont.height * 2 + 80);
 		}
+		break;
+	}
+	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: {
+		surfaceDraw(e->io.screen, e->io.back, 0, 0);
+		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
+		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
+		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
 		break;
 	}
 	case GUI_FOCUS_GAME_OVER: {
