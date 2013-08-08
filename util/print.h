@@ -5,17 +5,17 @@
 #include "log.h"
 
 void printLetter(LetterType);
-void printWord(struct Word *);
-void printDict(struct Dict *);
-void printTile(struct Tile *);
-void printBag(struct Bag *);
-void printAction(struct Action *);
-void printScore(struct Game *);
-void printBoard(struct Board *);
-void printRack(struct Player *);
-void printPlace(struct MovePlace *);
+void printWord(Word *);
+void printDict(Dict *);
+void printTile(Tile *);
+void printBag(Bag *);
+void printAction(Action *);
+void printScore(Game *);
+void printBoard(Board *);
+void printRack(Player *);
+void printPlace(MovePlace *);
 void printActionErr(ActionErrType);
-void printLog(struct Log *);
+void printLog(Log *);
 
 #endif
 

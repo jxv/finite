@@ -166,6 +166,7 @@ void printPlace(struct MovePlace *mp)
 void printActionErr(ActionErrType err)
 {
 	switch (err) {
+	case ACTION_ERR_UNKNOWN: puts("[err: unknown]"); break;
 	case ACTION_ERR_PLACE_OUT_OF_RANGE: puts("[err: out of range]"); break;
 	case ACTION_ERR_PLACE_SELF_OVERLAP: puts("[err: self overlap]"); break;
 	case ACTION_ERR_PLACE_BOARD_OVERLAP: puts("[err: board overlap]"); break;
@@ -173,7 +174,11 @@ void printActionErr(ActionErrType err)
 	case ACTION_ERR_PLACE_INVALID_SQ: puts("[err: place on free sq. or adjacent to a tile]"); break;
 	case ACTION_ERR_PLACE_NO_RACK: puts("[err: no tiles placed on the board]"); break;
 	case ACTION_ERR_PLACE_NO_DIR: puts("[err: tiles don't form a continuous line]"); break;
-	case ACTION_ERR_PLACE_INVALID_PATH: puts("[err: invalid path, misspelled words?]"); break;
+	case ACTION_ERR_PLACE_INVALID_PATH: puts("[err: invalid path]"); break;
+	case ACTION_ERR_PLACE_INVALID_WORD: puts("[err: misspelled word(s)]"); break;
+	case ACTION_ERR_DISCARD_RULE: puts("[err: discard rule]"); break;
+	case ACTION_ERR_SKIP_RULE: puts("[err: skip rule]"); break;
+	case ACTION_ERR_QUIT_RULE: puts("[err: quit rule]"); break;
 	case ACTION_ERR_NONE: /* fall through */
 	default: break;
 	}

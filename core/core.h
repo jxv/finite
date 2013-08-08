@@ -103,7 +103,7 @@ typedef enum
 typedef enum
 {
 	ACTION_ERR_NONE = 0,
-	ACTION_ERR_UKNOWN,
+	ACTION_ERR_UNKNOWN,
 	ACTION_ERR_PLACE_OUT_OF_RANGE,
 	ACTION_ERR_PLACE_SELF_OVERLAP,
 	ACTION_ERR_PLACE_BOARD_OVERLAP,
@@ -171,17 +171,17 @@ typedef enum
 	ACTION_COUNT
 } ActionType;
 
-struct Word
+typedef struct Word
 {
 	int len;
 	LetterType letter[BOARD_SIZE];
-};
+} Word;
 
-struct Tile
+typedef struct Tile
 {
 	TileType type;
 	LetterType letter;
-};
+} Tile;
 
 #define VALID_TILE_TYPE(tt) (RANGE(tt, 0, TILE_COUNT - 1))
 #define VALID_LETTER_TYPE(lt) (RANGE(lt, 0, LETTER_COUNT - 1))
@@ -192,61 +192,61 @@ struct Tile
 			} \
 		} while(0)
 
-struct Loc
+typedef struct Loc
 {
 	struct Tile tile;
 	SqType sq;
-};
+} Loc;
 
-struct Board
+typedef struct Board
 {
 	struct Tile tile[BOARD_Y][BOARD_X];
 	SqType sq[BOARD_Y][BOARD_X];
 	/* struct Loc loc[BOARD_Y][BOARD_X]; */
-};
+} Board;
 
-struct Player
+typedef struct Player
 {
 	bool active;
 	int score;
 	struct Tile tile[RACK_SIZE];
-};
+} Player;
 
-struct Coor
+typedef struct Coor
 {
 	int x;
 	int y;
-};
+} Coor;
 
-struct MovePlace
+typedef struct MovePlace
 {
 	int num;
 	int rackIdx[RACK_SIZE];
 	struct Coor coor[RACK_SIZE];
-};
+} MovePlace;
 
-struct MoveDiscard
+typedef struct MoveDiscard
 {
 	int num;
 	int rackIdx[RACK_SIZE];
-};
+} MoveDiscard;
 
-struct TileAdjust
+typedef struct TileAdjust
 {
 	TileType type;
 	int idx;
-};
+} TileAdjust;
 
-struct Adjust
+typedef struct Adjust
 {
 	AdjustType type;
 	union {
 	struct TileAdjust tile[RACK_SIZE];
 	AdjustErrType err;
 	} data;
-};
+} Adjust;
 
-struct Move
+typedef struct Move
 {
 	MoveType type;
 	int playerIdx;
@@ -254,25 +254,25 @@ struct Move
 	struct MovePlace place;
 	struct MoveDiscard discard;
 	} data;
-};
+} Move;
 
-struct Bag
+typedef struct Bag
 {
 	int head;
 	int tail;
 	struct Tile tile[BAG_SIZE];
-};
+} Bag;
 
-struct Dir
+typedef struct Dir
 {
 	DirType type;
 	int x;
 	int y;
 	int len;
 	int pos[BOARD_SIZE];
-};
+} Dir;
 
-struct Path
+typedef struct Path
 {
 	PathType type;
 	struct Board board;
@@ -290,9 +290,9 @@ struct Path
  		struct Dir down;
 	} vert;
 	} data;
-};
+} Path;
 
-struct Action
+typedef struct Action
 {
 	ActionType	type;
 	int playerIdx;
@@ -306,15 +306,15 @@ struct Action
 	struct MoveDiscard discard;
 	ActionErrType err;
 	} data;
-};
+} Action;
 
-struct Dict
+typedef struct Dict
 {
 	long num;
 	struct Word *words;
-};
+} Dict;
 
-struct Game
+typedef struct Game
 {
 	int turn;
 	int playerNum;
@@ -322,15 +322,15 @@ struct Game
 	struct Board board;
 	struct Bag bag;
 	struct Dict dict;
-};
+} Game;
 
-struct Rule
+typedef struct Rule
 {
 	bool (*place)(struct Word *, PathType, DirType);
 	bool (*discard)(struct Game *, struct MoveDiscard *);
 	bool (*skip)(struct Game *);
 	bool (*quit)(struct Game *);
-};
+} Rule;
 
 
 void mkAdjust(struct Adjust *, struct Player *);
@@ -352,6 +352,7 @@ bool validRackIdx(int);
 bool validBoardIdx(struct Coor);
 int rackCount(struct Player*);
 int adjustTileCount(struct Adjust*);
+bool wordValid(Word *, Dict *);
 
 #endif
 
