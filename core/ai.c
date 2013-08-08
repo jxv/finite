@@ -381,27 +381,28 @@ void printPlacement(Placement *p)
 	}
 }
 
-void aiFindMove(Move *m, Player *p, Board *b, Game *g, Rule *r)
+void aiFindMove(Move *m, Player *p, Game *g, Rule *r)
 {
 	int i, j;
 	int maxScore;
 	int dir[2];
 	int bd[2];
+	bool firstMove;
 	Cont cont;
 	Combo combo;
 	Placement placement;
 	Move move;
 	Action action;
+	Board *b;
 
 	NOT(m);
 	NOT(p);
-	NOT(b);
 	NOT(g);
 
+	b = &g->board;
 
 	bd[0] = BOARD_X;
 	bd[1] = BOARD_Y;
-
 
 	dir[0] = DIR_DOWN;
 	dir[1] = DIR_RIGHT;
@@ -412,13 +413,15 @@ void aiFindMove(Move *m, Player *p, Board *b, Game *g, Rule *r)
 	move.type = MOVE_PLACE;
 	move.playerIdx = m->playerIdx;
 
+	firstMove = boardEmpty(b);
+
 	for (j = 0; j < 2; j++) {
 		for (i = 0; i < bd[j]; i++) {
 			initCont(&cont);
 			syncTaken(&cont, b, dir[j], i);
 			do {
 				findOpenIdx(&cont);
-				if (!eligibleCont(&cont, b, dir[j], i, true)) {
+				if (!eligibleCont(&cont, b, dir[j], i, firstMove)) {
 					continue;
 				}
 				initCombo(&combo);

@@ -435,7 +435,7 @@ bool init(Env *e)
 
 		move.playerIdx = 1;
 
-		aiFindMove(&move, e->game.player, &e->game.board, &e->game, NULL);
+		aiFindMove(&move, e->game.player, &e->game, NULL);
 		mkAction(&action, &e->game, &move, NULL);
 		printAction(&action);
 		

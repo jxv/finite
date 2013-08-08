@@ -333,26 +333,27 @@ typedef struct Rule
 } Rule;
 
 
-void mkAdjust(struct Adjust *, struct Player *);
-void adjustSwap(struct Adjust *, int, int);
-AdjustErrType fdAdjustErr(struct Adjust *, struct Player *);
-void applyAdjust(struct Player *, struct Adjust *);
-void mkAction(struct Action *, struct Game *, struct Move *, struct Rule *);
-bool applyAction(struct Game *, struct Action *);
-void nextTurn(struct Game *);
-CmpType cmpWord(struct Word *, struct Word *);
-void moveClr(struct Move *);
-void actionClr(struct Action *);
-void rmRackTile(struct Player *, int *, int);
-void rackShift(struct Player*);
-void rackRefill(struct Player*, struct Bag *);
-bool endGame(struct Game *);
-int fdWinner(struct Game *);
+void mkAdjust(Adjust *, Player *);
+void adjustSwap(Adjust *, int, int);
+AdjustErrType fdAdjustErr(Adjust *, Player *);
+void applyAdjust(Player *, Adjust *);
+void mkAction(Action *, Game *, Move *, Rule *);
+bool applyAction(Game *, Action *);
+void nextTurn(Game *);
+CmpType cmpWord(Word *, Word *);
+void moveClr(Move *);
+void actionClr(Action *);
+void rmRackTile(Player *, int *, int);
+void rackShift(Player *);
+void rackRefill(Player *, Bag *);
+bool endGame(Game *);
+int fdWinner( Game *);
 bool validRackIdx(int);
-bool validBoardIdx(struct Coor);
-int rackCount(struct Player*);
-int adjustTileCount(struct Adjust*);
+bool validBoardIdx(Coor);
+int rackCount(Player *);
+int adjustTileCount(Adjust *);
 bool wordValid(Word *, Dict *);
+bool boardEmpty(Board *b);
 
 #endif
 

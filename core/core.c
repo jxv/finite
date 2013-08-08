@@ -1328,3 +1328,20 @@ int adjustTileCount(struct Adjust *a)
 	return count;
 }
 
+bool boardEmpty(Board *b)
+{
+	int y, x;
+
+	NOT(b);
+
+	for (y = 0; y < BOARD_Y; y++) {
+		for (x = 0; x < BOARD_X; x++) {
+			if (b->tile[y][x].type != TILE_NONE) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
