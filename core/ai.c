@@ -58,7 +58,7 @@ bool nextCont(Cont *c)
 	return true;
 }
 
-void syncTaken(Cont *c, struct Board *b, DirType dt, int idx)
+void syncTaken(Cont *c, Board *b, DirType dt, int idx)
 {
 	int i;
 	
@@ -201,7 +201,7 @@ void initCombo(Combo *c)
 	c->pathCount = 0;
 }
 
-bool eligibleCont(Cont *c, struct Board *b, DirType dt, int idx, bool firstMove)
+bool eligibleCont(Cont *c, Board *b, DirType dt, int idx, bool firstMove)
 {
 	int i;
 
@@ -332,6 +332,8 @@ void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 	NOT(cb);
 	NOT(cn);
 
+	assert(cb->pathCount == cn->num);
+
 	switch (dt) {
 	case DIR_DOWN: {
 		p->type = PLACEMENT_VERTICAL;
@@ -379,10 +381,12 @@ void printPlacement(Placement *p)
 	}
 }
 
-void aiFindMove(struct Move *m, struct Player *p, struct Board *b, struct Game *g, struct Rule *r)
+void aiFindMove(Move *m, Player *p, Board *b, Game *g, Rule *r)
 {
-	int i;
+	int i, j;
 	int maxScore;
+	int dir[2];
+	int bd[2];
 	Cont cont;
 	Combo combo;
 	Placement placement;
@@ -394,71 +398,47 @@ void aiFindMove(struct Move *m, struct Player *p, struct Board *b, struct Game *
 	NOT(b);
 	NOT(g);
 
-	if (0)
-	{
-		initCont(&cont);
-		syncTaken(&cont, b, DIR_DOWN, 7);
-		findOpenIdx(&cont);
-		initCombo(&combo);
-		combo.rackCount = rackCount(p);
-		combo.pathCount = 7;
-		mkPlacement(&placement, &combo, &cont, DIR_DOWN, 7);
-		printPlacement(&placement);
-		m->playerIdx = 1;
-		m->type = MOVE_PLACE;
-		placementToMovePlace(&m->data.place, &placement);
-		return;
-	}
+
+	bd[0] = BOARD_X;
+	bd[1] = BOARD_Y;
 
 
+	dir[0] = DIR_DOWN;
+	dir[1] = DIR_RIGHT;
 
 	maxScore = 0;
 	
-	initCont(&cont);
-	cont.offset = 0;
-	cont.len = MIN_LEN;
 	combo.rackCount = rackCount(p);
+	move.type = MOVE_PLACE;
+	move.playerIdx = m->playerIdx;
 
-	for (i = 0; i < BOARD_X; i++) {
-		printf("[%d]idx\n", i);
-		initCont(&cont);
-		syncTaken(&cont, b, DIR_DOWN, i);
-		do {
-			findOpenIdx(&cont);
-			if (!eligibleCont(&cont, b, DIR_DOWN, i, true)) {
-				continue;
-			}
-			initCombo(&combo);
-			combo.pathCount = cont.num;
+	for (j = 0; j < 2; j++) {
+		for (i = 0; i < bd[j]; i++) {
+			initCont(&cont);
+			syncTaken(&cont, b, dir[j], i);
 			do {
-				/*printv(&combo);*/
-				mkPlacement(&placement, &combo, &cont, DIR_DOWN, i);
-				
-				placementToMovePlace(&move.data.place, &placement);
-				move.type = MOVE_PLACE;
-				move.playerIdx = 1;
-				mkAction(&action, g, &move, r);
-				if (action.type == ACTION_PLACE) {
-					if (action.data.place.score > maxScore) {
-						maxScore = action.data.place.score;
-						placementToMovePlace(&m->data.place, &placement);
-						puts("yes");
-					} else {
-						puts("almost");
+				findOpenIdx(&cont);
+				if (!eligibleCont(&cont, b, dir[j], i, true)) {
+					continue;
+				}
+				initCombo(&combo);
+				combo.pathCount = cont.num;
+				do {
+					mkPlacement(&placement, &combo, &cont, dir[j], i);
+					
+					placementToMovePlace(&move.data.place, &placement);
+					mkAction(&action, g, &move, r);
+					if (action.type == ACTION_PLACE) {
+						if (action.data.place.score > maxScore) {
+							maxScore = action.data.place.score;
+							placementToMovePlace(&m->data.place, &placement);
+						}
 					}
-				}
-				else
-				if (action.type == ACTION_INVALID) {
-					printf("[%d]\n", action.data.err);
-					printActionErr(action.data.err);
-				}
-				/* printPlacement(&placement); */
-			} while (stepCombo(&combo));
-		} while (nextCont(&cont));
+				} while (stepCombo(&combo));
+			} while (nextCont(&cont));
+		}
 	}
 
-	m->playerIdx = 1;
-	m->type = MOVE_PLACE;
 
 	/* dummy function */
 	/*

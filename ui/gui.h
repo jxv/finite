@@ -118,21 +118,21 @@ typedef enum
 	GAME_MENU_FOCUS_COUNT
 } GameMenuFocusType;
 
-struct Font
+typedef struct Font
 {
 	int width;
 	int height;
 	SDL_Surface *map;
-};
+} Font;
 
-struct HighText
+typedef struct HighText
 {
 	SDL_Surface *normal;
 	SDL_Surface *highlight;
 	int offset;
-};
+} HighText;
 
-struct IO
+typedef struct IO
 {
 	float time;
 	SDL_Surface *screen;
@@ -169,15 +169,15 @@ struct IO
 	struct Font blackFont;
 	struct Font yellowFont;
 	struct Font darkRedFont;
-};
+} IO;
 
-struct KeyState
+typedef struct KeyState
 {
 	KeyStateType type;
 	float time;
-};
+} KeyState;
 
-struct Controls
+typedef struct Controls
 {
 	struct KeyState start;
 	struct KeyState up;
@@ -190,9 +190,9 @@ struct Controls
 	struct KeyState y;
 	struct KeyState l;
 	struct KeyState r;
-};
+} Controls;
 
-struct Cmd
+typedef struct Cmd
 {
 	CmdType type;
 	union {
@@ -200,15 +200,15 @@ struct Cmd
 	int rack;
 	int choice;
 	} data;
-};
+} Cmd;
 
-struct GridWidget
+typedef struct GridWidget
 {
 	struct Coor index;
 	bool **button;
 	int width;
 	int height;
-};
+} GridWidget;
 
 typedef enum
 {
@@ -232,34 +232,34 @@ typedef enum
 	GUI_FOCUS_COUNT
 } GUIFocusType;
 
-struct Menu
+typedef struct Menu
 {
 	MenuFocusType focus;
-};
+} Menu;
 
-struct GameGUI
+typedef struct GameGUI
 {
 	GameGUIFocusType focus;
 	GameGUIFocusType bottomLast;
 	struct GridWidget rackWidget;
 	struct GridWidget boardWidget;
 	struct GridWidget choiceWidget;
-};
+} GameGUI;
 
-struct GameMenu
+typedef struct GameMenu
 {
 	GameMenuFocusType focus;
 	int idx;
-};
+} GameMenu;
 
-struct Options
+typedef struct Options
 {
 	int sfxVolume;
 	int musVolume;
 	GUIFocusType previous;
-};
+} Options;
 
-struct GUI
+typedef struct GUI
 {
 	GUIFocusType focus;
 	struct Menu menu;
@@ -267,24 +267,24 @@ struct GUI
 	struct GameMenu gameMenu;
 	struct Options options;
 	YES_NO_TYPE gameAreYouSureQuit;
-};
+} GUI;
 
-struct MoveModePlace
+typedef struct MoveModePlace
 {
 	int num;
 	int idx;
 	bool taken[BOARD_Y][BOARD_X];
 	int rackIdx[BOARD_Y][BOARD_X];
 	struct Coor boardIdx[RACK_SIZE];
-};
+} MoveModePlace;
 
-struct MoveModeDiscard
+typedef struct MoveModeDiscard
 {
 	int num;
 	bool rack[RACK_SIZE];
-};
+} MoveModeDiscard;
 
-struct TransMove
+typedef struct TransMove
 {
 	TransMoveType type;
 	int playerIdx;
@@ -295,9 +295,9 @@ struct TransMove
 	} data; */
 	struct MoveModePlace place;
 	struct MoveModeDiscard discard;
-};
+} TransMove;
 
-struct Env
+typedef struct Env
 {
 	struct IO io;
 	struct Game game;
@@ -305,7 +305,7 @@ struct Env
 	struct GUI gui;
 	struct TransMove transMove;
 	bool quit;
-};
+} Env;
 
 int gui();
 
