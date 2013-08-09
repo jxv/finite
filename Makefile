@@ -11,24 +11,29 @@ SRC+=$(wildcard core/*.c)
 SRC+=$(wildcard ui/*.c)
 SRC+=$(wildcard util/*.c)
 
-CFLAG=-ansi
-#CFLAG+=-Werror
-CFLAG+=-Wall
-CFLAG+=-pedantic
-CFLAG+=-O3
-CFLAG+=-DDEBUG
-CFLAG+=`sdl-config --cflags`
+CFLAGS=-ansi
+#CFLAGS+=-Werror
+CFLAGS+=-Wall
+CFLAGS+=-pedantic
+CFLAGS+=-O3
+CFLAGS+=-DDEBUG
+CFLAGS+=$(shell sdl-config --cflags)
 
 LIB=-lc
 LIB=-lm
 LIB=-lpthread
-LIB+=`sdl-config --libs`
+LIB+=$(shell sdl-config --libs)
 LIB+=-lSDL_image
 LIB+=-lopk
 
+OBJ:=$(SRC:.c=.o)
+
 OUT=finite
 
-all:
-	$(CC) $(SRC) -o $(OUT) $(CFLAG) $(INC) $(LIB)  
+%.o:	%.c
+	$(CC) $(CFLAGS) $(INC) $(LIB) -o $@ -c $<
+
+all:	$(OBJ)
+	$(CC) $(OBJ) -o $(OUT) $(CFLAG) $(INC) $(LIB)  
 clean:
-	$(RM) $(OUT)
+	$(RM) $(OUT) $(OBJ)
