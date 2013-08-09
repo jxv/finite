@@ -17,7 +17,7 @@ CFLAGS:=-ansi
 #CFLAGS+=-Werror
 CFLAGS+=-pedantic
 CFLAGS+=-O3
-CFLAGS+=-DDEBUG
+CFLAGS+=-DNDEBUG
 CFLAGS+=$(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 
 LIB:=-lc
@@ -28,8 +28,14 @@ LIB+=-lSDL_image
 LIB+=-lopk
 
 OUT:=finite
+OBJ:=$(SRC:.c=.o)
 
-all:
-	$(CC) $(SRC) -o $(OUT) $(CFLAGS) $(INC) $(LIB)  
+%.o:	%.c
+	$(CC) $(CFLAGS) $(INC) $(LIB) -o $@ -c $<
+
+all:	$(OBJ)
+	$(CC) $(OBJ) -o $(OUT) $(CFLAGS) $(INC) $(LIB)  
+
 clean:
-	$(RM) $(OUT)
+	$(RM) $(OUT) $(OBJ)
+
