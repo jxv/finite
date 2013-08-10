@@ -214,7 +214,7 @@ int term()
 				m.playerIdx = g.turn;
 			} while (m.type == MOVE_INVALID);
 			actionClr(&a);
-			mkAction(&a, &g, &m, NULL);
+			mkAction(&a, &g, &m);
 			if (a.type == ACTION_INVALID) {
 				printActionErr(a.data.err);
 			}

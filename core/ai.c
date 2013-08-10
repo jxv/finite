@@ -473,7 +473,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 					if (!placementToMovePlace(&move.data.place, &placement)) {
 						continue;
 					}
-					mkAction(&action, g, &move, r);
+					mkAction(&action, g, &move);
 					if (action.type == ACTION_PLACE) {
 						if (action.data.place.score > maxScore) {
 							maxScore = action.data.place.score;

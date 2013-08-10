@@ -60,6 +60,9 @@ void boardInit(Board *b)
 	b->sq[6][6] = SQ_DBL_LET;
 	b->sq[6][8] = SQ_DBL_LET;
 	b->sq[8][6] = SQ_DBL_LET;
+
+	b->tile[13][14].type = TILE_LETTER;
+	b->tile[13][14].letter = LETTER_N;
 }
 
 

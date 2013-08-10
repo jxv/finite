@@ -178,6 +178,9 @@ typedef enum
 	ACTION_COUNT
 } ActionType;
 
+
+struct Game;
+
 typedef struct Word
 {
 	int len;
@@ -277,7 +280,7 @@ typedef struct Dir
 	int x;
 	int y;
 	int len;
-	int pos[BOARD_SIZE];
+	bool pos[BOARD_SIZE];
 } Dir;
 
 typedef struct Path
@@ -322,6 +325,14 @@ typedef struct Dict
 	struct Word *words;
 } Dict;
 
+typedef struct Rule
+{
+	bool (*place)(Word *, PathType, DirType);
+	bool (*discard)(struct Game *, MoveDiscard *);
+	bool (*skip)(struct Game *);
+	bool (*quit)(struct Game *);
+} Rule;
+
 typedef struct Game
 {
 	int turn;
@@ -330,22 +341,14 @@ typedef struct Game
 	struct Board board;
 	struct Bag bag;
 	struct Dict dict;
+	struct Rule rule;
 } Game;
-
-typedef struct Rule
-{
-	bool (*place)(struct Word *, PathType, DirType);
-	bool (*discard)(struct Game *, struct MoveDiscard *);
-	bool (*skip)(struct Game *);
-	bool (*quit)(struct Game *);
-} Rule;
-
 
 void mkAdjust(Adjust *, Player *);
 void adjustSwap(Adjust *, int, int);
 AdjustErrType fdAdjustErr(Adjust *, Player *);
 void applyAdjust(Player *, Adjust *);
-void mkAction(Action *, Game *, Move *, Rule *);
+void mkAction(Action *, Game *, Move *);
 bool applyAction(Game *, Action *);
 void nextTurn(Game *);
 CmpType cmpWord(Word *, Word *);

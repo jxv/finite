@@ -52,13 +52,6 @@ void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 	}
 }
 
-bool ioInit(IO *io)
-{
-	NOT(io);
-
-	return false;
-}
-
 void keystateInit(KeyState *ks)
 {
 	NOT(ks);
@@ -84,6 +77,16 @@ void controlsInit(Controls *c)
 	keystateInit(&c->r);
 }
 
+void initDefaultRule(Rule *r)
+{
+	NOT(r);
+
+	r->place = NULL;
+	r->discard = NULL;
+	r->skip = NULL;
+	r->quit = NULL;
+}
+
 void initGame1vs1Human(Game *g)
 {
 	NOT(g);
@@ -95,6 +98,7 @@ void initGame1vs1Human(Game *g)
 	initPlayerHuman(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
+	initDefaultRule(&g->rule);
 }
 
 void initGame1vs1HumanAI(Game *g)
@@ -108,6 +112,7 @@ void initGame1vs1HumanAI(Game *g)
 	initPlayerAI(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
+	initDefaultRule(&g->rule);
 }
 
 void initMenu(Menu *m)
@@ -265,6 +270,12 @@ void freeHighTexts(HighText *ht, int count)
 	}
 }
 
+bool initIO(IO *io)
+{
+	NOT(io);
+
+	return false;
+}
 
 bool init(Env *e)
 {
@@ -276,8 +287,7 @@ bool init(Env *e)
 	e->quit = false;
 
 	NOT(e);
-
-	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
+if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
 	}
 	SDL_ShowCursor(SDL_DISABLE);
@@ -409,7 +419,7 @@ bool init(Env *e)
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
 	{
-		char *text[MENU_FOCUS_COUNT] = {"Start", "Options", "Exit"};
+		char *text[MENU_FOCUS_COUNT] = {"Play", "Options", "Exit"};
 		mkHighTexts(e->io.menuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.menuFocus, MENU_FOCUS_COUNT)) {
@@ -436,25 +446,8 @@ bool init(Env *e)
 	controlsInit(&e->controls);
 
 	e->transMove.type = TRANS_MOVE_INVALID;
-	/* initGame1vs1Human(&e->game); */
-	initGame1vs1HumanAI(&e->game);
 	initGUI(&e->gui);
 
-
-/*
-	{
-		Move move;
-		Action action;
-
-		aiFindMove(&move, 1, &e->game, NULL);
-		mkAction(&action, &e->game, &move, NULL);
-		printAction(&action);
-		
-		e->game.turn = 1;
-		applyAction(&e->game, &action);
-		e->game.turn = 0;
-	}
-*/
 	return true;
 }
 
@@ -1246,7 +1239,7 @@ void updateMenu(Env *e)
 		case MENU_FOCUS_START: {
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
 			e->gui.gameAreYouSureQuit = YES;
-			initGame1vs1HumanAI(&e->game);
+			initGame1vs1Human(&e->game);
 			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
 			c.type = CMD_INVALID;
 			updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
@@ -1394,7 +1387,7 @@ void updateGameGui(Env *e)
 
 	transMoveToMove(&m, &e->transMove);
 
-	mkAction(&a, &e->game, &m, NULL);
+	mkAction(&a, &e->game, &m);
 	applyAction(&e->game, &a);
 
 	if (c.type == CMD_PLAY || c.type == CMD_QUIT) {
@@ -1473,7 +1466,7 @@ void updateGameAIPause(Env *e)
 	
 	printf("Starting AI... patience...\n");
 	aiFindMove(&m, e->game.turn, &e->game, NULL);
-	mkAction(&a, &e->game, &m, NULL);
+	mkAction(&a, &e->game, &m);
 	applyAction(&e->game, &a);
 	if (a.type != ACTION_INVALID) {
 		printf("[AI_PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
@@ -1762,6 +1755,14 @@ void draw(Env *e)
 			s = i == e->gui.gameMenu.focus ? e->io.gameMenuFocus[i].highlight : e->io.gameMenuFocus[i].normal;
 			surfaceDraw(e->io.screen, s, 150 + e->io.gameMenuFocus[i].offset, i * e->io.whiteFont.height * 2 + 80);
 		}
+		break;
+	}
+	case GUI_FOCUS_GAME_AI_PAUSE: {
+		surfaceDraw(e->io.screen, e->io.back, 0, 0);
+		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
+		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 		break;
 	}
 	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: {
