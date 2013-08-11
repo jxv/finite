@@ -233,7 +233,7 @@ void bagDrop(Bag *b)
 {
 	NOT(b);
 
-	b->head ++;
+	b->head++;
 	b->head %= BAG_SIZE;
 }
 
@@ -242,7 +242,7 @@ void bagAdd(Bag *b, Tile t)
 	NOT(b);
 
 	b->tile[b->tail] = t;
-	b->tail ++;
+	b->tail++;
 	b->tail %= BAG_SIZE;
 }
 
