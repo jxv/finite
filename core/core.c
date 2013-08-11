@@ -1,7 +1,7 @@
 #include "common.h"
 #include "print.h"
 
-int defaultLetterScore(Letter l)
+int defaultLetterScore(LetterType l)
 {
 	switch (l) {
 	case LETTER_A: return 1;
