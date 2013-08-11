@@ -1,40 +1,46 @@
 #include "common.h"
 #include "print.h"
 
+int defaultLetterScore(Letter l)
+{
+	switch (l) {
+	case LETTER_A: return 1;
+	case LETTER_B: return 3;
+	case LETTER_C: return 3;
+	case LETTER_D: return 2;
+	case LETTER_E: return 1;
+	case LETTER_F: return 4;
+	case LETTER_G: return 2;
+	case LETTER_H: return 4;
+	case LETTER_I: return 1;
+	case LETTER_J: return 8;
+	case LETTER_K: return 5;
+	case LETTER_L: return 1;
+	case LETTER_M: return 3;
+	case LETTER_N: return 1;
+	case LETTER_O: return 1;
+	case LETTER_P: return 3;
+	case LETTER_Q: return 10;
+	case LETTER_R: return 1;
+	case LETTER_S: return 1;
+	case LETTER_T: return 1;
+	case LETTER_U: return 1;
+	case LETTER_V: return 4;
+	case LETTER_W: return 4;
+	case LETTER_X: return 8;
+	case LETTER_Y: return 4;
+	case LETTER_Z: return 10;
+	default: break;
+	}
+	return 0;
+}
+
 int tileScore(Tile *t)
 {
 	NOT(t);
 
 	if (t->type == TILE_LETTER) {
-		switch (t->letter) {
-		case LETTER_A: return 1;
-		case LETTER_B: return 3;
-		case LETTER_C: return 3;
-		case LETTER_D: return 2;
-		case LETTER_E: return 1;
-		case LETTER_F: return 4;
-		case LETTER_G: return 2;
-		case LETTER_H: return 4;
-		case LETTER_I: return 1;
-		case LETTER_J: return 8;
-		case LETTER_K: return 5;
-		case LETTER_L: return 1;
-		case LETTER_M: return 3;
-		case LETTER_N: return 1;
-		case LETTER_O: return 1;
-		case LETTER_P: return 3;
-		case LETTER_Q: return 10;
-		case LETTER_R: return 1;
-		case LETTER_S: return 1;
-		case LETTER_T: return 1;
-		case LETTER_U: return 1;
-		case LETTER_V: return 4;
-		case LETTER_W: return 4;
-		case LETTER_X: return 8;
-		case LETTER_Y: return 4;
-		case LETTER_Z: return 10;
-		default: break;
-		}
+		return defaultLetterScore(t->letter);
 	}
 	return 0;
 }
