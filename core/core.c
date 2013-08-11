@@ -81,15 +81,12 @@ bool canUseTrpWrd(Board *b, Dir *d, int p, int x, int y)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	if (b->sq[y][x] == SQ_TRP_WRD) {
-		printf("TRP_WRD: %d, %d (%d, %d)\n", p, d->pos[p], x, y);
-	}
 	return d->pos[p] && b->sq[y][x] == SQ_TRP_WRD;
 }
 
 int dirScore(Board *b, Dir *d)
 {
-	int dw, tw, x, y, s, p, i, t;
+	int dw, tw, x, y, s, i, t;
 
 	NOT(b);
 	NOT(d);
@@ -101,23 +98,23 @@ int dirScore(Board *b, Dir *d)
 	s = 0;
 	switch (d->type) {
 	case DIR_RIGHT: {
-		for (p = 0, i = d->x; i < d->len + d->x; p++, i++) {
+		for (i = d->x; i < d->len + d->x; i++) {
 			t = tileScore(&b->tile[y][i]);
-			t *= canUseDblLet(b, d, p, i, y) ? 2 : 1;
-			t *= canUseTrpLet(b, d, p, i, y) ? 3 : 1;
-			dw += canUseDblWrd(b, d, p, i, y);
-			tw += canUseTrpWrd(b, d, p, i, y);
+			t *= canUseDblLet(b, d, i, i, y) ? 2 : 1;
+			t *= canUseTrpLet(b, d, i, i, y) ? 3 : 1;
+			dw += canUseDblWrd(b, d, i, i, y);
+			tw += canUseTrpWrd(b, d, i, i, y);
 			s += t;
 		}
 		break;
 	}
 	case DIR_DOWN: {
-		for (p = 0, i = d->y; i < d->len + d->y; p++, i++) {
+		for (i = d->y; i < d->len + d->y; i++) {
 			t = tileScore(&b->tile[i][x]);
-			t *= canUseDblLet(b, d, p, x, i) ? 2 : 1;
-			t *= canUseTrpLet(b, d, p, x, i) ? 3 : 1;
-			dw += canUseDblWrd(b, d, p, x, i);
-			tw += canUseTrpWrd(b, d, p, x, i);
+			t *= canUseDblLet(b, d, i, x, i) ? 2 : 1;
+			t *= canUseTrpLet(b, d, i, x, i) ? 3 : 1;
+			dw += canUseDblWrd(b, d, i, x, i);
+			tw += canUseTrpWrd(b, d, i, x, i);
 			s += t;
 		}
 		break;
@@ -809,16 +806,19 @@ void mkRight(Dir *d, int x, int y, Board *b)
 	d->type = DIR_RIGHT;
 	d->x = x;
 	d->y = y;
-	memSet(d->pos, 0, sizeof(int) * BOARD_SIZE);
-	d->pos[x] = 1;
+	memSet(d->pos, false, sizeof(bool) * BOARD_SIZE);
+	d->pos[x] = true;
 
 	for (i = x; i >= 0 && b->tile[y][i].type != TILE_NONE; i--) {
 		d->x = i;
 	}
+
 	for (i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++) {
 		d->len = i;
 	}
 	d->len -= d->x - 1;
+
+	/* a word cannot be 1 letter long */
 	if (d->len == 1) {
 		 d->type = DIR_INVALID;
 	}
@@ -836,17 +836,21 @@ void mkDown(Dir *d, int x, int y, Board *b)
 	d->type = DIR_DOWN;
 	d->x = x;
 	d->y = y;
-	memSet(d->pos, 0, sizeof(int) * BOARD_SIZE);
-	d->pos[y] = 1;
+	memSet(d->pos, false, sizeof(bool) * BOARD_SIZE);
+	d->pos[y] = true;
+
 	for (i = y; i >= 0 && b->tile[i][x].type != TILE_NONE; i--) {
 		d->y = i;
 	}
+
 	for (i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++) {
 		d->len = i;
 	}
 	d->len -= d->y - 1;
-	if (d->len == 1) {
-		 d->type = DIR_INVALID;
+
+	/* a word cannot be 1 letter long */
+	if (d->len == 1) {	
+		d->type = DIR_INVALID;
 	}
 }
 
@@ -973,7 +977,8 @@ ActionErrType fdPlaceErr(MovePlace *mp,Player *p, Board *b)
 bool ruleZ4Char(Word *w, PathType pt, DirType dt)
 {
 	NOT(w);
-	printWord(w);putchar('\n');
+	printWord(w);
+	putchar('\n');
 	return w->len == 4 && w->letter[0] == LETTER_Z;
 }
 
