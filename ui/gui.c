@@ -122,13 +122,13 @@ void initMenu(Menu *m)
 	m->focus = MENU_FOCUS_PLAY;
 }
 
-void initOptions(Options *o)
+void initSettings(Settings *s)
 {
-	NOT(o);
+	NOT(s);
 
-	o->sfxVolume = 50;
-	o->musVolume = 100;
-	o->previous = GUI_FOCUS_MENU; 
+	s->sfxVolume = 50;
+	s->musVolume = 100;
+	s->previous = GUI_FOCUS_MENU; 
 }
 
 void initGameMenu(GameMenu *gm)
@@ -153,7 +153,7 @@ void initGameGUI(GameGUI *gg)
 void initGUI(GUI *g)
 {
 	initMenu(&g->menu);
-	initOptions(&g->options);
+	initSettings(&g->settings);
 	initGameMenu(&g->gameMenu);
 	initGameGUI(&g->gameGui);
 	g->gameAreYouSureQuit = 0;
@@ -423,7 +423,7 @@ bool init(Env *e)
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
 	{
-		char *text[MENU_FOCUS_COUNT] = {"Play", "Options", "Exit"};
+		char *text[MENU_FOCUS_COUNT] = {"Play", "Settings", "Exit"};
 		mkHighTexts(e->io.menuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.menuFocus, MENU_FOCUS_COUNT)) {
@@ -439,7 +439,7 @@ bool init(Env *e)
 	}
 
 	{
-		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Options", "Quit"};
+		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Quit"};
 		mkHighTexts(e->io.gameMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, GAME_MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT)) {
@@ -797,7 +797,6 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			assert(mmp->boardIdx[mmp->idx].x == -1 && mmp->boardIdx[mmp->idx].y == -1);;
 			mmp->boardIdx[mmp->idx] = c->data.board;
 			if (tm->adjust.data.tile[*idx].type == TILE_LETTER) {
-				printf("[%d]\n", mmp->num);
 				mmp->num++;
 				assert(mmp->num > 0 && mmp->num <= adjustTileCount(&tm->adjust));
 				if (adjustTileCount(&tm->adjust) == mmp->num) {
@@ -1252,9 +1251,9 @@ void updateMenu(Env *e)
 			e->gui.playMenu.focus = PLAY_MENU_FOCUS_HUMAN_VS_HUMAN;
 			break;
 		}
-		case MENU_FOCUS_OPTIONS: {
-			e->gui.options.previous = e->gui.focus;
-			e->gui.focus = GUI_FOCUS_OPTIONS;
+		case MENU_FOCUS_SETTINGS: {
+			e->gui.settings.previous = e->gui.focus;
+			e->gui.focus = GUI_FOCUS_SETTINGS;
 			break;
 		}
 		case MENU_FOCUS_EXIT: {
@@ -1280,12 +1279,12 @@ void updateMenu(Env *e)
 	}
 }
 
-void updateOptions(Env *e)
+void updateSettings(Env *e)
 {
 	NOT(e);
 	
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = e->gui.options.previous;
+		e->gui.focus = e->gui.settings.previous;
 	}
 }
 
@@ -1452,7 +1451,6 @@ void updateGameGui(Env *e)
 	}
 
 	if (a.type != ACTION_INVALID) {
-		printf("[PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
 		applyAdjust(&e->game.player[a.playerIdx], &e->transMove.adjust);
 		if (endGame(&e->game)) {
 			e->gui.focus = GUI_FOCUS_GAME_OVER;
@@ -1479,9 +1477,9 @@ void updateGameMenu(Env *e)
 			e->gui.focus = GUI_FOCUS_GAME_GUI;
 			break;
 		}
-		case GAME_MENU_FOCUS_OPTIONS: {
-			e->gui.options.previous = e->gui.focus;
-			e->gui.focus = GUI_FOCUS_OPTIONS;
+		case GAME_MENU_FOCUS_SETTINGS: {
+			e->gui.settings.previous = e->gui.focus;
+			e->gui.focus = GUI_FOCUS_SETTINGS;
 			break;
 		}
 		case GAME_MENU_FOCUS_QUIT: {
@@ -1520,13 +1518,9 @@ void updateGameAIPause(Env *e)
 
 	NOT(e);
 	
-	printf("Starting AI... patience...\n");
 	aiFindMove(&m, e->game.turn, &e->game, NULL);
 	mkAction(&a, &e->game, &m);
 	applyAction(&e->game, &a);
-	if (a.type != ACTION_INVALID) {
-		printf("[AI_PLAYER_%d: %d]\n", a.playerIdx, e->game.player[a.playerIdx].score);
-	}
 	nextTurn(&e->game);
 	e->gui.focus = nextGUIFocusByPlayerType(e->game.player[e->game.turn].type);
 }
@@ -1577,7 +1571,7 @@ void update(Env *e)
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: updateTitle(e); break;
 	case GUI_FOCUS_MENU: updateMenu(e); break;
-	case GUI_FOCUS_OPTIONS: updateOptions(e); break;
+	case GUI_FOCUS_SETTINGS: updateSettings(e); break;
 	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(e); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
 	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
@@ -1827,18 +1821,18 @@ void draw(Env *e)
 		}
 		break;
 	}
-	case GUI_FOCUS_OPTIONS: {
+	case GUI_FOCUS_SETTINGS: {
 		SDL_Rect rect;
 		rect.h = 10;
 		rect.x = (320-100)/2 + 50;
 		drawScrollingBackground(e);
 		
 		rect.y = 100;
-		rect.w = e->gui.options.sfxVolume;
+		rect.w = e->gui.settings.sfxVolume;
 		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xff, 0xff, 0xff));
 		
 		rect.y += 25;
-		rect.w = e->gui.options.musVolume;
+		rect.w = e->gui.settings.musVolume;
 		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xff, 0xff, 0xff));
 		break;
 	}
