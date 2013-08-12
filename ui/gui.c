@@ -1263,7 +1263,7 @@ void updateMenu(Env *e)
 		default: break;
 		}
 		return;
-	}
+	} 
 	if (e->controls.b.type == KEY_STATE_PRESSED) {
 		e->gui.focus = GUI_FOCUS_TITLE;
 		return;
@@ -1764,6 +1764,44 @@ void drawGameAreYouSureQuit(Env *e)
 	}
 }
 
+void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
+{
+	SDL_Rect clip, offset;
+	int c, n;
+
+	NOT(s);
+	NOT(f);
+	NOT(f->map);
+
+	n = num > -num ? num : -num;
+	offset.x = x;
+	offset.y = y;
+	clip.y = 0;
+	clip.h = f->height;
+	clip.w = f->width;
+
+	if (num == 0) {
+		c = '0' - 32;
+		clip.x = c * f->width;
+		SDL_BlitSurface(f->map, &clip, s, &offset);
+		return;
+	}
+
+	do {	
+		c = '0' + (n % 10) - 32;
+		clip.x = c * f->width;
+		SDL_BlitSurface(f->map, &clip, s, &offset);
+		offset.x -= f->width;
+		n /= 10;
+	} while (n != 0);
+
+	if (num < 0) {
+		c = '-' - 32;
+		clip.x = c * f->width;
+		SDL_BlitSurface(f->map, &clip, s, &offset);
+	} 
+}
+
 void draw(Env *e)
 {
 	NOT(e);
@@ -1805,9 +1843,14 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {
+
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+		drawNum(e->io.screen, 50, 30, e->game.player[0].score, 
+				&e->io.whiteFont);
+		drawNum(e->io.screen, 50, 50, e->game.player[1].score, 
+				&e->io.whiteFont);
 		break;
 	}
 	case GUI_FOCUS_GAME_MENU: {
