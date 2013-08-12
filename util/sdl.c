@@ -30,6 +30,25 @@ SDL_Surface *surfaceLoad(const char *filename)
 	return s;
 } 
 
+SDL_Surface *surfaceAlphaLoad(const char *filename)
+{
+	SDL_Surface *s, *tmp;
+
+	NOT(filename);
+
+	s = NULL;
+	tmp = IMG_Load(filename);
+	if (!tmp) {
+		return NULL;
+	}
+	s = SDL_DisplayFormatAlpha(tmp);
+	SDL_FreeSurface(tmp);
+	if (!s) {
+		return NULL;
+	}
+	return s;
+}
+
 void delay(int st, int et, int fps)
 {
 	int ms;

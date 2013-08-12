@@ -103,7 +103,7 @@ typedef enum
 typedef enum
 {
 	MENU_FOCUS_INAVLID = -1,
-	MENU_FOCUS_START = 0,
+	MENU_FOCUS_PLAY = 0,
 	MENU_FOCUS_OPTIONS,
 	MENU_FOCUS_EXIT,
 	MENU_FOCUS_COUNT
@@ -117,6 +117,14 @@ typedef enum
 	GAME_MENU_FOCUS_QUIT,
 	GAME_MENU_FOCUS_COUNT
 } GameMenuFocusType;
+
+typedef enum
+{
+	PLAY_MENU_FOCUS_INVALID = -1,
+	PLAY_MENU_FOCUS_HUMAN_VS_HUMAN = 0,
+	PLAY_MENU_FOCUS_HUMAN_VS_AI,
+	PLAY_MENU_FOCUS_COUNT
+} PlayMenuFocusType;
 
 typedef struct Font
 {
@@ -160,9 +168,11 @@ typedef struct IO
 	SDL_Surface *sq[SQ_COUNT];
 	HighText menuFocus[MENU_FOCUS_COUNT];
 	HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
+	HighText playMenuFocus[PLAY_MENU_FOCUS_COUNT];
 	SDL_Surface *areYouSureQuit;
 	HighText yesNo[YES_NO_COUNT];
 	SDL_Surface *titleScreen;
+	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
 	Font whiteFont;
@@ -225,6 +235,7 @@ typedef enum
 	GUI_FOCUS_TITLE,
 	GUI_FOCUS_MENU,
 	GUI_FOCUS_OPTIONS,
+	GUI_FOCUS_PLAY_MENU,
 	GUI_FOCUS_GAME_GUI,
 	GUI_FOCUS_GAME_MENU,
 	GUI_FOCUS_GAME_HOTSEAT_PAUSE,
@@ -254,6 +265,11 @@ typedef struct GameMenu
 	int idx;
 } GameMenu;
 
+typedef struct PlayMenu
+{
+	PlayMenuFocusType focus;
+} PlayMenu;
+
 typedef struct Options
 {
 	int sfxVolume;
@@ -267,6 +283,7 @@ typedef struct GUI
 	Menu menu;
 	GameGUI gameGui;
 	GameMenu gameMenu;
+	PlayMenu playMenu;
 	Options options;
 	YesNoType gameAreYouSureQuit;
 } GUI;

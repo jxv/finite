@@ -119,7 +119,7 @@ void initMenu(Menu *m)
 {
 	NOT(m);
 
-	m->focus = MENU_FOCUS_START;
+	m->focus = MENU_FOCUS_PLAY;
 }
 
 void initOptions(Options *o)
@@ -287,7 +287,8 @@ bool init(Env *e)
 	e->quit = false;
 
 	NOT(e);
-if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
+
+	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
 	}
 	SDL_ShowCursor(SDL_DISABLE);
@@ -298,13 +299,16 @@ if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 	if (!dictInit(&e->game.dict, RES_PATH "dict.txt")) {
 		return false;
 	}
-	if ((e->io.titleScreen = surfaceLoad(RES_PATH "title_screen.png")) == NULL) {
+	if ((e->io.titleScreen = surfaceAlphaLoad(RES_PATH "title_screen.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.titleBackground = surfaceLoad(RES_PATH "title_background.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.back = surfaceLoad(RES_PATH "back.png")) == NULL) {
+	if ((e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png")) == NULL) {
+		return false;
+	}
+	if ((e->io.back = surfaceAlphaLoad(RES_PATH "back.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.wildUp = surfaceLoad(RES_PATH "wild_up.png")) == NULL) {
@@ -427,6 +431,14 @@ if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 	}
 
 	{
+		char *text[PLAY_MENU_FOCUS_COUNT] = {"Human vs. Human", "Human vs. CPU"};
+		mkHighTexts(e->io.playMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
+	}
+	if (!areHighTextsLoaded(e->io.playMenuFocus, PLAY_MENU_FOCUS_COUNT)) {
+		return false;
+	}
+
+	{
 		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Options", "Quit"};
 		mkHighTexts(e->io.gameMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, GAME_MENU_FOCUS_COUNT);
 	}
@@ -460,6 +472,7 @@ void quit(Env *e)
 	dictQuit(&e->game.dict);
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
+	surfaceFree(e->io.titleHover);
 	surfaceFree(e->io.titleBackground);
 	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
@@ -1230,22 +1243,13 @@ void updateTitle(Env *e)
 
 void updateMenu(Env *e)
 {
-	Cmd c;
-	
 	NOT(e);
 
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
+	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
 		switch (e->gui.menu.focus) {
-		case MENU_FOCUS_START: {
-			e->gui.focus = GUI_FOCUS_GAME_GUI;
-			e->gui.gameAreYouSureQuit = YES;
-			initGame1vs1Human(&e->game);
-			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
-			c.type = CMD_INVALID;
-			updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
-			updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-			updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-			updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+		case MENU_FOCUS_PLAY: {
+			e->gui.focus = GUI_FOCUS_PLAY_MENU;
+			e->gui.playMenu.focus = PLAY_MENU_FOCUS_HUMAN_VS_HUMAN;
 			break;
 		}
 		case MENU_FOCUS_OPTIONS: {
@@ -1282,6 +1286,58 @@ void updateOptions(Env *e)
 	
 	if (e->controls.start.type == KEY_STATE_PRESSED) {
 		e->gui.focus = e->gui.options.previous;
+	}
+}
+
+void resetNewGameGui(Env *e)
+{
+	Cmd c;
+
+	NOT(e);
+
+	e->gui.focus = GUI_FOCUS_GAME_GUI;
+	e->gui.gameAreYouSureQuit = YES;
+	clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
+	c.type = CMD_INVALID;
+	updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
+	updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
+	updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
+	updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+}
+
+void updatePlayMenu(Env *e)
+{
+	NOT(e);
+	
+	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
+		switch (e->gui.playMenu.focus) {
+		case PLAY_MENU_FOCUS_HUMAN_VS_HUMAN: {
+			initGame1vs1Human(&e->game);
+			resetNewGameGui(e);
+			e->gui.focus = GUI_FOCUS_GAME_GUI;
+			break;
+		}
+		case PLAY_MENU_FOCUS_HUMAN_VS_AI: {
+			initGame1vs1HumanAI(&e->game);
+			resetNewGameGui(e);
+			break;
+		}
+		default: break;
+		}
+	}
+	if (e->controls.b.type == KEY_STATE_PRESSED) {
+		e->gui.focus = GUI_FOCUS_MENU;
+		return;
+	}
+	if (e->controls.up.type == KEY_STATE_PRESSED) {
+		e->gui.playMenu.focus += PLAY_MENU_FOCUS_COUNT;
+		e->gui.playMenu.focus--;
+		e->gui.playMenu.focus %= PLAY_MENU_FOCUS_COUNT;
+		return;
+	}
+	if (e->controls.down.type == KEY_STATE_PRESSED) {
+		e->gui.playMenu.focus++;
+		e->gui.playMenu.focus %= PLAY_MENU_FOCUS_COUNT;
 	}
 }
 
@@ -1522,6 +1578,7 @@ void update(Env *e)
 	case GUI_FOCUS_TITLE: updateTitle(e); break;
 	case GUI_FOCUS_MENU: updateMenu(e); break;
 	case GUI_FOCUS_OPTIONS: updateOptions(e); break;
+	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(e); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
 	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
 	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(e); break;
@@ -1661,6 +1718,28 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 	guiDrawLockon(io, &g->gameGui);
 }
 
+int scrollOffset(int dis, int pps, float time)
+{
+	int secsToLoop;
+	secsToLoop = dis / pps;
+	return (int)(dis * time / secsToLoop) % dis;
+}
+
+void drawScrollingBackground(Env *e)
+{
+	int off0, off1;
+	
+	NOT(e);
+
+	off0 = scrollOffset(e->io.titleBackground->h, 15, e->io.time);
+	off1 = scrollOffset(e->io.titleHover->h, -30, e->io.time);
+
+	surfaceDraw(e->io.screen, e->io.titleBackground, 0, off0);
+	surfaceDraw(e->io.screen, e->io.titleBackground, 0, off0 - e->io.titleBackground->h);
+	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1);
+	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1 + e->io.titleHover->h);
+}
+
 
 void drawGameAreYouSureQuit(Env *e)
 {
@@ -1670,6 +1749,8 @@ void drawGameAreYouSureQuit(Env *e)
 
 	NOT(e);
 
+	drawScrollingBackground(e);
+	
 	surfaceDraw(e->io.screen, e->io.back, 0, 0);
 	guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
 	SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
@@ -1681,21 +1762,6 @@ void drawGameAreYouSureQuit(Env *e)
 				e->gui.gameAreYouSureQuit == i ? e->io.yesNo[i].highlight : e->io.yesNo[i].normal,
 				orgX, orgY + i * e->io.whiteFont.height);
 	}
-}
-
-void drawScrollingBackground(Env *e)
-{
-	int bgOffset;
-	int secsToLoop;
-	int loopSpeed;
-	
-	NOT(e);
-
-	loopSpeed = 15;
-	secsToLoop = e->io.titleBackground->h / loopSpeed;
-	bgOffset = (int)(e->io.titleBackground->h * e->io.time / secsToLoop) % e->io.titleBackground->h;
-	surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset);
-	surfaceDraw(e->io.screen, e->io.titleBackground, 0, bgOffset - e->io.titleBackground->h);
 }
 
 void draw(Env *e)
@@ -1739,12 +1805,14 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
 		break;
 	}
 	case GUI_FOCUS_GAME_MENU: {
 		int i;
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
@@ -1757,7 +1825,18 @@ void draw(Env *e)
 		}
 		break;
 	}
+	case GUI_FOCUS_PLAY_MENU: {
+		int i;
+		drawScrollingBackground(e);
+		for (i = 0; i < PLAY_MENU_FOCUS_COUNT; i++) {
+			SDL_Surface *s;
+			s = i == e->gui.playMenu.focus ? e->io.playMenuFocus[i].highlight : e->io.playMenuFocus[i].normal;
+			surfaceDraw(e->io.screen, s, 150 + e->io.playMenuFocus[i].offset, i * e->io.whiteFont.height * 2 + 80);
+		}
+		break;
+	}
 	case GUI_FOCUS_GAME_AI_PAUSE: {
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
@@ -1766,6 +1845,7 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: {
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
@@ -1775,6 +1855,7 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_GAME_OVER: {
+		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
 		break;
