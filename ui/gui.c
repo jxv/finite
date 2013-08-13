@@ -1796,6 +1796,19 @@ void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
 	} 
 }
 
+void drawScoreBoard(Env *e)
+{
+	int i;
+	Font *f;
+
+	NOT(e);
+	
+	for (i = 0; i < e->game.playerNum; i++) {
+		f = &e->io.whiteFont;
+		drawNum(e->io.screen, 60, 10 * i, e->game.player[i].score, f);
+	}
+}
+
 void draw(Env *e)
 {
 	NOT(e);
@@ -1841,10 +1854,7 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
-		drawNum(e->io.screen, 50, 30, e->game.player[0].score, 
-				&e->io.whiteFont);
-		drawNum(e->io.screen, 50, 50, e->game.player[1].score, 
-				&e->io.whiteFont);
+		drawScoreBoard(e);
 		break;
 	}
 	case GUI_FOCUS_GAME_MENU: {
@@ -1876,6 +1886,7 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		drawScoreBoard(e);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
@@ -1885,6 +1896,7 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		drawScoreBoard(e);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
@@ -1895,6 +1907,7 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		drawScoreBoard(e);
 		break;
 	}
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: drawGameAreYouSureQuit(e); break;
