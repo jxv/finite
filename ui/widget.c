@@ -1,6 +1,6 @@
 #include "widget.h"
 
-void mkGridWidgetByDim(struct GridWidget *gw)
+void mkGridWidgetByDim(GridWidget *gw)
 {
 	int i, y, x;
 
@@ -21,7 +21,7 @@ void mkGridWidgetByDim(struct GridWidget *gw)
 	}
 }
 
-void mkRackWidget(struct GridWidget *gw)
+void mkRackWidget(GridWidget *gw)
 {
 	NOT(gw);
 	
@@ -30,7 +30,7 @@ void mkRackWidget(struct GridWidget *gw)
 	mkGridWidgetByDim(gw);
 }
 
-void mkChoiceWidget(struct GridWidget *gw)
+void mkChoiceWidget(GridWidget *gw)
 {
 	NOT(gw);
 	
@@ -39,7 +39,7 @@ void mkChoiceWidget(struct GridWidget *gw)
 	mkGridWidgetByDim(gw);
 }
 
-void mkBoardWidget(struct GridWidget *gw)
+void mkBoardWidget(GridWidget *gw)
 {
 	NOT(gw);
 	
@@ -48,9 +48,9 @@ void mkBoardWidget(struct GridWidget *gw)
 	mkGridWidgetByDim(gw);
 }
 
-void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
+void boardWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 {
-	struct GridWidget *bw;
+	GridWidget *bw;
 
 	NOT(cmd);
 	NOT(gg);
@@ -99,9 +99,9 @@ void boardWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c
 	}
 }
 
-void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
+void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 {
-	struct GridWidget *cw;
+	GridWidget *cw;
 
 	NOT(cmd);
 	NOT(gg);
@@ -176,9 +176,9 @@ void choiceWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *
 	}
 }
 
-void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
+void rackWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 {
-	struct GridWidget *rw;
+	GridWidget *rw;
 
 	NOT(cmd);
 	NOT(gg);
@@ -232,9 +232,9 @@ void rackWidgetControls(struct Cmd *cmd, struct GameGUI *gg, struct Controls *c)
 	}
 }
 
-void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm, struct Board *b)
+void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 {
-	struct Coor idx;
+	Coor idx;
 
 	NOT(bw);
 	NOT(tm);
@@ -285,9 +285,9 @@ void updateBoardWidget(struct GridWidget *bw, struct TransMove *tm, struct Board
 	}
 }
 
-void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
+void updateRackWidget(GridWidget *rw, TransMove *tm)
 {
-	struct Coor idx;
+	Coor idx;
 	TileType tt;
 
 	NOT(rw);
@@ -325,7 +325,7 @@ void updateRackWidget(struct GridWidget *rw, struct TransMove *tm)
 	}
 }
 
-void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
+void updateChoiceWidget(GridWidget *cw, TransMove *tm)
 {
 	NOT(cw);
 	NOT(tm);
@@ -364,9 +364,9 @@ void updateChoiceWidget(struct GridWidget *cw, struct TransMove *tm)
 
 }
 
-void updateGameGUI(struct GameGUI *gg, struct Cmd *c, TransMoveType tmt)
+void updateGameGUIViaCmd(GameGUI *gg, Cmd *c, TransMoveType tmt)
 {
-	struct GridWidget *rw, *bw, *cw;
+	GridWidget *rw, *bw, *cw;
 
 	NOT(gg);
 	NOT(c);
@@ -445,11 +445,11 @@ void updateGameGUI(struct GameGUI *gg, struct Cmd *c, TransMoveType tmt)
 	}
 }
 
-void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, struct Board *b, struct TransMove *tm, struct Coor pos, struct Coor dim)
+void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm, Coor pos, Coor dim)
 {
-	struct Tile *t;
-	struct SDL_Surface *ts;
-	struct Coor idx;
+	Tile *t;
+	SDL_Surface *ts;
+	Coor idx;
 	int i;
 
 	NOT(io);
@@ -490,10 +490,10 @@ void boardWidgetDraw(struct IO *io, struct GridWidget *bw, struct Player *p, str
 	}
 }
 
-void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, struct Coor pos, struct Coor dim, struct Player *p)
+void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, Player *p)
 {
 	int i, offset;
-	struct Tile *t;
+	Tile *t;
 	TileType tt;
 	SDL_Surface *s;
 
@@ -559,7 +559,7 @@ void rackWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *rw, 
 	}
 }
 
-void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw, struct Coor pos, struct Coor dim)
+void choiceWidgetDraw(IO *io, TransMove *tm, GridWidget *cw, Coor pos, Coor dim)
 {
 	bool mode, recall, play, shuffle;
 	ModeType type;
@@ -606,7 +606,7 @@ void choiceWidgetDraw(struct IO *io, struct TransMove *tm, struct GridWidget *cw
 	surfaceDraw(io->screen, shuffle ? io->shuffle : io->shuffleDisable, 147, 220);
 }
 
-void gridWidgetDraw(SDL_Surface *s, struct GridWidget *gw, struct Coor pos, struct Coor dim)
+void gridWidgetDraw(SDL_Surface *s, GridWidget *gw, Coor pos, Coor dim)
 {
 	int y, x;
 	SDL_Rect clip;

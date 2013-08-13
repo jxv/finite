@@ -257,10 +257,12 @@ typedef enum
 	GUI_FOCUS_COUNT
 } GUIFocusType;
 
-typedef struct Menu
+typedef struct MetaMenu
 {
-	MenuFocusType focus;
-} Menu;
+	int focus;
+	int max;
+	int init;
+} MetaMenu;
 
 typedef struct GameGUI
 {
@@ -272,35 +274,13 @@ typedef struct GameGUI
 	YesNoType validPlay;
 } GameGUI;
 
-typedef struct GameMenu
-{
-	GameMenuFocusType focus;
-	int idx;
-} GameMenu;
-
-typedef struct PlayMenu
-{
-	PlayMenuFocusType focus;
-} PlayMenu;
-
 typedef struct Settings 
 {
-	SettingsFocusType focus;
+	MetaMenu menu;
 	int sfxVolume;
 	int musVolume;
 	GUIFocusType previous;
 } Settings;
-
-typedef struct GUI
-{
-	GUIFocusType focus;
-	Menu menu;
-	GameGUI gameGui;
-	GameMenu gameMenu;
-	PlayMenu playMenu;
-	Settings settings;
-	YesNoType gameAreYouSureQuit;
-} GUI;
 
 typedef struct MoveModePlace
 {
@@ -326,13 +306,25 @@ typedef struct TransMove
 	MoveModeDiscard discard;
 } TransMove;
 
+typedef struct GUI
+{
+	GUIFocusType focus;
+	GameGUI gameGui;
+	MetaMenu menu;
+	MetaMenu gameMenu;
+	MetaMenu playMenu;
+	Settings settings;
+	MetaMenu gameAreYouSureQuit;
+	TransMove transMove;
+} GUI;
+
+
 typedef struct Env
 {
 	IO io;
 	Game game;
 	Controls controls;
 	GUI gui;
-	TransMove transMove;
 	bool quit;
 } Env;
 

@@ -3,20 +3,20 @@
 
 #include "gui.h"
 
-void mkRackWidget(struct GridWidget *);
-void mkBoardWidget(struct GridWidget *);
-void mkChoiceWidget(struct GridWidget *);
-void boardWidgetControls(struct Cmd *, struct GameGUI *, struct Controls *);
-void choiceWidgetControls(struct Cmd *, struct GameGUI *, struct Controls *);
-void rackWidgetControls(struct Cmd *, struct GameGUI *, struct Controls *);
-void updateBoardWidget(struct GridWidget *, struct TransMove *, struct Board *);
-void updateRackWidget(struct GridWidget *, struct TransMove *);
-void updateChoiceWidget(struct GridWidget *, struct TransMove *);
-void boardWidgetDraw(struct IO *, struct GridWidget *, struct Player *, struct Board *, struct TransMove *, struct Coor, struct Coor);
-void updateGameGUI(struct GameGUI *, struct Cmd *, TransMoveType);
-void rackWidgetDraw(struct IO *, struct TransMove *, struct GridWidget *, struct Coor, struct Coor, struct Player *);
-void choiceWidgetDraw(struct IO *, struct TransMove *, struct GridWidget *, struct Coor, struct Coor);
-void gridWidgetDraw(SDL_Surface *, struct GridWidget *, struct Coor, struct Coor);
+void mkRackWidget(GridWidget *);
+void mkBoardWidget(GridWidget *);
+void mkChoiceWidget(GridWidget *);
+void boardWidgetControls(Cmd *, GameGUI *, Controls *);
+void choiceWidgetControls(Cmd *, GameGUI *, Controls *);
+void rackWidgetControls(Cmd *, GameGUI *, Controls *);
+void updateBoardWidget(GridWidget *, TransMove *, Board *);
+void updateRackWidget(GridWidget *, TransMove *);
+void updateChoiceWidget(GridWidget *, TransMove *);
+void boardWidgetDraw(IO *, GridWidget *, Player *, Board *, TransMove *, Coor, Coor);
+void updateGameGUIViaCmd(GameGUI *, Cmd *, TransMoveType);
+void rackWidgetDraw(IO *, TransMove *, GridWidget *, Coor, Coor, Player *);
+void choiceWidgetDraw(IO *, TransMove *, GridWidget *, Coor, Coor);
+void gridWidgetDraw(SDL_Surface *, GridWidget *, Coor, Coor);
 
 #endif
 

@@ -115,11 +115,11 @@ void initGame1vs1HumanAI(Game *g)
 	initDefaultRule(&g->rule);
 }
 
-void initMenu(Menu *m)
+void initMetaMenu(MetaMenu *m, int focus, int max)
 {
-	NOT(m);
-
-	m->focus = MENU_FOCUS_PLAY;
+	m->init = focus;
+	m->focus = focus;
+	m->max = max;
 }
 
 void initSettings(Settings *s)
@@ -129,13 +129,7 @@ void initSettings(Settings *s)
 	s->sfxVolume = 50;
 	s->musVolume = 100;
 	s->previous = GUI_FOCUS_MENU; 
-}
-
-void initGameMenu(GameMenu *gm)
-{
-	NOT(gm);
-
-	gm->focus = GAME_MENU_FOCUS_RESUME;
+	initMetaMenu(&s->menu, SETTINGS_FOCUS_MUSIC, SETTINGS_FOCUS_COUNT);
 }
 
 void initGameGUI(GameGUI *gg)
@@ -152,11 +146,12 @@ void initGameGUI(GameGUI *gg)
 
 void initGUI(GUI *g)
 {
-	initMenu(&g->menu);
+	initMetaMenu(&g->menu, MENU_FOCUS_PLAY, MENU_FOCUS_COUNT);
+	initMetaMenu(&g->gameMenu, GAME_MENU_FOCUS_RESUME, GAME_MENU_FOCUS_COUNT);
+	initMetaMenu(&g->playMenu, PLAY_MENU_FOCUS_HUMAN_VS_HUMAN, PLAY_MENU_FOCUS_COUNT);
 	initSettings(&g->settings);
-	initGameMenu(&g->gameMenu);
 	initGameGUI(&g->gameGui);
-	g->gameAreYouSureQuit = 0;
+	initMetaMenu(&g->gameAreYouSureQuit, YES, YES_NO_COUNT);
 	g->focus = GUI_FOCUS_TITLE;
 }
 
@@ -475,7 +470,6 @@ bool init(Env *e)
 
 	controlsInit(&e->controls);
 
-	e->transMove.type = TRANS_MOVE_INVALID;
 	initGUI(&e->gui);
 
 	return true;
@@ -1243,59 +1237,82 @@ bool transMoveToMove(Move *m, TransMove *tm)
 	return false;
 }
 
-void quitGame(Env *e)
+void quitGame(GUI *g)
 {
-	NOT(e);
-	
-	e->transMove.type = TRANS_MOVE_QUIT;
-	e->gui.focus = GUI_FOCUS_GAME_GUI;
+	NOT(g);
+
+	g->focus = GUI_FOCUS_GAME_OVER;
+	g->transMove.type = TRANS_MOVE_QUIT;
 }
 
-void updateTitle(Env *e)
+void updateTitle(GUI *g, Controls *c)
 {
-	NOT(e);
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_MENU;
+	NOT(g);
+	NOT(c);
+
+	if (c->start.type == KEY_STATE_PRESSED) {
+		g->focus = GUI_FOCUS_MENU;
 	}
 }
 
-void updateMenu(Env *e)
+bool submitted(Controls *c)
 {
-	NOT(e);
+	return c->a.type == KEY_STATE_PRESSED || c->start.type == KEY_STATE_PRESSED;
+}
 
-	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
-		switch (e->gui.menu.focus) {
-		case MENU_FOCUS_PLAY: {
-			e->gui.focus = GUI_FOCUS_PLAY_MENU;
-			e->gui.playMenu.focus = PLAY_MENU_FOCUS_HUMAN_VS_HUMAN;
-			break;
-		}
-		case MENU_FOCUS_SETTINGS: {
-			e->gui.settings.previous = e->gui.focus;
-			e->gui.focus = GUI_FOCUS_SETTINGS;
-			break;
-		}
-		case MENU_FOCUS_EXIT: {
-			e->quit = true;
-		}
+bool goBack(Controls *c)
+{
+	return c->b.type == KEY_STATE_PRESSED;
+}
+
+void updateMetaMenuFocus(MetaMenu *m, Controls *c)
+{
+	NOT(m);
+	NOT(c);
+
+	if (m->focus < 0 && m->focus >= m->max) {
+		m->focus = m->init;
+	}
+
+	if (c->up.type == KEY_STATE_PRESSED) {
+		m->focus += m->max;
+		m->focus--;
+		m->focus %= m->max;
+		return;
+	}
+	if (c->down.type == KEY_STATE_PRESSED) {
+		m->focus++;
+		m->focus %= m->max;
+	}
+}
+
+bool updateMenu(GUI *g, Controls *c)
+{
+
+	MetaMenu *m;
+
+	NOT(g);
+	NOT(c);
+
+	m = &g->menu;
+
+	updateMetaMenuFocus(m, c);
+
+
+
+	if (submitted(c)) {
+		switch (m->focus) {
+		case MENU_FOCUS_PLAY: g->focus = GUI_FOCUS_PLAY_MENU; break;
+		case MENU_FOCUS_SETTINGS: g->focus = GUI_FOCUS_SETTINGS; break;
+		case MENU_FOCUS_EXIT: return true;
 		default: break;
 		}
-		return;
-	} 
-	if (e->controls.b.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_TITLE;
-		return;
+
 	}
-	if (e->controls.up.type == KEY_STATE_PRESSED) {
-		e->gui.menu.focus += MENU_FOCUS_COUNT;
-		e->gui.menu.focus--;
-		e->gui.menu.focus %= MENU_FOCUS_COUNT;
-		return;
+	if (goBack(c)) {
+		g->focus = GUI_FOCUS_TITLE;
 	}
-	if (e->controls.down.type == KEY_STATE_PRESSED) {
-		e->gui.menu.focus++;
-		e->gui.menu.focus %= MENU_FOCUS_COUNT;
-	}
+	return false;
 }
 
 int updateVolumes(int curVol, Controls *c)
@@ -1307,96 +1324,89 @@ int updateVolumes(int curVol, Controls *c)
 	newVol = curVol;
 	
 	if (c->left.type == KEY_STATE_PRESSED) {
-		newVol -= curVol <= 0 ? curVol : 10;
+		newVol -= curVol <= 0 ? curVol : 1;
 	} 
 	if (c->right.type == KEY_STATE_PRESSED) {
-		newVol += curVol >= 100 ? 100 - curVol : 10;
+		newVol += curVol >= 11 ? 11 - curVol : 1;
 	}
 	return newVol;
 }
 
-void updateSettings(Env *e)
+void updateSettings(GUI *g, Controls *c)
 {
-	NOT(e);
+	Settings *s;
+
+	NOT(g);
+	NOT(c);
+
+	s = &g->settings;
 	
-	if (e->controls.start.type == KEY_STATE_PRESSED
-			|| e->controls.b.type == KEY_STATE_PRESSED) {
-		e->gui.focus = e->gui.settings.previous;
+	updateMetaMenuFocus(&s->menu, c);
+	
+	if (submitted(c) || goBack(c)) {
+		g->focus = s->previous;
 		return;
 	}
-	if (e->controls.up.type == KEY_STATE_PRESSED) {
-		e->gui.settings.focus += SETTINGS_FOCUS_COUNT;
-		e->gui.settings.focus--;
-		e->gui.settings.focus %= SETTINGS_FOCUS_COUNT;
-		return;
-	}
-	if (e->controls.down.type == KEY_STATE_PRESSED) {
-		e->gui.settings.focus++;
-		e->gui.settings.focus %= SETTINGS_FOCUS_COUNT;
-	}
 	
-	switch (e->gui.settings.focus) {
-	case SETTINGS_FOCUS_MUSIC: {
-		e->gui.settings.musVolume = updateVolumes(e->gui.settings.musVolume, &e->controls);
-		break;
-	}
-	case SETTINGS_FOCUS_SFX: {
-		e->gui.settings.sfxVolume = updateVolumes(e->gui.settings.sfxVolume, &e->controls);
-		break;
-	}
+	switch (s->menu.focus) {
+	case SETTINGS_FOCUS_MUSIC: s->musVolume = updateVolumes(s->musVolume, c); break;
+	case SETTINGS_FOCUS_SFX: s->sfxVolume = updateVolumes(s->sfxVolume, c); break;
 	default: break;
 	}
 }
 
-void resetNewGameGui(Env *e)
+void updateGameGUIWidgets(GameGUI *gg, TransMove *tm, Board *b)
+{
+	updateBoardWidget(&gg->boardWidget, tm, b); 
+	updateChoiceWidget(&gg->choiceWidget, tm);
+	updateRackWidget(&gg->rackWidget, tm);
+}
+
+void resetNewGameGui(GUI *g, Game *gm)
 {
 	Cmd c;
 
-	NOT(e);
+	NOT(g);
+	NOT(gm);
 
-	e->gui.focus = GUI_FOCUS_GAME_GUI;
-	e->gui.gameAreYouSureQuit = YES;
-	clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
+	g->focus = GUI_FOCUS_GAME_GUI;
+	clrTransMove(&g->transMove, gm->turn, &gm->player[gm->turn], &gm->board);
 	c.type = CMD_INVALID;
-	updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
-	updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-	updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-	updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	updateTransMove(&g->transMove, &c, &gm->board, &gm->player[gm->turn]);
+	updateGameGUIWidgets(&g->gameGui, &g->transMove, &gm->board);
 }
 
-void updatePlayMenu(Env *e)
+void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 {
-	NOT(e);
+	MetaMenu *m;
+
+	NOT(g);
+	NOT(c);
+	NOT(gm);
+
+	m = &g->playMenu;
 	
-	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
-		switch (e->gui.playMenu.focus) {
+	updateMetaMenuFocus(m, c);
+
+	if (goBack(c)) {
+		g->focus = GUI_FOCUS_MENU;
+		return;
+	}
+
+	if (submitted(c)) {
+		switch (m->focus) {
 		case PLAY_MENU_FOCUS_HUMAN_VS_HUMAN: {
-			initGame1vs1Human(&e->game);
-			resetNewGameGui(e);
-			e->gui.focus = GUI_FOCUS_GAME_GUI;
+			initGame1vs1Human(gm);
+			resetNewGameGui(g, gm);
 			break;
 		}
 		case PLAY_MENU_FOCUS_HUMAN_VS_AI: {
-			initGame1vs1HumanAI(&e->game);
-			resetNewGameGui(e);
+			initGame1vs1HumanAI(gm);
+			resetNewGameGui(g, gm);
 			break;
 		}
 		default: break;
 		}
-	}
-	if (e->controls.b.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_MENU;
-		return;
-	}
-	if (e->controls.up.type == KEY_STATE_PRESSED) {
-		e->gui.playMenu.focus += PLAY_MENU_FOCUS_COUNT;
-		e->gui.playMenu.focus--;
-		e->gui.playMenu.focus %= PLAY_MENU_FOCUS_COUNT;
-		return;
-	}
-	if (e->controls.down.type == KEY_STATE_PRESSED) {
-		e->gui.playMenu.focus++;
-		e->gui.playMenu.focus %= PLAY_MENU_FOCUS_COUNT;
 	}
 }
 
@@ -1413,220 +1423,207 @@ GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)
 	return GUI_FOCUS_GAME_GUI;
 }
 
-void updateGameGui(Env *e)
+void updateGameGUI(GUI *g, Controls *c, Game *gm)
 {
-	Cmd c;
+	Cmd cmd;
 	Move m;
 	Action a;
 	Log l;
+	GameGUI *gg;
+	TransMove *tm;
 	
-	NOT(e);
+	NOT(g);
+	NOT(c);
+	NOT(gm);
 
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_MENU;
+	gg = &g->gameGui;
+	tm = &g->transMove;
+
+	if (c->start.type == KEY_STATE_PRESSED) {
+		g->focus = GUI_FOCUS_GAME_MENU;
 		return;
 	}
 	
-	if (e->transMove.type == TRANS_MOVE_INVALID) {
-		clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
-		c.type = CMD_INVALID;
-		updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn]);
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+	if (tm->type == TRANS_MOVE_INVALID) {
+		resetNewGameGui(g, gm);
 	}
 	
-	switch (e->gui.gameGui.focus) {
-	case GAME_GUI_FOCUS_BOARD: boardWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GAME_GUI_FOCUS_CHOICE: choiceWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
-	case GAME_GUI_FOCUS_RACK: rackWidgetControls(&c, &e->gui.gameGui, &e->controls); break;
+	switch (gg->focus) {
+	case GAME_GUI_FOCUS_BOARD: boardWidgetControls(&cmd, gg, c); break;
+	case GAME_GUI_FOCUS_CHOICE: choiceWidgetControls(&cmd, gg, c); break;
+	case GAME_GUI_FOCUS_RACK: rackWidgetControls(&cmd, gg, c); break;
 	default: break;
 	}
-	updateGameGUI(&e->gui.gameGui, &c, e->transMove.type);
+	updateGameGUIViaCmd(gg, &cmd, tm->type);
 	
-	switch (c.type) {
+	switch (cmd.type) {
 	case CMD_FOCUS_TOP: {
-		TransMove *tm;
-		tm = &e->transMove;
-		if (		tm->type == TRANS_MOVE_PLACE ||
-				tm->type == TRANS_MOVE_PLACE_WILD ||
-				tm->type == TRANS_MOVE_PLACE_END ||
-				tm->type == TRANS_MOVE_PLACE_PLAY) {
-			e->gui.gameGui.focus = GAME_GUI_FOCUS_BOARD;
+		if (tm->type == TRANS_MOVE_PLACE ||
+		    tm->type == TRANS_MOVE_PLACE_WILD ||
+		    tm->type == TRANS_MOVE_PLACE_END ||
+		    tm->type == TRANS_MOVE_PLACE_PLAY) {
+			gg->focus = GAME_GUI_FOCUS_BOARD;
 		}
 		break;
 	}
 	case CMD_FOCUS_BOTTOM: {
-		if (e->gui.gameGui.bottomLast != GAME_GUI_FOCUS_CHOICE) {
-			e->gui.gameGui.focus = GAME_GUI_FOCUS_RACK;
-		} else {
-			e->gui.gameGui.focus = GAME_GUI_FOCUS_CHOICE;
-		}
+		gg->focus = gg->bottomLast != GAME_GUI_FOCUS_CHOICE 
+			? GAME_GUI_FOCUS_RACK
+			: GAME_GUI_FOCUS_CHOICE;
 		break;
 	}
 	case CMD_BOARD: {
-		e->gui.gameGui.focus = GAME_GUI_FOCUS_BOARD;
-		e->gui.gameGui.boardWidget.index = c.data.board;
+		gg->focus = GAME_GUI_FOCUS_BOARD;
+		gg->boardWidget.index = cmd.data.board;
 		break;
 	}
 	case CMD_RACK: {
-		if (e->transMove.type == TRANS_MOVE_SKIP) {
+		if (tm->type == TRANS_MOVE_SKIP) {
 			break;
 		}
-		e->gui.gameGui.focus = GAME_GUI_FOCUS_RACK;
-		e->gui.gameGui.rackWidget.index.x = c.data.rack;
-		e->gui.gameGui.rackWidget.index.y = 0;
+		gg->focus = GAME_GUI_FOCUS_RACK;
+		gg->rackWidget.index.x = cmd.data.rack;
+		gg->rackWidget.index.y = 0;
 		break;
 	}
 	case CMD_CHOICE: {
-		e->gui.gameGui.focus = GAME_GUI_FOCUS_CHOICE;
-		e->gui.gameGui.choiceWidget.index.x = c.data.choice;
-		e->gui.gameGui.choiceWidget.index.y = 0;
+		gg->focus = GAME_GUI_FOCUS_CHOICE;
+		gg->choiceWidget.index.x = cmd.data.choice;
+		gg->choiceWidget.index.y = 0;
 		break;
 	}
 	default: break;
 	}
-	if (e->gui.gameGui.focus != GAME_GUI_FOCUS_BOARD) {
-		
-		e->gui.gameGui.bottomLast = e->gui.gameGui.focus;
+
+	if (gg->focus != GAME_GUI_FOCUS_BOARD) {
+		gg->bottomLast = gg->focus;
 	}
 
 	/* printCmd(&c); */
 
-	if (updateTransMove(&e->transMove, &c, &e->game.board, &e->game.player[e->game.turn])) {
+	if (updateTransMove(tm, &cmd, &gm->board, &gm->player[gm->turn])) {
 		/* printTransMove(&e->transMove); */
-		updateBoardWidget(&e->gui.gameGui.boardWidget, &e->transMove, &e->game.board); 
-		updateChoiceWidget(&e->gui.gameGui.choiceWidget, &e->transMove);
-		updateRackWidget(&e->gui.gameGui.rackWidget, &e->transMove);
+		updateBoardWidget(&gg->boardWidget, tm, &gm->board); 
+		updateChoiceWidget(&gg->choiceWidget, tm);
+		updateRackWidget(&gg->rackWidget, tm);
 	}
 
-	transMoveToMove(&m, &e->transMove);
+	transMoveToMove(&m, tm);
 
-	mkAction(&a, &e->game, &m);
-	applyAction(&e->game, &a);
+	mkAction(&a, gm, &m);
+	applyAction(gm, &a);
 
-	if (c.type == CMD_PLAY || c.type == CMD_QUIT) {
+	if (cmd.type == CMD_PLAY || cmd.type == CMD_QUIT) {
 		mkLog(&a, &l);
 		/* printLog(&l); */
 	}
 
 	if (a.type != ACTION_INVALID) {
-		applyAdjust(&e->game.player[a.playerIdx], &e->transMove.adjust);
-		if (endGame(&e->game)) {
-			e->gui.focus = GUI_FOCUS_GAME_OVER;
+		applyAdjust(&gm->player[a.playerIdx], &tm->adjust);
+		if (endGame(gm)) {
+			g->focus = GUI_FOCUS_GAME_OVER;
 		} else {
-			nextTurn(&e->game);
-			clrTransMove(&e->transMove, e->game.turn, &e->game.player[e->game.turn], &e->game.board);
-			e->gui.focus = nextGUIFocusByPlayerType(e->game.player[e->game.turn].type);
+			nextTurn(gm);
+			clrTransMove(tm, gm->turn, &gm->player[gm->turn], &gm->board);
+			g->focus = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 		}
-		e->transMove.type = TRANS_MOVE_INVALID;
+		tm->type = TRANS_MOVE_INVALID;
 	} else {
 		if (m.type != MOVE_INVALID) {
 			/* printActionErr(a.type); */
 		}
 	} 
 
-	if (c.type == CMD_PLAY) {
-		e->gui.gameGui.validPlay = a.type != ACTION_INVALID ? YES : NO;
+	if (cmd.type == CMD_PLAY) {
+		gg->validPlay = a.type != ACTION_INVALID ? YES : NO;
 	} else {
-		e->gui.gameGui.validPlay = YES_NO_INVALID;
+		gg->validPlay = YES_NO_INVALID;
 	}
 }
 
-void updateGameMenu(Env *e)
+void updateGameMenu(GUI *g, Controls *c)
 {
-	NOT(e);
-	
-	if (e->controls.start.type == KEY_STATE_PRESSED || e->controls.a.type == KEY_STATE_PRESSED) {
-		switch (e->gui.gameMenu.focus) {
+	MetaMenu *m;
+
+	NOT(g);
+	NOT(c);
+
+	m = &g->gameMenu;
+
+	updateMetaMenuFocus(m, c);
+
+	if (submitted(c)) {
+		switch (m->focus) {
 		case GAME_MENU_FOCUS_RESUME: {
-			e->gui.focus = GUI_FOCUS_GAME_GUI;
+			g->focus = GUI_FOCUS_GAME_GUI;
 			break;
 		}
 		case GAME_MENU_FOCUS_SETTINGS: {
-			e->gui.settings.previous = e->gui.focus;
-			e->gui.focus = GUI_FOCUS_SETTINGS;
+			g->settings.previous = g->focus;
+			g->focus = GUI_FOCUS_SETTINGS;
 			break;
 		}
 		case GAME_MENU_FOCUS_QUIT: {
-			e->gui.focus = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
+			g->focus = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
 			break;
 		}
 		default: break;
 		}
 		return;
 	}
-	if (e->controls.up.type == KEY_STATE_PRESSED) {
-		e->gui.gameMenu.focus += GAME_MENU_FOCUS_COUNT;
-		e->gui.gameMenu.focus--;
-		e->gui.gameMenu.focus %= GAME_MENU_FOCUS_COUNT;
-		return;
-	}
-	if (e->controls.down.type == KEY_STATE_PRESSED) {
-		e->gui.gameMenu.focus++;
-		e->gui.gameMenu.focus %= GAME_MENU_FOCUS_COUNT;
-	}
 }
 
-void updateGameHotseatPause(Env *e)
+void updateGameHotseatPause(GUI *g, Controls *c)
 {
-	NOT(e);
+	NOT(g);
+	NOT(c);
 
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_GUI;
+	if (submitted(c)) {
+		g->focus = GUI_FOCUS_GAME_GUI;
 	}
 }
 
-void updateGameAIPause(Env *e)
+void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 {
 	Move m;
 	Action a;
 
-	NOT(e);
+	NOT(g);
+	NOT(c);
+	NOT(gm);
 	
-	aiFindMove(&m, e->game.turn, &e->game, NULL);
-	mkAction(&a, &e->game, &m);
-	applyAction(&e->game, &a);
-	nextTurn(&e->game);
-	e->gui.focus = nextGUIFocusByPlayerType(e->game.player[e->game.turn].type);
+	aiFindMove(&m, gm->turn, gm, NULL);
+	mkAction(&a, gm, &m);
+	applyAction(gm, &a);
+	nextTurn(gm);
+	g->focus = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 }
 
-void updateGameAreYouSureQuit(Env *e)
+void updateGameAreYouSureQuit(GUI *g, Controls *c)
 {
-	NOT(e);
+	NOT(g);
+	NOT(c);
 
-	if (e->controls.down.type == KEY_STATE_PRESSED) {
-		e->gui.gameAreYouSureQuit++;
-		e->gui.gameAreYouSureQuit %= YES_NO_COUNT;
+	updateMetaMenuFocus(&g->gameAreYouSureQuit, c);
+	
+	if (submitted(c)) {
+		g->focus = g->gameAreYouSureQuit.focus == YES
+				? GUI_FOCUS_GAME_OVER
+				: GUI_FOCUS_GAME_MENU;
 		return;
 	}
-	if (e->controls.up.type == KEY_STATE_PRESSED) {
-		e->gui.gameAreYouSureQuit += YES_NO_COUNT;
-		e->gui.gameAreYouSureQuit--;
-		e->gui.gameAreYouSureQuit %= YES_NO_COUNT;
-		return;
-	}
-	if (e->controls.a.type == KEY_STATE_PRESSED || e->controls.start.type == KEY_STATE_PRESSED) {
-		if (e->gui.gameAreYouSureQuit == YES) {
-			quitGame(e);
-		} else {
-			e->gui.focus = GUI_FOCUS_GAME_MENU;
-		}
-		return;
-	}
-	if (e->controls.b.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_GAME_MENU;
-		return;
+	if (goBack(c)) {
+		g->focus = GUI_FOCUS_GAME_MENU;
 	}
 }
 
-void updateGameOver(Env *e)
+void updateGameOver(GUI *g, Controls *c)
 {
-	NOT(e);
-	
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
-		e->gui.focus = GUI_FOCUS_TITLE;
-		return;
+	NOT(g);
+	NOT(c);
+		
+	if (c->start.type == KEY_STATE_PRESSED) {
+		g->focus = GUI_FOCUS_TITLE;
 	}
 }
 
@@ -1635,16 +1632,16 @@ void update(Env *e)
 	NOT(e);
 
 	switch (e->gui.focus) {
-	case GUI_FOCUS_TITLE: updateTitle(e); break;
-	case GUI_FOCUS_MENU: updateMenu(e); break;
-	case GUI_FOCUS_SETTINGS: updateSettings(e); break;
-	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(e); break;
-	case GUI_FOCUS_GAME_GUI: updateGameGui(e); break;
-	case GUI_FOCUS_GAME_MENU: updateGameMenu(e); break;
-	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(e); break;
-	case GUI_FOCUS_GAME_AI_PAUSE: updateGameAIPause(e); break;
-	case GUI_FOCUS_GAME_OVER: updateGameOver(e); break;
-	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(e); break;
+	case GUI_FOCUS_TITLE: updateTitle(&e->gui, &e->controls); break;
+	case GUI_FOCUS_MENU: e->quit = updateMenu(&e->gui, &e->controls); break;
+	case GUI_FOCUS_SETTINGS: updateSettings(&e->gui, &e->controls); break;
+	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
+	case GUI_FOCUS_GAME_GUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
+	case GUI_FOCUS_GAME_MENU: updateGameMenu(&e->gui, &e->controls); break;
+	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(&e->gui, &e->controls); break;
+	case GUI_FOCUS_GAME_AI_PAUSE: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
+	case GUI_FOCUS_GAME_OVER: updateGameOver(&e->gui, &e->controls); break;
+	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(&e->gui, &e->controls); break;
 	default: break;
 	}
 	e->io.time += 1.0f / ((float)(FPS));
@@ -1812,14 +1809,14 @@ void drawGameAreYouSureQuit(Env *e)
 	drawScrollingBackground(e);
 	
 	surfaceDraw(e->io.screen, e->io.back, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
 	SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 	SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 218);
 	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX - e->io.whiteFont.width * 11, orgY - e->io.whiteFont.height);
 	for (i = 0; i < YES_NO_COUNT; i++) {
 		surfaceDraw(e->io.screen,
-				e->gui.gameAreYouSureQuit == i ? e->io.yesNo[i].highlight : e->io.yesNo[i].normal,
+				e->gui.gameAreYouSureQuit.focus == i ? e->io.yesNo[i].highlight : e->io.yesNo[i].normal,
 				orgX, orgY + i * e->io.whiteFont.height);
 	}
 }
@@ -1934,7 +1931,7 @@ void draw(Env *e)
 
 		for (i = 0; i < SETTINGS_FOCUS_COUNT; i++) {
 			SDL_Surface *s;
-			s = i == e->gui.settings.focus ? e->io.settingsFocus[i].highlight : e->io.settingsFocus[i].normal;
+			s = i == e->gui.settings.menu.focus ? e->io.settingsFocus[i].highlight : e->io.settingsFocus[i].normal;
 			surfaceDraw(e->io.screen, s, 100 + e->io.settingsFocus[i].offset, i * e->io.whiteFont.height * 2 + 100);
 		}
 		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
@@ -1944,7 +1941,7 @@ void draw(Env *e)
 
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
 		drawScoreBoard(e);
 		break;
 	}
@@ -1952,7 +1949,7 @@ void draw(Env *e)
 		int i;
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDraw(&e->io, &e->gui, &e->game, &e->transMove); 
+		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
@@ -1976,7 +1973,7 @@ void draw(Env *e)
 	case GUI_FOCUS_GAME_AI_PAUSE: {
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
 		drawScoreBoard(e);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
@@ -1986,7 +1983,7 @@ void draw(Env *e)
 	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: {
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
 		drawScoreBoard(e);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
@@ -1997,7 +1994,7 @@ void draw(Env *e)
 	case GUI_FOCUS_GAME_OVER: {
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->transMove);
+		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
 		drawScoreBoard(e);
 		break;
 	}
