@@ -291,6 +291,9 @@ bool init(Env *e)
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
 	}
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1) {
+		return false;
+	}
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("finite", NULL);
 	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE)) == NULL) {
@@ -446,12 +449,27 @@ bool init(Env *e)
 		return false;
 	}
 
+	{
+		char *text[SETTINGS_FOCUS_COUNT] = {"Music:", "SFX:"};
+		mkHighTexts(e->io.settingsFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, SETTINGS_FOCUS_COUNT);
+	}
+	if (!areHighTextsLoaded(e->io.settingsFocus, SETTINGS_FOCUS_COUNT)) {
+		return false;
+	}
+
 	e->io.areYouSureQuit = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Are you sure?");
 	{
 		char *text[GAME_MENU_FOCUS_COUNT] = {"Yes", "No"};
 		mkHighTexts(e->io.yesNo, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, YES_NO_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.yesNo, YES_NO_COUNT)) {
+		return false;
+	}
+
+	if (!(e->io.incorrectSnd = Mix_LoadWAV(RES_PATH "incorrect_snd.wav"))) {
+		return false;
+	}
+	if (!(e->io.correctSnd = Mix_LoadWAV(RES_PATH "correct_snd.wav"))) {
 		return false;
 	}
 
@@ -512,6 +530,7 @@ void quit(Env *e)
 	fontmapQuit(&e->io.blackFont);
 	fontmapQuit(&e->io.yellowFont);
 	fontmapQuit(&e->io.darkRedFont);
+	Mix_CloseAudio();
 	SDL_Quit();
 }
 
@@ -1279,12 +1298,53 @@ void updateMenu(Env *e)
 	}
 }
 
+int updateVolumes(int curVol, Controls *c)
+{
+	int newVol;
+
+	NOT(c);
+
+	newVol = curVol;
+	
+	if (c->left.type == KEY_STATE_PRESSED) {
+		newVol -= curVol <= 0 ? curVol : 10;
+	} 
+	if (c->right.type == KEY_STATE_PRESSED) {
+		newVol += curVol >= 100 ? 100 - curVol : 10;
+	}
+	return newVol;
+}
+
 void updateSettings(Env *e)
 {
 	NOT(e);
 	
-	if (e->controls.start.type == KEY_STATE_PRESSED) {
+	if (e->controls.start.type == KEY_STATE_PRESSED
+			|| e->controls.b.type == KEY_STATE_PRESSED) {
 		e->gui.focus = e->gui.settings.previous;
+		return;
+	}
+	if (e->controls.up.type == KEY_STATE_PRESSED) {
+		e->gui.settings.focus += SETTINGS_FOCUS_COUNT;
+		e->gui.settings.focus--;
+		e->gui.settings.focus %= SETTINGS_FOCUS_COUNT;
+		return;
+	}
+	if (e->controls.down.type == KEY_STATE_PRESSED) {
+		e->gui.settings.focus++;
+		e->gui.settings.focus %= SETTINGS_FOCUS_COUNT;
+	}
+	
+	switch (e->gui.settings.focus) {
+	case SETTINGS_FOCUS_MUSIC: {
+		e->gui.settings.musVolume = updateVolumes(e->gui.settings.musVolume, &e->controls);
+		break;
+	}
+	case SETTINGS_FOCUS_SFX: {
+		e->gui.settings.sfxVolume = updateVolumes(e->gui.settings.sfxVolume, &e->controls);
+		break;
+	}
+	default: break;
 	}
 }
 
@@ -1465,6 +1525,12 @@ void updateGameGui(Env *e)
 			/* printActionErr(a.type); */
 		}
 	} 
+
+	if (c.type == CMD_PLAY) {
+		e->gui.gameGui.validPlay = a.type != ACTION_INVALID ? YES : NO;
+	} else {
+		e->gui.gameGui.validPlay = YES_NO_INVALID;
+	}
 }
 
 void updateGameMenu(Env *e)
@@ -1809,6 +1875,23 @@ void drawScoreBoard(Env *e)
 	}
 }
 
+void audi(Env *e)
+{
+	NOT(e);
+	
+	switch (e->gui.focus) {
+	case GUI_FOCUS_GAME_GUI: {
+		switch (e->gui.gameGui.validPlay) {
+		case YES: Mix_PlayChannel(-1, e->io.correctSnd, 0); break;
+		case NO: Mix_PlayChannel(-1, e->io.incorrectSnd, 0); break;
+		default: break;
+		}
+		break;
+	}
+	default: break;
+	}
+}
+
 void draw(Env *e)
 {
 	NOT(e);
@@ -1835,18 +1918,26 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_SETTINGS: {
+		int i;
 		SDL_Rect rect;
 		rect.h = 10;
 		rect.x = (320-100)/2 + 50;
 		drawScrollingBackground(e);
 		
 		rect.y = 100;
-		rect.w = e->gui.settings.sfxVolume;
-		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xff, 0xff, 0xff));
+		rect.w = e->gui.settings.musVolume;
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xe0, 0xd0, 0xa0));
 		
 		rect.y += 25;
-		rect.w = e->gui.settings.musVolume;
-		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xff, 0xff, 0xff));
+		rect.w = e->gui.settings.sfxVolume;
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xe0, 0xd0, 0xa0));
+
+		for (i = 0; i < SETTINGS_FOCUS_COUNT; i++) {
+			SDL_Surface *s;
+			s = i == e->gui.settings.focus ? e->io.settingsFocus[i].highlight : e->io.settingsFocus[i].normal;
+			surfaceDraw(e->io.screen, s, 100 + e->io.settingsFocus[i].offset, i * e->io.whiteFont.height * 2 + 100);
+		}
+		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
 		break;
 	}
 	case GUI_FOCUS_GAME_GUI: {
@@ -1931,6 +2022,7 @@ void exec(Env *e)
 		q = handleEvent(&e->controls);
 		update(e);
 		draw(e);
+		audi(e);
 		delay(st, SDL_GetTicks(), FPS);
 	} while (!e->quit && !q);
 }

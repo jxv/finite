@@ -24,6 +24,7 @@ LIB=-lm
 LIB=-lpthread
 LIB+=$(shell sdl-config --libs)
 LIB+=-lSDL_image
+LIB+=-lSDL_mixer
 LIB+=-lopk
 
 OBJ:=$(SRC:.c=.o)

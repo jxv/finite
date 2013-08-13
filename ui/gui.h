@@ -10,6 +10,7 @@
 
 typedef enum
 {
+	YES_NO_INVALID = -1,
 	YES = 0,
 	NO = 1,
 	YES_NO_COUNT
@@ -120,6 +121,14 @@ typedef enum
 
 typedef enum
 {
+	SETTINGS_FOCUS_INVALID = -1,
+	SETTINGS_FOCUS_MUSIC,
+	SETTINGS_FOCUS_SFX,
+	SETTINGS_FOCUS_COUNT
+} SettingsFocusType;
+
+typedef enum
+{
 	PLAY_MENU_FOCUS_INVALID = -1,
 	PLAY_MENU_FOCUS_HUMAN_VS_HUMAN = 0,
 	PLAY_MENU_FOCUS_HUMAN_VS_AI,
@@ -175,10 +184,13 @@ typedef struct IO
 	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
+	HighText settingsFocus[SETTINGS_FOCUS_COUNT];
 	Font whiteFont;
 	Font blackFont;
 	Font yellowFont;
 	Font darkRedFont;
+	Mix_Chunk *incorrectSnd;
+	Mix_Chunk *correctSnd;
 } IO;
 
 typedef struct KeyState
@@ -257,6 +269,7 @@ typedef struct GameGUI
 	GridWidget rackWidget;
 	GridWidget boardWidget;
 	GridWidget choiceWidget;
+	YesNoType validPlay;
 } GameGUI;
 
 typedef struct GameMenu
@@ -272,6 +285,7 @@ typedef struct PlayMenu
 
 typedef struct Settings 
 {
+	SettingsFocusType focus;
 	int sfxVolume;
 	int musVolume;
 	GUIFocusType previous;
