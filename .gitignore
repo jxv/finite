@@ -1,4 +1,6 @@
+build/*
 .*
 *.o
 finite
+finite.opk
 res/finite_logo.png

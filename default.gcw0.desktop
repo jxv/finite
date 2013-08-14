@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Finite
+Comment=Save the world forever
+Exec=finite
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=icon
+Categories=games;
+
