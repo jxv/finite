@@ -154,6 +154,7 @@ void initGUI(GUI *g)
 	initGameGUI(&g->gameGui);
 	initMenuWidget(&g->gameAreYouSureQuit, YES, YES_NO_COUNT);
 	g->focus = GUI_FOCUS_TITLE;
+	g->next = GUI_FOCUS_TITLE;
 }
 
 SDL_Surface *createText(Font *f, char *str)
@@ -1352,7 +1353,7 @@ void quitGame(GUI *g)
 {
 	NOT(g);
 
-	g->focus = GUI_FOCUS_GAME_OVER;
+	g->next = GUI_FOCUS_GAME_OVER;
 	g->transMove.type = TRANS_MOVE_QUIT;
 }
 
@@ -1362,7 +1363,7 @@ void updateTitle(GUI *g, Controls *c)
 	NOT(c);
 
 	if (c->start.type == KEY_STATE_PRESSED) {
-		g->focus = GUI_FOCUS_MENU;
+		g->next = GUI_FOCUS_MENU;
 	}
 }
 
@@ -1413,15 +1414,15 @@ bool updateMenu(GUI *g, Controls *c)
 
 	if (submitted(c)) {
 		switch (m->focus) {
-		case MENU_FOCUS_PLAY: g->focus = GUI_FOCUS_PLAY_MENU; break;
-		case MENU_FOCUS_SETTINGS: g->focus = GUI_FOCUS_SETTINGS; break;
+		case MENU_FOCUS_PLAY: g->next = GUI_FOCUS_PLAY_MENU; break;
+		case MENU_FOCUS_SETTINGS: g->next = GUI_FOCUS_SETTINGS; break;
 		case MENU_FOCUS_EXIT: return true;
 		default: break;
 		}
 
 	}
 	if (goBack(c)) {
-		g->focus = GUI_FOCUS_TITLE;
+		g->next = GUI_FOCUS_TITLE;
 	}
 	return false;
 }
@@ -1459,7 +1460,7 @@ void updateSettings(GUI *g, Controls *c)
 	updateMenuWidget(&s->menu, c);
 	
 	if (submitted(c) || goBack(c)) {
-		g->focus = s->previous;
+		g->next = s->previous;
 		return;
 	}
 	
@@ -1486,7 +1487,7 @@ void resetNewGameGui(GUI *g, Game *gm)
 	NOT(g);
 	NOT(gm);
 
-	g->focus = GUI_FOCUS_GAME_GUI;
+	g->next = GUI_FOCUS_GAME_GUI;
 	clrTransMove(&g->transMove, gm->turn, &gm->player[gm->turn], &gm->board);
 	c.type = CMD_INVALID;
 	updateTransMove(&g->transMove, &c, &gm->board, &gm->player[gm->turn]);
@@ -1506,7 +1507,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	updateMenuWidget(m, c);
 
 	if (goBack(c)) {
-		g->focus = GUI_FOCUS_MENU;
+		g->next = GUI_FOCUS_MENU;
 		return;
 	}
 
@@ -1557,7 +1558,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	tm = &g->transMove;
 
 	if (c->start.type == KEY_STATE_PRESSED) {
-		g->focus = GUI_FOCUS_GAME_MENU;
+		g->next = GUI_FOCUS_GAME_MENU;
 		return;
 	}
 	
@@ -1638,11 +1639,11 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	if (a.type != ACTION_INVALID) {
 		applyAdjust(&gm->player[a.playerIdx], &tm->adjust);
 		if (endGame(gm)) {
-			g->focus = GUI_FOCUS_GAME_OVER;
+			g->next = GUI_FOCUS_GAME_OVER;
 		} else {
 			nextTurn(gm);
 			clrTransMove(tm, gm->turn, &gm->player[gm->turn], &gm->board);
-			g->focus = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 		}
 		tm->type = TRANS_MOVE_INVALID;
 	} else {
@@ -1672,16 +1673,16 @@ void updateGameMenu(GUI *g, Controls *c)
 	if (submitted(c)) {
 		switch (m->focus) {
 		case GAME_MENU_FOCUS_RESUME: {
-			g->focus = GUI_FOCUS_GAME_GUI;
+			g->next = GUI_FOCUS_GAME_GUI;
 			break;
 		}
 		case GAME_MENU_FOCUS_SETTINGS: {
 			g->settings.previous = g->focus;
-			g->focus = GUI_FOCUS_SETTINGS;
+			g->next = GUI_FOCUS_SETTINGS;
 			break;
 		}
 		case GAME_MENU_FOCUS_QUIT: {
-			g->focus = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
+			g->next = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
 			break;
 		}
 		default: break;
@@ -1696,7 +1697,7 @@ void updateGameHotseatPause(GUI *g, Controls *c)
 	NOT(c);
 
 	if (submitted(c)) {
-		g->focus = GUI_FOCUS_GAME_GUI;
+		g->next = GUI_FOCUS_GAME_GUI;
 	}
 }
 
@@ -1713,7 +1714,7 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 	mkAction(&a, gm, &m);
 	applyAction(gm, &a);
 	nextTurn(gm);
-	g->focus = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+	g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 }
 
 void updateGameAreYouSureQuit(GUI *g, Controls *c)
@@ -1724,13 +1725,13 @@ void updateGameAreYouSureQuit(GUI *g, Controls *c)
 	updateMenuWidget(&g->gameAreYouSureQuit, c);
 	
 	if (submitted(c)) {
-		g->focus = g->gameAreYouSureQuit.focus == YES
+		g->next = g->gameAreYouSureQuit.focus == YES
 				? GUI_FOCUS_GAME_OVER
 				: GUI_FOCUS_GAME_MENU;
 		return;
 	}
 	if (goBack(c)) {
-		g->focus = GUI_FOCUS_GAME_MENU;
+		g->next = GUI_FOCUS_GAME_MENU;
 	}
 }
 
@@ -1740,7 +1741,7 @@ void updateGameOver(GUI *g, Controls *c)
 	NOT(c);
 		
 	if (c->start.type == KEY_STATE_PRESSED) {
-		g->focus = GUI_FOCUS_TITLE;
+		g->next = GUI_FOCUS_TITLE;
 	}
 }
 
@@ -1748,6 +1749,7 @@ void update(Env *e)
 {
 	NOT(e);
 
+	e->gui.focus = e->gui.next;
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: updateTitle(&e->gui, &e->controls); break;
 	case GUI_FOCUS_MENU: e->quit = updateMenu(&e->gui, &e->controls); break;

@@ -341,6 +341,7 @@ typedef struct TransMove
 typedef struct GUI
 {
 	GUIFocusType focus;
+	GUIFocusType next;
 	GameGUI gameGui;
 	MenuWidget menu;
 	MenuWidget gameMenu;
