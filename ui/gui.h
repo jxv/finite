@@ -8,6 +8,15 @@
 #define SCREEN_HEIGHT	240
 #define FPS 30
 
+#define MAX_GUI_VOLUME	11
+
+typedef enum
+{
+	AUDIO_CHAN_MUSIC = 0,
+	AUDIO_CHAN_SFX,
+	AUDIO_CHAN_COUNT
+} AudioChanType;
+
 typedef enum
 {
 	YES_NO_INVALID = -1,
@@ -135,10 +144,13 @@ typedef enum
 	PLAY_MENU_FOCUS_COUNT
 } PlayMenuFocusType;
 
+struct MenuWidget;
+
 typedef struct Font
 {
 	int width;
 	int height;
+	int spacing;
 	SDL_Surface *map;
 } Font;
 
@@ -148,6 +160,14 @@ typedef struct HighText
 	SDL_Surface *highlight;
 	int offset;
 } HighText;
+
+typedef struct MenuView
+{
+	Coor pos;
+	Coor spacing;
+	HighText *text;
+	struct MenuWidget *menu;
+} MenuView;
 
 typedef struct IO
 {
@@ -175,20 +195,32 @@ typedef struct IO
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[SQ_COUNT];
-	HighText menuFocus[MENU_FOCUS_COUNT];
-	HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
-	HighText playMenuFocus[PLAY_MENU_FOCUS_COUNT];
 	SDL_Surface *areYouSureQuit;
-	HighText yesNo[YES_NO_COUNT];
 	SDL_Surface *titleScreen;
 	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
+	
+	MenuView menuMT;
+	MenuView gameMT;
+	MenuView playMT;
+	MenuView settingsMT;
+	MenuView yesNoMT;
+	
+	HighText menuFocus[MENU_FOCUS_COUNT];
+	HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
+	HighText playMenuFocus[PLAY_MENU_FOCUS_COUNT];
+	HighText yesNo[YES_NO_COUNT];
 	HighText settingsFocus[SETTINGS_FOCUS_COUNT];
+
 	Font whiteFont;
 	Font blackFont;
 	Font yellowFont;
 	Font darkRedFont;
+
+	Font normalFont;
+	Font highlightFont;
+
 	Mix_Chunk *incorrectSnd;
 	Mix_Chunk *correctSnd;
 } IO;
@@ -257,12 +289,12 @@ typedef enum
 	GUI_FOCUS_COUNT
 } GUIFocusType;
 
-typedef struct MetaMenu
+typedef struct MenuWidget
 {
 	int focus;
 	int max;
 	int init;
-} MetaMenu;
+} MenuWidget;
 
 typedef struct GameGUI
 {
@@ -276,7 +308,7 @@ typedef struct GameGUI
 
 typedef struct Settings 
 {
-	MetaMenu menu;
+	MenuWidget menu;
 	int sfxVolume;
 	int musVolume;
 	GUIFocusType previous;
@@ -310,11 +342,11 @@ typedef struct GUI
 {
 	GUIFocusType focus;
 	GameGUI gameGui;
-	MetaMenu menu;
-	MetaMenu gameMenu;
-	MetaMenu playMenu;
+	MenuWidget menu;
+	MenuWidget gameMenu;
+	MenuWidget playMenu;
 	Settings settings;
-	MetaMenu gameAreYouSureQuit;
+	MenuWidget gameAreYouSureQuit;
 	TransMove transMove;
 } GUI;
 

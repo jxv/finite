@@ -12,6 +12,7 @@ bool fontmapInit(Font *f, int w, int h, const char *filename)
 
 	f->width = w;
 	f->height = h;
+	f->spacing = 0;
 	f->map = surfaceLoad(filename);
 	return f->map != NULL;
 }
@@ -115,7 +116,7 @@ void initGame1vs1HumanAI(Game *g)
 	initDefaultRule(&g->rule);
 }
 
-void initMetaMenu(MetaMenu *m, int focus, int max)
+void initMenuWidget(MenuWidget *m, int focus, int max)
 {
 	m->init = focus;
 	m->focus = focus;
@@ -126,10 +127,10 @@ void initSettings(Settings *s)
 {
 	NOT(s);
 
-	s->sfxVolume = 50;
-	s->musVolume = 100;
+	s->sfxVolume = MAX_GUI_VOLUME;
+	s->musVolume = MAX_GUI_VOLUME;
 	s->previous = GUI_FOCUS_MENU; 
-	initMetaMenu(&s->menu, SETTINGS_FOCUS_MUSIC, SETTINGS_FOCUS_COUNT);
+	initMenuWidget(&s->menu, SETTINGS_FOCUS_MUSIC, SETTINGS_FOCUS_COUNT);
 }
 
 void initGameGUI(GameGUI *gg)
@@ -146,12 +147,12 @@ void initGameGUI(GameGUI *gg)
 
 void initGUI(GUI *g)
 {
-	initMetaMenu(&g->menu, MENU_FOCUS_PLAY, MENU_FOCUS_COUNT);
-	initMetaMenu(&g->gameMenu, GAME_MENU_FOCUS_RESUME, GAME_MENU_FOCUS_COUNT);
-	initMetaMenu(&g->playMenu, PLAY_MENU_FOCUS_HUMAN_VS_HUMAN, PLAY_MENU_FOCUS_COUNT);
+	initMenuWidget(&g->menu, MENU_FOCUS_PLAY, MENU_FOCUS_COUNT);
+	initMenuWidget(&g->gameMenu, GAME_MENU_FOCUS_RESUME, GAME_MENU_FOCUS_COUNT);
+	initMenuWidget(&g->playMenu, PLAY_MENU_FOCUS_HUMAN_VS_HUMAN, PLAY_MENU_FOCUS_COUNT);
 	initSettings(&g->settings);
 	initGameGUI(&g->gameGui);
-	initMetaMenu(&g->gameAreYouSureQuit, YES, YES_NO_COUNT);
+	initMenuWidget(&g->gameAreYouSureQuit, YES, YES_NO_COUNT);
 	g->focus = GUI_FOCUS_TITLE;
 }
 
@@ -217,6 +218,80 @@ SDL_Surface *createOutlineText(Font *fIn, Font *fOut, char *str)
 	return text;
 }
 
+void mkOutlineFont(Font *f, Font *fIn, Font *fOut)
+{
+	int i;
+	Uint32 rmask, gmask, bmask, amask;
+	SDL_Rect offset, clip;
+
+	NOT(f);
+	NOT(fIn);
+	NOT(fOut);
+	NOT(fIn->map);
+	
+	assert(fIn->width == fOut->width);
+	assert(fIn->height == fOut->height);
+	assert(fIn->spacing == fOut->spacing);
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	rmask = 0xff000000;
+	gmask = 0x00ff0000;
+	bmask = 0x0000ff00;
+	amask = 0x000000ff;
+#else
+	rmask = 0x000000ff;
+	gmask = 0x0000ff00;
+	bmask = 0x00ff0000;
+	amask = 0xff000000;
+#endif
+
+	f->width = fIn->width + 2;
+	f->height = fIn->height + 2;
+	f->spacing = fIn->spacing - 2;
+	
+	f->map = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * (127-32), f->height, SCREEN_BPP, rmask, gmask, bmask, amask);
+	SDL_SetColorKey(f->map, SDL_SRCCOLORKEY, SDL_MapRGB(f->map->format, 0xff, 0x00, 0xff));
+
+	offset.x = 1;
+	offset.y = 1;
+	clip.y = 0;
+	clip.h =fOut->height;
+	clip.w =fOut->width;
+	for (i = 32; i <= 126; i++) {
+		clip.x = fOut->width * (i - 32);
+		
+		offset.x--;
+		offset.y--;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+
+		offset.y++;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+
+		offset.y++;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+
+		offset.x++;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+		
+		offset.x++;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+		
+		offset.y--;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+		
+		offset.y--;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+
+		offset.x--;
+		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
+
+		offset.y++;
+		SDL_BlitSurface(fIn->map, &clip, f->map, &offset);
+
+		offset.x += f->width;
+	}
+}
+
 void mkHighTexts(HighText *ht, Font *fIn, Font *fOut, Font *hfIn, Font *hfOut, char **text, int count)
 {
 	int max, i, len;
@@ -265,12 +340,42 @@ void freeHighTexts(HighText *ht, int count)
 	}
 }
 
+void initMenuView(MenuView *mv, MenuWidget *mm, char *str[], int px, int py, int sx, int sy, IO *io)
+{
+	NOT(mv);
+	NOT(mm);
+	NOT(str);
+
+	mv->pos.x = px;
+	mv->pos.y = py;
+	mv->spacing.x = sx;
+	mv->spacing.y = sy;
+	mv->menu = mm;
+	mv->text = memAlloc(sizeof(HighText) * mm->max);
+	mkHighTexts(mv->text, &io->whiteFont, &io->blackFont, &io->yellowFont, &io->darkRedFont, str, mm->max);
+}
+
+void freeMenuView(MenuView *mv)
+{
+	NOT(mv);
+	NOT(mv->menu);
+
+	freeHighTexts(mv->text, mv->menu->max);
+	memFree(mv->text);
+}
+
 bool initIO(IO *io)
 {
 	NOT(io);
 
 	return false;
 }
+
+/*
+bool initOutline(Font *in, Font *out)
+{
+}
+*/
 
 bool init(Env *e)
 {
@@ -286,7 +391,7 @@ bool init(Env *e)
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
 	}
-	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1) {
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, AUDIO_CHAN_COUNT, 4096 ) == -1) {
 		return false;
 	}
 	SDL_ShowCursor(SDL_DISABLE);
@@ -360,6 +465,7 @@ bool init(Env *e)
 	if ((e->io.shuffleDisable = surfaceLoad(RES_PATH "shuffle_disable.png")) == NULL) {
 		return false;
 	}
+
 	if (!fontmapInit(&e->io.whiteFont, 6, 12, RES_PATH "white_font.png")) {
 		return false;
 	}
@@ -372,7 +478,12 @@ bool init(Env *e)
 	if (!fontmapInit(&e->io.darkRedFont, 6, 12, RES_PATH "darkred_font.png")) {
 		return false;
 	}
+	if (!fontmapInit(&e->io.darkRedFont, 6, 12, RES_PATH "darkred_font.png")) {
+		return false;
+	}
 
+	mkOutlineFont(&e->io.normalFont, &e->io.whiteFont, &e->io.blackFont);
+	mkOutlineFont(&e->io.highlightFont, &e->io.yellowFont, &e->io.darkRedFont);
 
 	e->io.sq[SQ_NORMAL] = surfaceLoad(RES_PATH "sq_normal.png");
 	e->io.sq[SQ_DBL_LET] = surfaceLoad(RES_PATH "sq_dl.png");
@@ -387,10 +498,10 @@ bool init(Env *e)
 		}
 	}
 
-	tile[TILE_LOOK_DISABLE] = surfaceLoad(RES_PATH "tile_disable.png");
-	tile[TILE_LOOK_NORMAL] = surfaceLoad(RES_PATH "tile_normal.png");
-	tile[TILE_LOOK_HOLD] = surfaceLoad(RES_PATH "tile_hold.png");
-	tile[TILE_LOOK_GHOST] = surfaceLoad(RES_PATH "tile_ghost.png");
+	tile[TILE_LOOK_DISABLE] = surfaceAlphaLoad(RES_PATH "tile_disable.png");
+	tile[TILE_LOOK_NORMAL] = surfaceAlphaLoad(RES_PATH "tile_normal.png");
+	tile[TILE_LOOK_HOLD] = surfaceAlphaLoad(RES_PATH "tile_hold.png");
+	tile[TILE_LOOK_GHOST] = surfaceAlphaLoad(RES_PATH "tile_ghost.png");
 
 	for (i = 0; i < TILE_LOOK_COUNT; i++) {
 		e->io.wild[i] = tile[i];
@@ -1265,7 +1376,7 @@ bool goBack(Controls *c)
 	return c->b.type == KEY_STATE_PRESSED;
 }
 
-void updateMetaMenuFocus(MetaMenu *m, Controls *c)
+void updateMenuWidget(MenuWidget *m, Controls *c)
 {
 	NOT(m);
 	NOT(c);
@@ -1289,14 +1400,14 @@ void updateMetaMenuFocus(MetaMenu *m, Controls *c)
 bool updateMenu(GUI *g, Controls *c)
 {
 
-	MetaMenu *m;
+	MenuWidget *m;
 
 	NOT(g);
 	NOT(c);
 
 	m = &g->menu;
 
-	updateMetaMenuFocus(m, c);
+	updateMenuWidget(m, c);
 
 
 
@@ -1324,11 +1435,15 @@ int updateVolumes(int curVol, Controls *c)
 	newVol = curVol;
 	
 	if (c->left.type == KEY_STATE_PRESSED) {
-		newVol -= curVol <= 0 ? curVol : 1;
+		newVol --;
 	} 
 	if (c->right.type == KEY_STATE_PRESSED) {
-		newVol += curVol >= 11 ? 11 - curVol : 1;
+		newVol ++;
 	}
+
+	newVol = newVol < 0 ? 0 : newVol;
+	newVol = newVol > MAX_GUI_VOLUME ? MAX_GUI_VOLUME : newVol;
+
 	return newVol;
 }
 
@@ -1341,7 +1456,7 @@ void updateSettings(GUI *g, Controls *c)
 
 	s = &g->settings;
 	
-	updateMetaMenuFocus(&s->menu, c);
+	updateMenuWidget(&s->menu, c);
 	
 	if (submitted(c) || goBack(c)) {
 		g->focus = s->previous;
@@ -1353,6 +1468,8 @@ void updateSettings(GUI *g, Controls *c)
 	case SETTINGS_FOCUS_SFX: s->sfxVolume = updateVolumes(s->sfxVolume, c); break;
 	default: break;
 	}
+
+
 }
 
 void updateGameGUIWidgets(GameGUI *gg, TransMove *tm, Board *b)
@@ -1378,7 +1495,7 @@ void resetNewGameGui(GUI *g, Game *gm)
 
 void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 {
-	MetaMenu *m;
+	MenuWidget *m;
 
 	NOT(g);
 	NOT(c);
@@ -1386,7 +1503,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 
 	m = &g->playMenu;
 	
-	updateMetaMenuFocus(m, c);
+	updateMenuWidget(m, c);
 
 	if (goBack(c)) {
 		g->focus = GUI_FOCUS_MENU;
@@ -1543,14 +1660,14 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 
 void updateGameMenu(GUI *g, Controls *c)
 {
-	MetaMenu *m;
+	MenuWidget *m;
 
 	NOT(g);
 	NOT(c);
 
 	m = &g->gameMenu;
 
-	updateMetaMenuFocus(m, c);
+	updateMenuWidget(m, c);
 
 	if (submitted(c)) {
 		switch (m->focus) {
@@ -1604,7 +1721,7 @@ void updateGameAreYouSureQuit(GUI *g, Controls *c)
 	NOT(g);
 	NOT(c);
 
-	updateMetaMenuFocus(&g->gameAreYouSureQuit, c);
+	updateMenuWidget(&g->gameAreYouSureQuit, c);
 	
 	if (submitted(c)) {
 		g->focus = g->gameAreYouSureQuit.focus == YES
@@ -1867,7 +1984,7 @@ void drawScoreBoard(Env *e)
 	NOT(e);
 	
 	for (i = 0; i < e->game.playerNum; i++) {
-		f = &e->io.whiteFont;
+		f = &e->io.normalFont;
 		drawNum(e->io.screen, 60, 10 * i, e->game.player[i].score, f);
 	}
 }
@@ -1879,10 +1996,15 @@ void audi(Env *e)
 	switch (e->gui.focus) {
 	case GUI_FOCUS_GAME_GUI: {
 		switch (e->gui.gameGui.validPlay) {
-		case YES: Mix_PlayChannel(-1, e->io.correctSnd, 0); break;
-		case NO: Mix_PlayChannel(-1, e->io.incorrectSnd, 0); break;
+		case YES: Mix_PlayChannel(AUDIO_CHAN_SFX, e->io.correctSnd, 0); break;
+		case NO: Mix_PlayChannel(AUDIO_CHAN_SFX, e->io.incorrectSnd, 0); break;
 		default: break;
 		}
+		break;
+	}
+	case GUI_FOCUS_SETTINGS: {
+		Mix_Volume(AUDIO_CHAN_MUSIC, e->gui.settings.musVolume * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
+		Mix_Volume(AUDIO_CHAN_SFX, e->gui.settings.sfxVolume * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 		break;
 	}
 	default: break;
@@ -1915,24 +2037,23 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_SETTINGS: {
+		Font *f;
 		int i;
-		SDL_Rect rect;
-		rect.h = 10;
-		rect.x = (320-100)/2 + 50;
+
 		drawScrollingBackground(e);
-		
-		rect.y = 100;
-		rect.w = e->gui.settings.musVolume;
-		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xe0, 0xd0, 0xa0));
-		
-		rect.y += 25;
-		rect.w = e->gui.settings.sfxVolume;
-		SDL_FillRect(e->io.screen, &rect, SDL_MapRGB(e->io.screen->format, 0xe0, 0xd0, 0xa0));
 
 		for (i = 0; i < SETTINGS_FOCUS_COUNT; i++) {
 			SDL_Surface *s;
 			s = i == e->gui.settings.menu.focus ? e->io.settingsFocus[i].highlight : e->io.settingsFocus[i].normal;
-			surfaceDraw(e->io.screen, s, 100 + e->io.settingsFocus[i].offset, i * e->io.whiteFont.height * 2 + 100);
+			surfaceDraw(e->io.screen, s, 120 + e->io.settingsFocus[i].offset, i * e->io.whiteFont.height * 2 + 100);
+
+			
+			f = i == e->gui.settings.menu.focus ? &e->io.highlightFont : &e->io.normalFont;
+			if (i == SETTINGS_FOCUS_MUSIC || i == SETTINGS_FOCUS_SFX) {
+				int v;
+				v = i == SETTINGS_FOCUS_MUSIC ? e->gui.settings.musVolume : e->gui.settings.sfxVolume;
+				drawNum(e->io.screen, 190, i * e->io.whiteFont.height * 2 + 100, v, f);
+			}
 		}
 		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
 		break;
