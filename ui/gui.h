@@ -166,6 +166,7 @@ typedef struct MenuView
 	Coor pos;
 	Coor spacing;
 	HighText *text;
+	int len;
 	struct MenuWidget *menu;
 } MenuView;
 
@@ -201,11 +202,11 @@ typedef struct IO
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
 	
-	MenuView menuMT;
-	MenuView gameMT;
-	MenuView playMT;
-	MenuView settingsMT;
-	MenuView yesNoMT;
+	MenuView menuMV;
+	MenuView gameMenuMV;
+	MenuView playMenuMV;
+	MenuView settingsMV;
+	MenuView yesNoMV;
 	
 	HighText menuFocus[MENU_FOCUS_COUNT];
 	HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];

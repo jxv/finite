@@ -293,32 +293,32 @@ void mkOutlineFont(Font *f, Font *fIn, Font *fOut)
 	}
 }
 
-void mkHighTexts(HighText *ht, Font *fIn, Font *fOut, Font *hfIn, Font *hfOut, char **text, int count)
+int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int count)
 {
 	int max, i, len;
 
 	NOT(ht);
-	NOT(fIn);
-	NOT(fOut);
-	NOT(hfIn);
-	NOT(hfOut);
+	NOT(normal);
+	NOT(highlight);
 	NOT(text);
 	assert(count > 0);
-	assert(fIn->width == fOut->width && fIn->height == fOut->height);
-	assert(hfIn->width == hfOut->width && hfIn->height == hfOut->height);
-	assert(fIn->width == hfOut->width && fIn->height == hfOut->height);
+	assert(normal->width == highlight->width);
+	assert(normal->height == highlight->height);
 
 	max = 0;
 	for (i = 0; i < count; i++) {
-		ht[i].normal = createOutlineText(fIn, fOut, text[i]);
-		ht[i].highlight = createOutlineText(hfIn, hfOut, text[i]);
+		ht[i].normal = createText(normal, text[i]);
+		NOT(ht[i].normal);
+		ht[i].highlight = createText(highlight, text[i]);
+		NOT(ht[i].highlight);
 		len = strlen(text[i]);
 		max = MAX(len, max);
 	}
 	for (i = 0; i < count; i++) {
 		len = strlen(text[i]);
-		ht[i].offset = (max - len) * fIn->width / 2;
+		ht[i].offset = (max - len) * (normal->width + normal->spacing) / 2;
 	}
+	return max;
 }
 
 bool areHighTextsLoaded(HighText *ht, int count)
@@ -341,19 +341,20 @@ void freeHighTexts(HighText *ht, int count)
 	}
 }
 
-void initMenuView(MenuView *mv, MenuWidget *mm, char *str[], int px, int py, int sx, int sy, IO *io)
+bool initMenuView(MenuView *mv, MenuWidget *mm, char *str[], Font *n, Font *h)
 {
 	NOT(mv);
 	NOT(mm);
 	NOT(str);
 
-	mv->pos.x = px;
-	mv->pos.y = py;
-	mv->spacing.x = sx;
-	mv->spacing.y = sy;
+	mv->spacing.x = 0;
+	mv->spacing.y = n->height * 2;
 	mv->menu = mm;
 	mv->text = memAlloc(sizeof(HighText) * mm->max);
-	mkHighTexts(mv->text, &io->whiteFont, &io->blackFont, &io->yellowFont, &io->darkRedFont, str, mm->max);
+	mv->len = mkHighTexts(mv->text, n, h, str, mm->max);
+	mv->pos.x = (SCREEN_WIDTH - mv->len) / 2;
+	mv->pos.y = (SCREEN_HEIGHT - mm->max * n->height * 2) / 2; 
+	return areHighTextsLoaded(mv->text, mm->max);
 }
 
 void freeMenuView(MenuView *mv)
@@ -365,6 +366,17 @@ void freeMenuView(MenuView *mv)
 	memFree(mv->text);
 }
 
+void freeMenuViews(IO *io)
+{
+	NOT(io);
+
+	freeMenuView(&io->menuMV);
+	freeMenuView(&io->playMenuMV);
+	freeMenuView(&io->gameMenuMV);
+	freeMenuView(&io->settingsMV);
+	freeMenuView(&io->yesNoMV);
+}
+
 bool initIO(IO *io)
 {
 	NOT(io);
@@ -372,11 +384,39 @@ bool initIO(IO *io)
 	return false;
 }
 
-/*
-bool initOutline(Font *in, Font *out)
+bool initMenuViews(IO *io, GUI *g)
 {
+	Font *n, *h;
+
+	char *menuText[MENU_FOCUS_COUNT] = {"Play", "Settings", "Exit"};
+	char *playMenuText[PLAY_MENU_FOCUS_COUNT] = {"Human vs. Human", "Human vs. CPU"};
+	char *gameMenuText[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Quit"};
+	char *settingsText[SETTINGS_FOCUS_COUNT] = {"Music:", "  SFX:"};
+	char *yesNoText[YES_NO_COUNT] = {"Yes", "No"};
+
+	NOT(io);
+	NOT(g);
+
+	n = &io->normalFont;
+	h = &io->highlightFont;
+
+	if (!initMenuView(&io->menuMV, &g->menu, menuText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->playMenuMV, &g->playMenu, playMenuText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->gameMenuMV, &g->gameMenu, gameMenuText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->settingsMV, &g->settings.menu, settingsText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->yesNoMV, &g->gameAreYouSureQuit, yesNoText, n, h)) {
+		return false;
+	}
+	return true;
 }
-*/
 
 bool init(Env *e)
 {
@@ -532,9 +572,13 @@ bool init(Env *e)
 
 	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
 
+	if (!initMenuViews(&e->io, &e->gui)) {
+		return false;
+	}
+
 	{
 		char *text[MENU_FOCUS_COUNT] = {"Play", "Settings", "Exit"};
-		mkHighTexts(e->io.menuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
+		mkHighTexts(e->io.menuFocus, &e->io.normalFont, &e->io.highlightFont, text, MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.menuFocus, MENU_FOCUS_COUNT)) {
 		return false;
@@ -542,7 +586,7 @@ bool init(Env *e)
 
 	{
 		char *text[PLAY_MENU_FOCUS_COUNT] = {"Human vs. Human", "Human vs. CPU"};
-		mkHighTexts(e->io.playMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, MENU_FOCUS_COUNT);
+		mkHighTexts(e->io.playMenuFocus, &e->io.normalFont, &e->io.highlightFont, text, PLAY_MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.playMenuFocus, PLAY_MENU_FOCUS_COUNT)) {
 		return false;
@@ -550,7 +594,7 @@ bool init(Env *e)
 
 	{
 		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Quit"};
-		mkHighTexts(e->io.gameMenuFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, GAME_MENU_FOCUS_COUNT);
+		mkHighTexts(e->io.gameMenuFocus, &e->io.normalFont, &e->io.highlightFont, text, GAME_MENU_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT)) {
 		return false;
@@ -558,16 +602,16 @@ bool init(Env *e)
 
 	{
 		char *text[SETTINGS_FOCUS_COUNT] = {"Music:", "SFX:"};
-		mkHighTexts(e->io.settingsFocus, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, SETTINGS_FOCUS_COUNT);
+		mkHighTexts(e->io.settingsFocus, &e->io.normalFont, &e->io.highlightFont, text, SETTINGS_FOCUS_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.settingsFocus, SETTINGS_FOCUS_COUNT)) {
 		return false;
 	}
 
-	e->io.areYouSureQuit = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "Are you sure?");
+	e->io.areYouSureQuit = createText(&e->io.normalFont, "Are you sure?");
 	{
 		char *text[GAME_MENU_FOCUS_COUNT] = {"Yes", "No"};
-		mkHighTexts(e->io.yesNo, &e->io.whiteFont, &e->io.blackFont, &e->io.yellowFont, &e->io.darkRedFont, text, YES_NO_COUNT);
+		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, YES_NO_COUNT);
 	}
 	if (!areHighTextsLoaded(e->io.yesNo, YES_NO_COUNT)) {
 		return false;
@@ -628,6 +672,7 @@ void quit(Env *e)
 			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
 		}
 	}
+	freeMenuViews(&e->io);
 	freeHighTexts(e->io.menuFocus, MENU_FOCUS_COUNT);
 	freeHighTexts(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT);
 	surfaceFree(e->io.areYouSureQuit);
@@ -1991,6 +2036,23 @@ void drawScoreBoard(Env *e)
 	}
 }
 
+void drawMenuView(SDL_Surface *s, MenuView *mv)
+{
+	SDL_Surface *t;
+	int i, x, y;
+
+	NOT(s);
+	NOT(mv);
+
+	for (i = 0; i < mv->menu->max; i++) {
+		t = mv->menu->focus == i ? mv->text[i].highlight : mv->text[i].normal;
+		NOT(t);
+		x = mv->pos.x + mv->spacing.x * i + mv->text[i].offset;
+		y = mv->pos.y + mv->spacing.y * i;
+		surfaceDraw(s, t, x, y);
+	}
+}
+
 void audi(Env *e)
 {
 	NOT(e);
@@ -2030,6 +2092,7 @@ void draw(Env *e)
 	case GUI_FOCUS_MENU: {
 		int i;
 		drawScrollingBackground(e);
+		drawMenuView(e->io.screen, &e->io.menuMV);
 		for (i = 0; i <MENU_FOCUS_COUNT; i++) {
 			surfaceDraw(e->io.screen,
 				e->gui.menu.focus == i ? e->io.menuFocus[i].highlight : e->io.menuFocus[i].normal, 
