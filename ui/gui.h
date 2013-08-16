@@ -7,6 +7,7 @@
 #define SCREEN_WIDTH	320
 #define SCREEN_HEIGHT	240
 #define FPS 30
+#define SPF (1.f/FPS)
 
 #define MAX_GUI_VOLUME	11
 
@@ -139,8 +140,8 @@ typedef enum
 typedef enum
 {
 	PLAY_MENU_FOCUS_INVALID = -1,
-	PLAY_MENU_FOCUS_HUMAN_VS_HUMAN = 0,
-	PLAY_MENU_FOCUS_HUMAN_VS_AI,
+	PLAY_MENU_FOCUS_HUMAN_VS_AI = 0,
+	PLAY_MENU_FOCUS_HUMAN_VS_HUMAN,
 	PLAY_MENU_FOCUS_COUNT
 } PlayMenuFocusType;
 
@@ -169,6 +170,25 @@ typedef struct MenuView
 	int len;
 	struct MenuWidget *menu;
 } MenuView;
+
+typedef struct ScoreCounter
+{
+	float curTime;
+	float endTime;
+	int start;
+	int cur;
+	int end;
+	bool stable;
+} ScoreCounter;
+
+typedef struct ScoreBoard
+{
+	int turn;
+	int playerNum;
+	ScoreCounter ctr[MAX_PLAYER];
+	float speed;
+	bool stable;
+} ScoreBoard;
 
 typedef struct IO
 {
@@ -350,6 +370,7 @@ typedef struct GUI
 	Settings settings;
 	MenuWidget gameAreYouSureQuit;
 	TransMove transMove;
+	ScoreBoard scoreBoard;
 } GUI;
 
 

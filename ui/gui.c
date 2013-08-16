@@ -13,7 +13,7 @@ bool fontmapInit(Font *f, int w, int h, const char *filename)
 	f->width = w;
 	f->height = h;
 	f->spacing = 0;
-	f->map = surfaceLoad(filename);
+	f->map = surfaceAlphaLoad(filename);
 	return f->map != NULL;
 }
 
@@ -49,7 +49,7 @@ void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 			clip.x = f->width * (c - 32);
 			SDL_BlitSurface(f->map, &clip, s, &offset);
 		}
-		offset.x += f->width;
+		offset.x += f->width + f->spacing;
 	}
 }
 
@@ -116,6 +116,29 @@ void initGame1vs1HumanAI(Game *g)
 	initDefaultRule(&g->rule);
 }
 
+void initScoreBoard(ScoreBoard *sb, Game *g)
+{
+	int i;
+
+	NOT(sb);
+	NOT(g);
+
+	sb->turn = g->turn;	
+	sb->playerNum = g->playerNum;
+	sb->speed = 1.f/20.f;
+	sb->stable = true;
+
+	for (i = 0; i < sb->playerNum; i++) {
+		sb->ctr[i].curTime = 0;
+		sb->ctr[i].endTime = 0;
+		sb->ctr[i].start = 0;
+		sb->ctr[i].cur = 0;
+		sb->ctr[i].end = 0;
+		sb->ctr[i].stable = true;
+	}
+	
+}
+
 void initMenuWidget(MenuWidget *m, int focus, int max)
 {
 	m->init = focus;
@@ -149,7 +172,7 @@ void initGUI(GUI *g)
 {
 	initMenuWidget(&g->menu, MENU_FOCUS_PLAY, MENU_FOCUS_COUNT);
 	initMenuWidget(&g->gameMenu, GAME_MENU_FOCUS_RESUME, GAME_MENU_FOCUS_COUNT);
-	initMenuWidget(&g->playMenu, PLAY_MENU_FOCUS_HUMAN_VS_HUMAN, PLAY_MENU_FOCUS_COUNT);
+	initMenuWidget(&g->playMenu, PLAY_MENU_FOCUS_HUMAN_VS_AI, PLAY_MENU_FOCUS_COUNT);
 	initSettings(&g->settings);
 	initGameGUI(&g->gameGui);
 	initMenuWidget(&g->gameAreYouSureQuit, YES, YES_NO_COUNT);
@@ -160,137 +183,29 @@ void initGUI(GUI *g)
 SDL_Surface *createText(Font *f, char *str)
 {
 	SDL_Surface *text;
-	Uint32 rmask, gmask, bmask, amask;
-
-	NOT(f);
-	NOT(str);
+	Uint32 rm, gm, bm, am, a;
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	rmask = 0xff000000;
-	gmask = 0x00ff0000;
-	bmask = 0x0000ff00;
-	amask = 0x000000ff;
+    rm = 0xff000000;
+    gm = 0x00ff0000;
+    bm = 0x0000ff00;
+    am = 0x000000ff;
 #else
-	rmask = 0x000000ff;
-	gmask = 0x0000ff00;
-	bmask = 0x00ff0000;
-	amask = 0xff000000;
+    rm = 0x000000ff;
+    gm = 0x0000ff00;
+    bm = 0x00ff0000;
+    am = 0xff000000;
 #endif
-
-	text = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * strlen(str), f->height, SCREEN_BPP, rmask, gmask, bmask, amask);
-	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0x00, 0xff));
+	text = SDL_CreateRGBSurface(SDL_SWSURFACE, (f->width + f->spacing) * strlen(str) + 1, f->height, SCREEN_BPP, rm, gm, bm, am);
+	if (!text) {
+		return NULL;
+	}
+	SDL_SetAlpha(text, 0, SDL_ALPHA_OPAQUE);
+	a = SDL_MapRGB(text->format, ALPHA_R, ALPHA_G, ALPHA_B);
+	SDL_FillRect(text, NULL, a);
+	SDL_SetColorKey(text, SDL_SRCCOLORKEY, a);
 	strDraw(text, f, str, 0, 0);
 	return text;
-}
-
-SDL_Surface *createOutlineText(Font *fIn, Font *fOut, char *str)
-{
-	int i, j;
-	SDL_Surface *text;
-	Uint32 rmask, gmask, bmask, amask;
-
-	NOT(fIn);
-	NOT(fOut);
-	NOT(str);
-	assert(fIn->width == fOut->width);
-	assert(fIn->height == fOut->height);
-	
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	rmask = 0xff000000;
-	gmask = 0x00ff0000;
-	bmask = 0x0000ff00;
-	amask = 0x000000ff;
-#else
-	rmask = 0x000000ff;
-	gmask = 0x0000ff00;
-	bmask = 0x00ff0000;
-	amask = 0xff000000;
-#endif
-
-	text = SDL_CreateRGBSurface(SDL_SWSURFACE, fIn->width * strlen(str) + 2, fIn->height + 2,
-			SCREEN_BPP, rmask, gmask, bmask, amask);
-	SDL_SetColorKey(text, SDL_SRCCOLORKEY, SDL_MapRGB(text->format, 0xff, 0x00, 0xff));
-	for (i = 0; i < 3; i++) {
-		for (j = 0; j < 3; j++) {	
-			strDraw(text, fOut, str, i, j);
-		}
-	}
-	strDraw(text, fIn, str, 1, 1); 
-	return text;
-}
-
-void mkOutlineFont(Font *f, Font *fIn, Font *fOut)
-{
-	int i;
-	Uint32 rmask, gmask, bmask, amask;
-	SDL_Rect offset, clip;
-
-	NOT(f);
-	NOT(fIn);
-	NOT(fOut);
-	NOT(fIn->map);
-	
-	assert(fIn->width == fOut->width);
-	assert(fIn->height == fOut->height);
-	assert(fIn->spacing == fOut->spacing);
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	rmask = 0xff000000;
-	gmask = 0x00ff0000;
-	bmask = 0x0000ff00;
-	amask = 0x000000ff;
-#else
-	rmask = 0x000000ff;
-	gmask = 0x0000ff00;
-	bmask = 0x00ff0000;
-	amask = 0xff000000;
-#endif
-
-	f->width = fIn->width + 2;
-	f->height = fIn->height + 2;
-	f->spacing = fIn->spacing - 2;
-	
-	f->map = SDL_CreateRGBSurface(SDL_SWSURFACE, f->width * (127-32), f->height, SCREEN_BPP, rmask, gmask, bmask, amask);
-	SDL_SetColorKey(f->map, SDL_SRCCOLORKEY, SDL_MapRGB(f->map->format, 0xff, 0x00, 0xff));
-
-	offset.x = 1;
-	offset.y = 1;
-	clip.y = 0;
-	clip.h =fOut->height;
-	clip.w =fOut->width;
-	for (i = 32; i <= 126; i++) {
-		clip.x = fOut->width * (i - 32);
-		
-		offset.x--;
-		offset.y--;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-
-		offset.y++;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-
-		offset.y++;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-
-		offset.x++;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-		
-		offset.x++;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-		
-		offset.y--;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-		
-		offset.y--;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-
-		offset.x--;
-		SDL_BlitSurface(fOut->map, &clip, f->map, &offset);
-
-		offset.y++;
-		SDL_BlitSurface(fIn->map, &clip, f->map, &offset);
-
-		offset.x += f->width;
-	}
 }
 
 int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int count)
@@ -307,6 +222,7 @@ int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int co
 
 	max = 0;
 	for (i = 0; i < count; i++) {
+		NOT(text[i]);
 		ht[i].normal = createText(normal, text[i]);
 		NOT(ht[i].normal);
 		ht[i].highlight = createText(highlight, text[i]);
@@ -352,7 +268,7 @@ bool initMenuView(MenuView *mv, MenuWidget *mm, char *str[], Font *n, Font *h)
 	mv->menu = mm;
 	mv->text = memAlloc(sizeof(HighText) * mm->max);
 	mv->len = mkHighTexts(mv->text, n, h, str, mm->max);
-	mv->pos.x = (SCREEN_WIDTH - mv->len) / 2;
+	mv->pos.x = (SCREEN_WIDTH - mv->len * (n->width + n->spacing)) / 2;
 	mv->pos.y = (SCREEN_HEIGHT - mm->max * n->height * 2) / 2; 
 	return areHighTextsLoaded(mv->text, mm->max);
 }
@@ -389,7 +305,7 @@ bool initMenuViews(IO *io, GUI *g)
 	Font *n, *h;
 
 	char *menuText[MENU_FOCUS_COUNT] = {"Play", "Settings", "Exit"};
-	char *playMenuText[PLAY_MENU_FOCUS_COUNT] = {"Human vs. Human", "Human vs. CPU"};
+	char *playMenuText[PLAY_MENU_FOCUS_COUNT] = {"1 Player", "2 Player"};
 	char *gameMenuText[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Quit"};
 	char *settingsText[SETTINGS_FOCUS_COUNT] = {"Music:", "  SFX:"};
 	char *yesNoText[YES_NO_COUNT] = {"Yes", "No"};
@@ -446,7 +362,7 @@ bool init(Env *e)
 	if ((e->io.titleScreen = surfaceAlphaLoad(RES_PATH "title_screen.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.titleBackground = surfaceLoad(RES_PATH "title_background.png")) == NULL) {
+	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png")) == NULL) {
@@ -455,55 +371,55 @@ bool init(Env *e)
 	if ((e->io.back = surfaceAlphaLoad(RES_PATH "back.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.wildUp = surfaceLoad(RES_PATH "wild_up.png")) == NULL) {
+	if ((e->io.wildUp = surfaceAlphaLoad(RES_PATH "wild_up.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.wildDown = surfaceLoad(RES_PATH "wild_down.png")) == NULL) {
+	if ((e->io.wildDown = surfaceAlphaLoad(RES_PATH "wild_down.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.lockon = surfaceLoad(RES_PATH "lockon.png")) == NULL) {
+	if ((e->io.lockon = surfaceAlphaLoad(RES_PATH "lockon.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.recall = surfaceLoad(RES_PATH "recall.png")) == NULL) {
+	if ((e->io.recall = surfaceAlphaLoad(RES_PATH "recall.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.recallDisable = surfaceLoad(RES_PATH "recall_disable.png")) == NULL) {
+	if ((e->io.recallDisable = surfaceAlphaLoad(RES_PATH "recall_disable.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.mode = surfaceLoad(RES_PATH "mode.png")) == NULL) {
+	if ((e->io.mode = surfaceAlphaLoad(RES_PATH "mode.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.modeDisable = surfaceLoad(RES_PATH "mode_disable.png")) == NULL) {
+	if ((e->io.modeDisable = surfaceAlphaLoad(RES_PATH "mode_disable.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.place = surfaceLoad(RES_PATH "place.png")) == NULL) {
+	if ((e->io.place = surfaceAlphaLoad(RES_PATH "place.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.placeDisable = surfaceLoad(RES_PATH "place_disable.png")) == NULL) {
+	if ((e->io.placeDisable = surfaceAlphaLoad(RES_PATH "place_disable.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.discard = surfaceLoad(RES_PATH "discard.png")) == NULL) {
+	if ((e->io.discard = surfaceAlphaLoad(RES_PATH "discard.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.discardDisable = surfaceLoad(RES_PATH "discard_disable.png")) == NULL) {
+	if ((e->io.discardDisable = surfaceAlphaLoad(RES_PATH "discard_disable.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.skip = surfaceLoad(RES_PATH "skip.png")) == NULL) {
+	if ((e->io.skip = surfaceAlphaLoad(RES_PATH "skip.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.skipDisable = surfaceLoad(RES_PATH "skip_disable.png")) == NULL) {
+	if ((e->io.skipDisable = surfaceAlphaLoad(RES_PATH "skip_disable.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.play = surfaceLoad(RES_PATH "play.png")) == NULL) {
+	if ((e->io.play = surfaceAlphaLoad(RES_PATH "play.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.playDisable = surfaceLoad(RES_PATH "play_disable.png")) == NULL) {
+	if ((e->io.playDisable = surfaceAlphaLoad(RES_PATH "play_disable.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.shuffle = surfaceLoad(RES_PATH "shuffle.png")) == NULL) {
+	if ((e->io.shuffle = surfaceAlphaLoad(RES_PATH "shuffle.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.shuffleDisable = surfaceLoad(RES_PATH "shuffle_disable.png")) == NULL) {
+	if ((e->io.shuffleDisable = surfaceAlphaLoad(RES_PATH "shuffle_disable.png")) == NULL) {
 		return false;
 	}
 
@@ -522,16 +438,22 @@ bool init(Env *e)
 	if (!fontmapInit(&e->io.darkRedFont, 6, 12, RES_PATH "darkred_font.png")) {
 		return false;
 	}
+	
+	if (!fontmapInit(&e->io.normalFont, 8, 14, RES_PATH "normal_font.png")) {
+		return false;
+	}
+	e->io.normalFont.spacing = -2;
+	if (!fontmapInit(&e->io.highlightFont, 8, 14, RES_PATH "highlight_font.png")) {
+		return false;
+	}
+	e->io.highlightFont.spacing = -2;
 
-	mkOutlineFont(&e->io.normalFont, &e->io.whiteFont, &e->io.blackFont);
-	mkOutlineFont(&e->io.highlightFont, &e->io.yellowFont, &e->io.darkRedFont);
-
-	e->io.sq[SQ_NORMAL] = surfaceLoad(RES_PATH "sq_normal.png");
-	e->io.sq[SQ_DBL_LET] = surfaceLoad(RES_PATH "sq_dl.png");
-	e->io.sq[SQ_DBL_WRD] = surfaceLoad(RES_PATH "sq_dw.png");
-	e->io.sq[SQ_TRP_LET] = surfaceLoad(RES_PATH "sq_tl.png");
-	e->io.sq[SQ_TRP_WRD] = surfaceLoad(RES_PATH "sq_tw.png");
-	e->io.sq[SQ_FREE] = surfaceLoad(RES_PATH "sq_free.png");
+	e->io.sq[SQ_NORMAL] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
+	e->io.sq[SQ_DBL_LET] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
+	e->io.sq[SQ_DBL_WRD] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
+	e->io.sq[SQ_TRP_LET] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
+	e->io.sq[SQ_TRP_WRD] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
+	e->io.sq[SQ_FREE] = surfaceAlphaLoad(RES_PATH "sq_free.png");
 
 	for (i = 0; i < SQ_COUNT; i++) {
 		if (e->io.sq[i] == NULL) { 
@@ -570,8 +492,9 @@ bool init(Env *e)
 
 	e->io.fader = surfaceCpy(e->io.screen);
 
-	e->io.pressStart = createOutlineText(&e->io.whiteFont, &e->io.blackFont, "PRESS START");
+	e->io.pressStart = createText(&e->io.normalFont, "PRESS START");
 
+	initGUI(&e->gui);
 	if (!initMenuViews(&e->io, &e->gui)) {
 		return false;
 	}
@@ -625,8 +548,6 @@ bool init(Env *e)
 	}
 
 	controlsInit(&e->controls);
-
-	initGUI(&e->gui);
 
 	return true;
 }
@@ -1561,11 +1482,13 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 		case PLAY_MENU_FOCUS_HUMAN_VS_HUMAN: {
 			initGame1vs1Human(gm);
 			resetNewGameGui(g, gm);
+			initScoreBoard(&g->scoreBoard, gm);
 			break;
 		}
 		case PLAY_MENU_FOCUS_HUMAN_VS_AI: {
 			initGame1vs1HumanAI(gm);
 			resetNewGameGui(g, gm);
+			initScoreBoard(&g->scoreBoard, gm);
 			break;
 		}
 		default: break;
@@ -1584,6 +1507,42 @@ GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)
 	}
 	assert(false);
 	return GUI_FOCUS_GAME_GUI;
+}
+
+void updateScoreBoard(ScoreBoard *sb, Game *gm, float timeStep)
+{
+	int i;
+
+	NOT(sb);
+	NOT(gm);
+	assert(sb->playerNum == gm->playerNum);
+
+	sb->turn = gm->turn;
+	sb->stable = true;
+
+	for (i = 0; i < sb->playerNum; i++) {
+		sb->ctr[i].end = gm->player[i].score;
+		if (sb->ctr[i].end == sb->ctr[i].start) {
+			sb->ctr[i].stable = true; 
+			sb->ctr[i].cur = sb->ctr[i].end;
+			continue;
+		}
+		if (sb->ctr[i].stable) {
+			sb->ctr[i].curTime = 0;
+			sb->ctr[i].endTime = sb->speed * (sb->ctr[i].end - sb->ctr[i].start);
+			sb->ctr[i].stable = false;
+		} else {
+			sb->ctr[i].curTime += timeStep;
+			if (sb->ctr[i].curTime >= sb->ctr[i].endTime) {
+				sb->ctr[i].cur = sb->ctr[i].end;
+				sb->ctr[i].start = sb->ctr[i].end;
+				continue;
+			}
+		}
+		sb->stable = false;
+		sb->ctr[i].cur = sb->ctr[i].start;
+		sb->ctr[i].cur += (sb->ctr[i].curTime / sb->ctr[i].endTime) * (sb->ctr[i].end - sb->ctr[i].start);
+	}
 }
 
 void updateGameGUI(GUI *g, Controls *c, Game *gm)
@@ -1702,6 +1661,8 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	} else {
 		gg->validPlay = YES_NO_INVALID;
 	}
+
+	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
 void updateGameMenu(GUI *g, Controls *c)
@@ -1736,7 +1697,7 @@ void updateGameMenu(GUI *g, Controls *c)
 	}
 }
 
-void updateGameHotseatPause(GUI *g, Controls *c)
+void updateGameHotseatPause(GUI *g, Controls *c, Game *gm)
 {
 	NOT(g);
 	NOT(c);
@@ -1744,6 +1705,7 @@ void updateGameHotseatPause(GUI *g, Controls *c)
 	if (submitted(c)) {
 		g->next = GUI_FOCUS_GAME_GUI;
 	}
+	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
 void updateGameAIPause(GUI *g, Controls *c, Game *gm)
@@ -1760,6 +1722,8 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 	applyAction(gm, &a);
 	nextTurn(gm);
 	g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+
+	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
 void updateGameAreYouSureQuit(GUI *g, Controls *c)
@@ -1780,7 +1744,7 @@ void updateGameAreYouSureQuit(GUI *g, Controls *c)
 	}
 }
 
-void updateGameOver(GUI *g, Controls *c)
+void updateGameOver(GUI *g, Controls *c, Game *gm)
 {
 	NOT(g);
 	NOT(c);
@@ -1788,6 +1752,7 @@ void updateGameOver(GUI *g, Controls *c)
 	if (c->start.type == KEY_STATE_PRESSED) {
 		g->next = GUI_FOCUS_TITLE;
 	}
+	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
 void update(Env *e)
@@ -1795,6 +1760,10 @@ void update(Env *e)
 	NOT(e);
 
 	e->gui.focus = e->gui.next;
+	if (!e->gui.scoreBoard.stable) {
+		updateScoreBoard(&e->gui.scoreBoard, &e->game, SPF);
+		return;
+	}
 	switch (e->gui.focus) {
 	case GUI_FOCUS_TITLE: updateTitle(&e->gui, &e->controls); break;
 	case GUI_FOCUS_MENU: e->quit = updateMenu(&e->gui, &e->controls); break;
@@ -1802,9 +1771,9 @@ void update(Env *e)
 	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_MENU: updateGameMenu(&e->gui, &e->controls); break;
-	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(&e->gui, &e->controls); break;
+	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_AI_PAUSE: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_OVER: updateGameOver(&e->gui, &e->controls); break;
+	case GUI_FOCUS_GAME_OVER: updateGameOver(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(&e->gui, &e->controls); break;
 	default: break;
 	}
@@ -2023,16 +1992,19 @@ void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
 	} 
 }
 
-void drawScoreBoard(Env *e)
+void drawScoreBoard(ScoreBoard *sb, IO *io)
 {
 	int i;
 	Font *f;
 
-	NOT(e);
+	NOT(sb);
+	NOT(io);
 	
-	for (i = 0; i < e->game.playerNum; i++) {
-		f = &e->io.normalFont;
-		drawNum(e->io.screen, 60, 10 * i, e->game.player[i].score, f);
+	for (i = 0; i < sb->playerNum; i++) {
+		f = i == sb->turn || sb->ctr[i].cur < sb->ctr[i].end 
+				? &io->highlightFont 
+				: &io->normalFont;
+		drawNum(io->screen, 40, (io->highlightFont.height + 2) * i + 30, sb->ctr[i].cur, f);
 	}
 }
 
@@ -2047,7 +2019,7 @@ void drawMenuView(SDL_Surface *s, MenuView *mv)
 	for (i = 0; i < mv->menu->max; i++) {
 		t = mv->menu->focus == i ? mv->text[i].highlight : mv->text[i].normal;
 		NOT(t);
-		x = mv->pos.x + mv->spacing.x * i + mv->text[i].offset;
+		x = mv->pos.x + mv->text[i].offset;
 		y = mv->pos.y + mv->spacing.y * i;
 		surfaceDraw(s, t, x, y);
 	}
@@ -2090,15 +2062,8 @@ void draw(Env *e)
 		break;
 	}
 	case GUI_FOCUS_MENU: {
-		int i;
 		drawScrollingBackground(e);
 		drawMenuView(e->io.screen, &e->io.menuMV);
-		for (i = 0; i <MENU_FOCUS_COUNT; i++) {
-			surfaceDraw(e->io.screen,
-				e->gui.menu.focus == i ? e->io.menuFocus[i].highlight : e->io.menuFocus[i].normal, 
-				120 + e->io.menuFocus[i].offset,
-				100 + e->io.whiteFont.height * i * 2);
-		}
 		break;
 	}
 	case GUI_FOCUS_SETTINGS: {
@@ -2107,17 +2072,13 @@ void draw(Env *e)
 
 		drawScrollingBackground(e);
 
+		drawMenuView(e->io.screen, &e->io.settingsMV);
 		for (i = 0; i < SETTINGS_FOCUS_COUNT; i++) {
-			SDL_Surface *s;
-			s = i == e->gui.settings.menu.focus ? e->io.settingsFocus[i].highlight : e->io.settingsFocus[i].normal;
-			surfaceDraw(e->io.screen, s, 120 + e->io.settingsFocus[i].offset, i * e->io.whiteFont.height * 2 + 100);
-
-			
 			f = i == e->gui.settings.menu.focus ? &e->io.highlightFont : &e->io.normalFont;
 			if (i == SETTINGS_FOCUS_MUSIC || i == SETTINGS_FOCUS_SFX) {
 				int v;
 				v = i == SETTINGS_FOCUS_MUSIC ? e->gui.settings.musVolume : e->gui.settings.sfxVolume;
-				drawNum(e->io.screen, 190, i * e->io.whiteFont.height * 2 + 100, v, f);
+				drawNum(e->io.screen, 190, i * e->io.normalFont.height * 2 + 100, v, f);
 			}
 		}
 		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
@@ -2128,39 +2089,30 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-		drawScoreBoard(e);
+		drawScoreBoard(&e->gui.scoreBoard, &e->io);
 		break;
 	}
 	case GUI_FOCUS_GAME_MENU: {
-		int i;
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-		for (i = 0; i < GAME_MENU_FOCUS_COUNT; i++) {
-			SDL_Surface *s;
-			s = i == e->gui.gameMenu.focus ? e->io.gameMenuFocus[i].highlight : e->io.gameMenuFocus[i].normal;
-			surfaceDraw(e->io.screen, s, 150 + e->io.gameMenuFocus[i].offset, i * e->io.whiteFont.height * 2 + 80);
-		}
+		
+		drawMenuView(e->io.screen, &e->io.gameMenuMV);
 		break;
 	}
 	case GUI_FOCUS_PLAY_MENU: {
-		int i;
 		drawScrollingBackground(e);
-		for (i = 0; i < PLAY_MENU_FOCUS_COUNT; i++) {
-			SDL_Surface *s;
-			s = i == e->gui.playMenu.focus ? e->io.playMenuFocus[i].highlight : e->io.playMenuFocus[i].normal;
-			surfaceDraw(e->io.screen, s, 150 + e->io.playMenuFocus[i].offset, i * e->io.whiteFont.height * 2 + 80);
-		}
+		drawMenuView(e->io.screen, &e->io.playMenuMV);
 		break;
 	}
 	case GUI_FOCUS_GAME_AI_PAUSE: {
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
-		drawScoreBoard(e);
+		drawScoreBoard(&e->gui.scoreBoard, &e->io);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
@@ -2170,7 +2122,7 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
-		drawScoreBoard(e);
+		drawScoreBoard(&e->gui.scoreBoard, &e->io);
 		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
@@ -2181,7 +2133,7 @@ void draw(Env *e)
 		drawScrollingBackground(e);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
-		drawScoreBoard(e);
+		drawScoreBoard(&e->gui.scoreBoard, &e->io);
 		break;
 	}
 	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: drawGameAreYouSureQuit(e); break;
