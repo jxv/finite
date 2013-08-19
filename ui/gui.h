@@ -385,6 +385,10 @@ typedef struct Env
 
 int gui();
 
+void initGame1vs1Human(Game *g);
+void initGame1vs1HumanAI(Game *g);
+void initScoreBoard(ScoreBoard *sb, Game *g);
+
 #define TILE_WIDTH 14
 #define TILE_HEIGHT 14
 
