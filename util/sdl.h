@@ -19,7 +19,6 @@ void delay(int st, int et, int fps);
 void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y);
 SDL_Surface *surfaceCpy(SDL_Surface *s);
 
-
 #endif
 
 

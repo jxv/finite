@@ -118,6 +118,10 @@ bool nextCombo(int *c, int k, int n)
 	assert(k <= n);
 	assert(k > 0);
 
+	if (k > n) {
+		return true;
+	}
+
 	i = k - 1;
 	c[i]++;
 	while (i >= 0 && c[i] >= n - k + 1 + i) {
@@ -414,7 +418,6 @@ void printPlacement(Placement *p)
 
 void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 {
-	time_t start, end;
 	int i, j;
 	int maxScore;
 	int dir[2];
@@ -427,8 +430,6 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	Action action;
 	Board *b;
 	Player *p;
-
-	start = time(NULL);
 
 	NOT(m);
 	assert(pIdx >= 0 && pIdx < MAX_PLAYER);
@@ -446,6 +447,13 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	maxScore = 0;
 	
 	combo.rackCount = rackCount(p);
+
+	if (combo.rackCount == 0) {
+		m->playerIdx = pIdx;
+		m->type = MOVE_SKIP;
+		return;
+	}
+	
 	move.type = MOVE_PLACE;
 	move.playerIdx = pIdx; 
 	m->playerIdx = pIdx;
@@ -466,6 +474,9 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 				}
 				initCombo(&combo);
 				combo.pathCount = cont.num;
+				if (combo.pathCount > combo.rackCount) {
+					continue;
+				}
 				do {
 					assert(combo.pathCount <= RACK_SIZE);
 					mkPlacement(&placement, &combo, &cont, dir[j], i);
@@ -487,8 +498,5 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 
 	m->playerIdx = pIdx;
 	m->type = maxScore > 0 ? MOVE_PLACE : MOVE_SKIP;
-	
-	end = time(NULL);
-	printf("[ai-find-move: %f secs]\n", difftime(end, start));
 }
 

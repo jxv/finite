@@ -534,10 +534,10 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 	case TRANS_MOVE_DISCARD: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			VALID_TILE(*t);
 			if (t->type == TILE_NONE) {
 				continue;
 			}
+			VALID_TILE(*t);
 			tt = tm->discard.rack[i] ? TILE_LOOK_DISABLE : TILE_LOOK_NORMAL;
 			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
 			surfaceDraw(io->screen, s, i * dim.x + offset, 220);

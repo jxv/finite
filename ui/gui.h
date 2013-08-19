@@ -1,6 +1,8 @@
 #ifndef FINITE_GUI_H
 #define FINITE_GUI_H
 
+#include <dosk.h>
+
 #include "sdl.h"
 #include "common.h"
 
@@ -115,6 +117,7 @@ typedef enum
 {
 	MENU_FOCUS_INAVLID = -1,
 	MENU_FOCUS_PLAY = 0,
+	MENU_FOCUS_RULES,
 	MENU_FOCUS_SETTINGS,
 	MENU_FOCUS_EXIT,
 	MENU_FOCUS_COUNT
@@ -125,6 +128,7 @@ typedef enum
 	GAME_MENU_FOCUS_INVALID = -1,
 	GAME_MENU_FOCUS_RESUME = 0,
 	GAME_MENU_FOCUS_SETTINGS,
+	GAME_MENU_FOCUS_SKIP,
 	GAME_MENU_FOCUS_QUIT,
 	GAME_MENU_FOCUS_COUNT
 } GameMenuFocusType;
@@ -134,6 +138,8 @@ typedef enum
 	SETTINGS_FOCUS_INVALID = -1,
 	SETTINGS_FOCUS_MUSIC,
 	SETTINGS_FOCUS_SFX,
+	SETTINGS_FOCUS_CONTROLS,
+	SETTINGS_FOCUS_BACK,
 	SETTINGS_FOCUS_COUNT
 } SettingsFocusType;
 
@@ -142,6 +148,7 @@ typedef enum
 	PLAY_MENU_FOCUS_INVALID = -1,
 	PLAY_MENU_FOCUS_HUMAN_VS_AI = 0,
 	PLAY_MENU_FOCUS_HUMAN_VS_HUMAN,
+	PLAY_MENU_FOCUS_NETPLAY,
 	PLAY_MENU_FOCUS_COUNT
 } PlayMenuFocusType;
 
@@ -373,7 +380,6 @@ typedef struct GUI
 	ScoreBoard scoreBoard;
 } GUI;
 
-
 typedef struct Env
 {
 	IO io;
@@ -388,6 +394,8 @@ int gui();
 void initGame1vs1Human(Game *g);
 void initGame1vs1HumanAI(Game *g);
 void initScoreBoard(ScoreBoard *sb, Game *g);
+
+void keyStateUpdate(KeyState *ks, bool);
 
 #define TILE_WIDTH 14
 #define TILE_HEIGHT 14

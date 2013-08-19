@@ -22,12 +22,18 @@ void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 	clip.w = f->width;
 	for (i = 0; str[i] != '\0'; i++) {
 		c = str[i];
+		if (c == '\n') {
+			offset.x = x;
+			offset.y += f->height;
+			continue;
+		}
 		/* [32..126] are drawable ASCII chars */
 		if (c >= 32 && c <= 126) {
 			clip.x = f->width * (c - 32);
 			SDL_BlitSurface(f->map, &clip, s, &offset);
 		}
 		offset.x += f->width + f->spacing;
+
 	}
 }
 
@@ -237,30 +243,6 @@ void drawScrollingBackground(Env *e)
 	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1 + e->io.titleHover->h);
 }
 
-
-void drawGameAreYouSureQuit(Env *e)
-{
-	int i;
-	const int orgX = 150 - 8;
-	const int orgY = 80;
-
-	NOT(e);
-
-	drawScrollingBackground(e);
-	
-	surfaceDraw(e->io.screen, e->io.back, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-	SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
-	SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 218);
-	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX - e->io.whiteFont.width * 11, orgY - e->io.whiteFont.height);
-	for (i = 0; i < YES_NO_COUNT; i++) {
-		surfaceDraw(e->io.screen,
-				e->gui.gameAreYouSureQuit.focus == i ? e->io.yesNo[i].highlight : e->io.yesNo[i].normal,
-				orgX, orgY + i * e->io.whiteFont.height);
-	}
-}
-
 void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
 {
 	SDL_Rect clip, offset;
@@ -332,6 +314,24 @@ void drawMenuView(SDL_Surface *s, MenuView *mv)
 	}
 }
 
+void drawGameAreYouSureQuit(Env *e)
+{
+	const int orgX = 150 - 8;
+	const int orgY = 80;
+
+	NOT(e);
+
+	drawScrollingBackground(e);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
+	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 218));
+	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
+	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX - e->io.whiteFont.width * 11, orgY - e->io.whiteFont.height);
+	drawMenuView(e->io.screen, &e->io.yesNoMV);
+}
+
 void draw(Env *e)
 {
 	NOT(e);
@@ -363,7 +363,11 @@ void draw(Env *e)
 			if (i == SETTINGS_FOCUS_MUSIC || i == SETTINGS_FOCUS_SFX) {
 				int v;
 				v = i == SETTINGS_FOCUS_MUSIC ? e->gui.settings.musVolume : e->gui.settings.sfxVolume;
-				drawNum(e->io.screen, 190, i * e->io.normalFont.height * 2 + 100, v, f);
+				drawNum(e->io.screen, 183, i * e->io.normalFont.height * 2 + 65, v, f);
+				if (i == SETTINGS_FOCUS_MUSIC) {
+				} else {
+					assert(i == SETTINGS_FOCUS_SFX);
+				}
 			}
 		}
 		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
@@ -379,12 +383,12 @@ void draw(Env *e)
 	}
 	case GUI_FOCUS_GAME_MENU: {
 		drawScrollingBackground(e);
+		drawScoreBoard(&e->gui.scoreBoard, &e->io);
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+		SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-		
 		drawMenuView(e->io.screen, &e->io.gameMenuMV);
 		break;
 	}
@@ -398,7 +402,7 @@ void draw(Env *e)
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
 		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+		SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 		break;
@@ -408,7 +412,7 @@ void draw(Env *e)
 		surfaceDraw(e->io.screen, e->io.back, 0, 0);
 		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
 		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		SDL_FillRect(e->io.fader, 0, SDL_MapRGB(e->io.fader->format, 0, 0, 0));
+		SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
 		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
 		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
 		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);

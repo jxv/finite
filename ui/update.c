@@ -970,12 +970,13 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
-void updateGameMenu(GUI *g, Controls *c)
+void updateGameMenu(GUI *g, Controls *c, Game *gm)
 {
 	MenuWidget *m;
 
 	NOT(g);
 	NOT(c);
+	NOT(gm);
 
 	m = &g->gameMenu;
 
@@ -990,6 +991,12 @@ void updateGameMenu(GUI *g, Controls *c)
 		case GAME_MENU_FOCUS_SETTINGS: {
 			g->settings.previous = g->focus;
 			g->next = GUI_FOCUS_SETTINGS;
+			break;
+		}
+		case GAME_MENU_FOCUS_SKIP: {
+			g->transMove.type = TRANS_MOVE_SKIP_PLAY;
+			nextTurn(gm);
+			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 			break;
 		}
 		case GAME_MENU_FOCUS_QUIT: {
@@ -1075,7 +1082,7 @@ void update(Env *e)
 	case GUI_FOCUS_SETTINGS: updateSettings(&e->gui, &e->controls); break;
 	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_GUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_MENU: updateGameMenu(&e->gui, &e->controls); break;
+	case GUI_FOCUS_GAME_MENU: updateGameMenu(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_AI_PAUSE: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
 	case GUI_FOCUS_GAME_OVER: updateGameOver(&e->gui, &e->controls, &e->game); break;

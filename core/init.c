@@ -147,7 +147,8 @@ void bagInit(Bag *b)
 	for (i = 0; i < tileWildNum; i++) {
 		b->tile[i].type = TILE_WILD;
 	}
-	bagShake(b, 0);
+
+	b->tail = 20; bagShake(b, 0);
 }
 
 

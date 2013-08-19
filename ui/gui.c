@@ -280,10 +280,10 @@ bool initMenuViews(IO *io, GUI *g)
 {
 	Font *n, *h;
 
-	char *menuText[MENU_FOCUS_COUNT] = {"Play", "Settings", "Exit"};
-	char *playMenuText[PLAY_MENU_FOCUS_COUNT] = {"1 Player", "2 Player"};
-	char *gameMenuText[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Quit"};
-	char *settingsText[SETTINGS_FOCUS_COUNT] = {"Music:", "  SFX:"};
+	char *menuText[MENU_FOCUS_COUNT] = {"Play", "Rules", "Settings", "Exit"};
+	char *playMenuText[PLAY_MENU_FOCUS_COUNT] = {"1 Player", "2 Player", "Netplay (N/A)"};
+	char *gameMenuText[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Skip", "Quit"};
+	char *settingsText[SETTINGS_FOCUS_COUNT] = {"Music:     ", "  SFX:     ", "Controls", "Back"};
 	char *yesNoText[YES_NO_COUNT] = {"Yes", "No"};
 
 	NOT(io);
@@ -467,43 +467,12 @@ bool init(Env *e)
 	}
 
 	e->io.fader = surfaceCpy(e->io.screen);
+	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 0));
 
 	e->io.pressStart = createText(&e->io.normalFont, "PRESS START");
 
 	initGUI(&e->gui);
 	if (!initMenuViews(&e->io, &e->gui)) {
-		return false;
-	}
-
-	{
-		char *text[MENU_FOCUS_COUNT] = {"Play", "Settings", "Exit"};
-		mkHighTexts(e->io.menuFocus, &e->io.normalFont, &e->io.highlightFont, text, MENU_FOCUS_COUNT);
-	}
-	if (!areHighTextsLoaded(e->io.menuFocus, MENU_FOCUS_COUNT)) {
-		return false;
-	}
-
-	{
-		char *text[PLAY_MENU_FOCUS_COUNT] = {"Human vs. Human", "Human vs. CPU"};
-		mkHighTexts(e->io.playMenuFocus, &e->io.normalFont, &e->io.highlightFont, text, PLAY_MENU_FOCUS_COUNT);
-	}
-	if (!areHighTextsLoaded(e->io.playMenuFocus, PLAY_MENU_FOCUS_COUNT)) {
-		return false;
-	}
-
-	{
-		char *text[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Quit"};
-		mkHighTexts(e->io.gameMenuFocus, &e->io.normalFont, &e->io.highlightFont, text, GAME_MENU_FOCUS_COUNT);
-	}
-	if (!areHighTextsLoaded(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT)) {
-		return false;
-	}
-
-	{
-		char *text[SETTINGS_FOCUS_COUNT] = {"Music:", "SFX:"};
-		mkHighTexts(e->io.settingsFocus, &e->io.normalFont, &e->io.highlightFont, text, SETTINGS_FOCUS_COUNT);
-	}
-	if (!areHighTextsLoaded(e->io.settingsFocus, SETTINGS_FOCUS_COUNT)) {
 		return false;
 	}
 
