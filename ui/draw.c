@@ -42,33 +42,33 @@ void printCmd(Cmd *c)
 	NOT(c);
 
 	switch (c->type) {
-	case CMD_FOCUS_TOP: puts("[cmd:focus-top]"); break;
-	case CMD_FOCUS_BOTTOM: puts("[cmd:focus-bottom]"); break;
-	case CMD_BOARD_SELECT: printf("[cmd:board-select (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
-	case CMD_RACK_SELECT: printf("[cmd:rack-select %d]\n", c->data.rack); break;
-	case CMD_BOARD: printf("[cmd:board (%d, %d)]\n", c->data.board.x, c->data.board.y); break;
-	case CMD_BOARD_LEFT: puts("[cmd:board-left]"); break;
-	case CMD_BOARD_RIGHT: puts("[cmd:board-right]"); break;
-	case CMD_BOARD_UP: puts("[cmd:board-up]"); break;
-	case CMD_BOARD_DOWN: puts("[cmd:board-down]"); break;
-	case CMD_RACK: printf("[cmd:rack %d]\n", c->data.rack); break;
-	case CMD_RACK_LEFT: puts("[cmd:rack-left]"); break;
-	case CMD_RACK_RIGHT: puts("[cmd:rack-right]"); break;
-	case CMD_CHOICE: printf("[cmd:choice %d]\n", c->data.choice); break;
-	case CMD_CHOICE_LEFT: puts("[cmd:choice-left]"); break;
-	case CMD_CHOICE_RIGHT: puts("[cmd:choice-right]"); break;
-	case CMD_RECALL: puts("[cmd:recall]"); break;
-	case CMD_MODE_UP: puts("[cmd:mode-up]"); break;
-	case CMD_MODE_DOWN: puts("[cmd:mode-down]"); break;
-	case CMD_PLAY: puts("[cmd:play]"); break;
-	case CMD_SHUFFLE: puts("[cmd:shuffle]"); break;
-	case CMD_BOARD_CANCEL: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
-	case CMD_RACK_CANCEL: printf("[cmd:rack-cancel %d]", c->data.rack); break;
-	case CMD_CHOICE_CANCEL: puts("[cmd:choice-cancel]"); break;
-	case CMD_TILE_PREV: puts("[cmd:tile-prev]"); break;
-	case CMD_TILE_NEXT: puts("[cmd:tile-next]"); break;
-	case CMD_QUIT: puts("[cmd:quit]"); break;
-	/*case CMD_INVALID: puts("[cmd:invalid]"); break; // very noisy */
+	case cmdFocusTop: puts("[cmd:focus-top]"); break;
+	case cmdFocusBottom: puts("[cmd:focus-bottom]"); break;
+	case cmdBoardSelect: printf("[cmd:board-select (%d,%d)]\n", c->data.board.x, c->data.board.y); break;
+	case cmdRackSelect: printf("[cmd:rack-select %d]\n", c->data.rack); break;
+	case cmdBoard: printf("[cmd:board (%d, %d)]\n", c->data.board.x, c->data.board.y); break;
+	case cmdBoardLeft: puts("[cmd:board-left]"); break;
+	case cmdBoardRight: puts("[cmd:board-right]"); break;
+	case cmdBoardUp: puts("[cmd:board-up]"); break;
+	case cmdBoardDown: puts("[cmd:board-down]"); break;
+	case cmdRack: printf("[cmd:rack %d]\n", c->data.rack); break;
+	case cmdRackLeft: puts("[cmd:rack-left]"); break;
+	case cmdRackRight: puts("[cmd:rack-right]"); break;
+	case cmdChoice: printf("[cmd:choice %d]\n", c->data.choice); break;
+	case cmdChoiceLeft: puts("[cmd:choice-left]"); break;
+	case cmdChoiceRight: puts("[cmd:choice-right]"); break;
+	case cmdRecall: puts("[cmd:recall]"); break;
+	case cmdModeUp: puts("[cmd:mode-up]"); break;
+	case cmdModeDown: puts("[cmd:mode-down]"); break;
+	case cmdPlay: puts("[cmd:play]"); break;
+	case cmdShuffle: puts("[cmd:shuffle]"); break;
+	case cmdBoardCancel: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
+	case cmdRackCancel: printf("[cmd:rack-cancel %d]", c->data.rack); break;
+	case cmdChoiceCancel: puts("[cmd:choice-cancel]"); break;
+	case cmdTilePrev: puts("[cmd:tile-prev]"); break;
+	case cmdTileNext: puts("[cmd:tile-next]"); break;
+	case cmdQuit: puts("[cmd:quit]"); break;
+	/*case cmdInvalid: puts("[cmd:invalid]"); break; // very noisy */
 	default: break;
 	}
 }
@@ -78,17 +78,17 @@ void printTransMove(TransMove *tm)
 	NOT(tm);
 
 	switch (tm->type) {
-	case TRANS_MOVE_NONE: puts("[trans-move:none]"); break;
-	case TRANS_MOVE_PLACE: puts("[trans-move:place]"); break;
-	case TRANS_MOVE_PLACE_WILD: puts("[trans-move:place-wild]"); break;
-	case TRANS_MOVE_PLACE_END: puts("[trans-move:place-end]"); break;
-	case TRANS_MOVE_PLACE_PLAY: puts("[trans-move:place-play]"); break;
-	case TRANS_MOVE_DISCARD: puts("[trans-move:discard]"); break;
-	case TRANS_MOVE_DISCARD_PLAY: puts("[trans-move:discard-play]"); break;
-	case TRANS_MOVE_SKIP: puts("[trans-move:skip]"); break;
-	case TRANS_MOVE_SKIP_PLAY: puts("[trans-move:skip-play]"); break;
-	case TRANS_MOVE_QUIT: puts("[trans-move:quit]"); break;
-	case TRANS_MOVE_INVALID: puts("[trans-move:invalid]"); break;
+	case transMoveNone: puts("[trans-move:none]"); break;
+	case transMovePlace: puts("[trans-move:place]"); break;
+	case transMovePlaceWild: puts("[trans-move:place-wild]"); break;
+	case transMovePlaceEnd: puts("[trans-move:place-end]"); break;
+	case transMovePlacePlay: puts("[trans-move:place-play]"); break;
+	case transMoveDiscard: puts("[trans-move:discard]"); break;
+	case transMoveDiscardPlay: puts("[trans-move:discard-play]"); break;
+	case transMoveSkip: puts("[trans-move:skip]"); break;
+	case transMoveSkipPlay: puts("[trans-move:skip-play]"); break;
+	case transMoveQuit: puts("[trans-move:quit]"); break;
+	case transMoveInvalid: puts("[trans-move:invalid]"); break;
 	default: break;
 	}
 }
@@ -102,17 +102,17 @@ void guiDrawLockon(IO *io, GameGUI *gg)
 	NOT(gg);
 	
 	switch (gg->focus) {
-	case GAME_GUI_FOCUS_BOARD: {
+	case gameGUIFocusBoard: {
 		idx = gg->boardWidget.index;
 		surfaceDraw(io->screen, io->lockon, 104 + idx.x * w, 4 + idx.y * h);
 		break;
 	}
-	case GAME_GUI_FOCUS_RACK: {
+	case gameGUIFocusRack: {
 		idx = gg->rackWidget.index;
 		surfaceDraw(io->screen, io->lockon, 174 + idx.x * w, 219);
 		break;
 	}
-	case GAME_GUI_FOCUS_CHOICE: {
+	case gameGUIFocusChoice: {
 		idx = gg->choiceWidget.index;
 		surfaceDraw(io->screen, io->lockon, 104 + idx.x * w, 219);
 		break;
@@ -136,20 +136,20 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, Gri
 	NOT(p);
 	NOT(bw);
 	
-	if (gf != GAME_GUI_FOCUS_BOARD) {
+	if (gf != gameGUIFocusBoard) {
 		return;
 	}
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: {
+	case transMovePlace: {
 		i = tm->adjust.data.tile[tm->place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
-		s = t->type == TILE_WILD ? io->wild[TILE_LOOK_GHOST] : io->tile[t->type][t->letter][TILE_LOOK_GHOST];
+		s = t->type == tileWild ? io->wild[tileLookGhost] : io->tile[t->type][t->letter][tileLookGhost];
 		surfaceDraw(io->screen, s, idx.x * TILE_WIDTH + POS_X, idx.y * TILE_HEIGHT + POS_Y);
 		break;
 	}
-	case TRANS_MOVE_PLACE_WILD: {
+	case transMovePlaceWild: {
 		i = tm->adjust.data.tile[tm->place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
@@ -314,9 +314,131 @@ void drawMenuView(SDL_Surface *s, MenuView *mv)
 	}
 }
 
-void drawGameAreYouSureQuit(Env *e)
+void drawDemoInfo(Env *e)
 {
-	const int orgX = 150 - 8;
+	NOT(e);
+	
+	strDraw(e->io.screen, &e->io.normalFont, "Demo August 2013", 0, SCREEN_HEIGHT - e->io.normalFont.height);
+}
+
+void draw_guiFocusTitle(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
+	if ((e->io.time - floorf(e->io.time)) > 0.5) {
+		surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
+	}
+}
+
+void draw_guiFocusMenu(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	drawMenuView(e->io.screen, &e->io.menuMV);
+}
+
+void draw_guiFocusSettings(Env *e)
+{
+	Font *f;
+	int i;
+
+	NOT(e);
+	
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+
+	drawMenuView(e->io.screen, &e->io.settingsMV);
+	for (i = 0; i < settingsFocusCount; i++) {
+		f = i == e->gui.settings.menu.focus ? &e->io.highlightFont : &e->io.normalFont;
+		if (i == settingsFocusMusic || i == settingsFocusSfx) {
+			int v;
+			v = i == settingsFocusMusic ? e->gui.settings.musVolume : e->gui.settings.sfxVolume;
+			drawNum(e->io.screen, 183, i * e->io.normalFont.height * 2 + 65, v, f);
+			if (i == settingsFocusMusic) {
+			} else {
+				assert(i == settingsFocusSfx);
+			}
+		}
+	}
+	/* surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200); */
+}
+
+void draw_guiFocusGameGUI(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+}
+
+void draw_guiFocusGameMenu(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	drawMenuView(e->io.screen, &e->io.gameMenuMV);
+}
+
+void draw_guiFocusPlayMenu(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	drawMenuView(e->io.screen, &e->io.playMenuMV);
+}
+
+void draw_guiGameAIPause(Env *e)
+{
+	NOT(e);
+		
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
+	SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
+	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
+}
+
+void draw_guiFocusGameHotseatPause(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
+	SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
+	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
+	surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
+}
+
+void draw_guiFocusGameOver(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.back, 0, 0);
+	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+}
+
+void draw_guiFocusGameAreYouSureQuit(Env *e)
+{
+	const int orgX = (SCREEN_WIDTH - e->io.areYouSureQuit->w)/2;
 	const int orgY = 80;
 
 	NOT(e);
@@ -326,9 +448,9 @@ void drawGameAreYouSureQuit(Env *e)
 	
 	surfaceDraw(e->io.screen, e->io.back, 0, 0);
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 218));
-	surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX - e->io.whiteFont.width * 11, orgY - e->io.whiteFont.height);
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	
+	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX, orgY - e->io.whiteFont.height);
 	drawMenuView(e->io.screen, &e->io.yesNoMV);
 }
 
@@ -338,96 +460,19 @@ void draw(Env *e)
 
 	SDL_FillRect(e->io.screen, NULL, 0);
 	switch (e->gui.focus) {
-	case GUI_FOCUS_TITLE: {
-		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
-		if ((e->io.time - floorf(e->io.time)) > 0.5) {
-			surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
-		}
-		break;
-	}
-	case GUI_FOCUS_MENU: {
-		drawScrollingBackground(e);
-		drawMenuView(e->io.screen, &e->io.menuMV);
-		break;
-	}
-	case GUI_FOCUS_SETTINGS: {
-		Font *f;
-		int i;
-
-		drawScrollingBackground(e);
-
-		drawMenuView(e->io.screen, &e->io.settingsMV);
-		for (i = 0; i < SETTINGS_FOCUS_COUNT; i++) {
-			f = i == e->gui.settings.menu.focus ? &e->io.highlightFont : &e->io.normalFont;
-			if (i == SETTINGS_FOCUS_MUSIC || i == SETTINGS_FOCUS_SFX) {
-				int v;
-				v = i == SETTINGS_FOCUS_MUSIC ? e->gui.settings.musVolume : e->gui.settings.sfxVolume;
-				drawNum(e->io.screen, 183, i * e->io.normalFont.height * 2 + 65, v, f);
-				if (i == SETTINGS_FOCUS_MUSIC) {
-				} else {
-					assert(i == SETTINGS_FOCUS_SFX);
-				}
-			}
-		}
-		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
-		break;
-	}
-	case GUI_FOCUS_GAME_GUI: {
-
-		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		break;
-	}
-	case GUI_FOCUS_GAME_MENU: {
-		drawScrollingBackground(e);
-		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-		SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
-		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
-		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-		drawMenuView(e->io.screen, &e->io.gameMenuMV);
-		break;
-	}
-	case GUI_FOCUS_PLAY_MENU: {
-		drawScrollingBackground(e);
-		drawMenuView(e->io.screen, &e->io.playMenuMV);
-		break;
-	}
-	case GUI_FOCUS_GAME_AI_PAUSE: {
-		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
-		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
-		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
-		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-		break;
-	}
-	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: {
-		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
-		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 196));
-		SDL_SetAlpha(e->io.fader, SDL_SRCALPHA, 196);
-		surfaceDraw(e->io.screen, e->io.fader, 0, 0);
-		surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200);
-		break;
-	}
-	case GUI_FOCUS_GAME_OVER: {
-		drawScrollingBackground(e);
-		surfaceDraw(e->io.screen, e->io.back, 0, 0);
-		guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
-		drawScoreBoard(&e->gui.scoreBoard, &e->io);
-		break;
-	}
-	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: drawGameAreYouSureQuit(e); break;
+	case guiFocusTitle: draw_guiFocusTitle(e); break;
+	case guiFocusMenu: draw_guiFocusMenu(e); break;
+	case guiFocusSettings: draw_guiFocusSettings(e); break;
+	case guiFocusGameGUI: draw_guiFocusGameGUI(e); break;
+	case guiFocusGameMenu: draw_guiFocusGameMenu(e); break;
+	case guiFocusPlayMenu: draw_guiFocusPlayMenu(e); break;
+	case guiFocusGameAIPause: draw_guiGameAIPause(e); break;
+	case guiFocusGameHotseatPause: draw_guiFocusGameHotseatPause(e); break;
+	case guiFocusGameOver: draw_guiFocusGameOver(e); break;
+	case guiFocusGameAreYouSureQuit: draw_guiFocusGameAreYouSureQuit(e); break;
 	default: break;
 	}
+	drawDemoInfo(e);
 	SDL_Flip(e->io.screen);
 }
 

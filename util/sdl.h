@@ -1,7 +1,6 @@
 #ifndef	FINITE_SDL_UTIL_H
 #define	FINITE_SDL_UTIL_H
 
-
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
@@ -11,6 +10,14 @@
 #define ALPHA_B		0xff
 #define SCREEN_BPP	32
 
+typedef enum
+{
+	keyStateUntouched = 0,
+	keyStatePressed,
+	keyStateHeld,
+	keyStateReleased,
+	keyStateCount
+} KeyStateType;
 
 void surfaceFree(SDL_Surface *s);
 SDL_Surface *surfaceLoad(const char *filename);

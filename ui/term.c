@@ -215,10 +215,10 @@ int term()
 			} while (m.type == MOVE_INVALID);
 			actionClr(&a);
 			mkAction(&a, &g, &m);
-			if (a.type == ACTION_INVALID) {
+			if (a.type == actionInvalid) {
 				printActionErr(a.data.err);
 			}
-		} while(a.type == ACTION_INVALID);
+		} while(a.type == actionInvalid);
 		if (applyAction(&g, &a)) {
 			nextTurn(&g);
 		}

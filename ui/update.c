@@ -1,5 +1,5 @@
 #include <math.h>
-
+#include <dosk.h>
 #include "gui.h"
 #include "update.h"
 #include "init.h"
@@ -12,22 +12,22 @@ void keyStateUpdate(KeyState *ks, bool touched)
 
 	if (touched) {
 		switch(ks->type) {
-		case KEY_STATE_UNTOUCHED: {
-			ks->type = KEY_STATE_PRESSED;
+		case keyStateUntouched: {
+			ks->type = keyStatePressed;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEY_STATE_PRESSED: {
-			ks->type = KEY_STATE_HELD;
+		case keyStatePressed: {
+			ks->type = keyStateHeld;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEY_STATE_HELD: {
+		case keyStateHeld: {
 			ks->time += 1.0f / 60.0f;
 			break;
 		}
-		case KEY_STATE_RELEASED: {
-			ks->type = KEY_STATE_PRESSED;
+		case keyStateReleased: {
+			ks->type = keyStatePressed;
 			ks->time = 0.0f;
 			break;
 		}
@@ -35,22 +35,22 @@ void keyStateUpdate(KeyState *ks, bool touched)
 		}
 	} else {
 		switch(ks->type) {
-		case KEY_STATE_UNTOUCHED: {
+		case keyStateUntouched: {
 			ks->time += 1.0f / 60.0f;
 			break;
 		}
-		case KEY_STATE_PRESSED: {
-			ks->type = KEY_STATE_RELEASED;
+		case keyStatePressed: {
+			ks->type = keyStateReleased;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEY_STATE_HELD: {
-			ks->type = KEY_STATE_RELEASED;
+		case keyStateHeld: {
+			ks->type = keyStateReleased;
 			ks->time = 0.0f;
 			break;
 		}
-		case KEY_STATE_RELEASED: {
-			ks->type = KEY_STATE_UNTOUCHED;
+		case keyStateReleased: {
+			ks->type = keyStateUntouched;
 			ks->time = 0.0f;
 			break;
 		}
@@ -100,14 +100,14 @@ void findNextMoveModePlaceIdx(TransMove *tm)
 	MoveModePlace *mmp;
 
 	NOT(tm);
-	assert(tm->type == TRANS_MOVE_PLACE);
+	assert(tm->type == transMovePlace);
 
 	mmp = &tm->place;
 
 	do {
 		mmp->idx++;
 		mmp->idx %= RACK_SIZE;
-	} while (validBoardIdx(mmp->boardIdx[mmp->idx]) || tm->adjust.data.tile[mmp->idx].type == TILE_NONE);
+	} while (validBoardIdx(mmp->boardIdx[mmp->idx]) || tm->adjust.data.tile[mmp->idx].type == tileNone);
 }
 
 void shuffleRackTransMove(TransMove *tm)
@@ -171,13 +171,13 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(c);
 	NOT(b);
 	NOT(p);
-	assert(tm->type == TRANS_MOVE_PLACE);
-	assert(c->type != CMD_QUIT);
+	assert(tm->type == transMovePlace);
+	assert(c->type != cmdQuit);
 	
 	mmp = &tm->place;
 	
 	switch (c->type) {
-	case CMD_BOARD_SELECT: {
+	case cmdBoardSelect: {
 		int *idx;
 
 		idx = &mmp->rackIdx[c->data.board.y][c->data.board.x];
@@ -191,8 +191,8 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			tm->adjust.data.tile[a0] = b1;
 			tm->adjust.data.tile[a1] = b0;
 
-			if (tm->adjust.data.tile[a0].type == TILE_WILD) {
-				tm->type = TRANS_MOVE_PLACE_WILD;
+			if (tm->adjust.data.tile[a0].type == tileWild) {
+				tm->type = transMovePlaceWild;
 				mmp->idx = a0;
 			}
 		} else {
@@ -200,29 +200,29 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			
 			assert(mmp->boardIdx[mmp->idx].x == -1 && mmp->boardIdx[mmp->idx].y == -1);;
 			mmp->boardIdx[mmp->idx] = c->data.board;
-			if (tm->adjust.data.tile[*idx].type == TILE_LETTER) {
+			if (tm->adjust.data.tile[*idx].type == tileLetter) {
 				mmp->num++;
 				assert(mmp->num > 0 && mmp->num <= adjustTileCount(&tm->adjust));
 				if (adjustTileCount(&tm->adjust) == mmp->num) {
-					tm->type = TRANS_MOVE_PLACE_END;
+					tm->type = transMovePlaceEnd;
 				} else {
 					findNextMoveModePlaceIdx(tm);
 				}
 			} else {
-				assert(tm->adjust.data.tile[*idx].type == TILE_WILD);
-				tm->type = TRANS_MOVE_PLACE_WILD;
+				assert(tm->adjust.data.tile[*idx].type == tileWild);
+				tm->type = transMovePlaceWild;
 			}
 		} 
 		return true;
 	}
-	case CMD_RACK_SELECT: {
+	case cmdRackSelect: {
 		TileType t;
 
 		assert(c->data.rack >= 0);
 		assert(c->data.rack < RACK_SIZE);
 		t = tm->adjust.data.tile[c->data.rack].type;
-		assert(t == TILE_NONE || t == TILE_LETTER || t == TILE_WILD);
-		if (t != TILE_NONE && mmp->idx != c->data.rack) {
+		assert(t == tileNone || t == tileLetter || t == tileWild);
+		if (t != tileNone && mmp->idx != c->data.rack) {
 			adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
 			if (validBoardIdx(mmp->boardIdx[c->data.rack])) {
 				int *idx;
@@ -238,12 +238,12 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		} 
 		return true;
 	}
-	case CMD_RECALL: {
-		tm->type = TRANS_MOVE_PLACE;
+	case cmdRecall: {
+		tm->type = transMovePlace;
 		clrMoveModePlace(mmp, b);
 		return true;
 	}
-	case CMD_BOARD_CANCEL: {
+	case cmdBoardCancel: {
 		Coor bIdx;
 		int rIdx;
 		
@@ -260,7 +260,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		}
 		break;
 	}
-	case CMD_TILE_PREV: {
+	case cmdTilePrev: {
 		do {
 			mmp->idx += RACK_SIZE;
 			mmp->idx--;
@@ -268,7 +268,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
 		return true;
 	}
-	case CMD_TILE_NEXT: {
+	case cmdTileNext: {
 #ifdef DEBUG
 		int original;
 		original = mmp->idx;
@@ -283,19 +283,15 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
 		return true;
 	}
-	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_SKIP;
+	case cmdModeToggle: {
+		tm->type = transMoveDiscard;
 		return true;
 	}
-	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_DISCARD;
+	case cmdPlay: {
+		tm->type = transMovePlacePlay;
 		return true;
 	}
-	case CMD_PLAY: {
-		tm->type = TRANS_MOVE_PLACE_PLAY;
-		return true;
-	}
-	case CMD_SHUFFLE: {
+	case cmdShuffle: {
 		shuffleRackTransMove(tm);
 		return true;
 	}
@@ -312,11 +308,11 @@ bool updateTransMovePlacePlay(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(c);
 	NOT(b);
 	NOT(p);
-	assert(tm->type == TRANS_MOVE_PLACE_PLAY);
-	assert(c->type != CMD_QUIT);
+	assert(tm->type == transMovePlacePlay);
+	assert(c->type != cmdQuit);
 
 	mmp = &tm->place;
-	tm->type = (adjustTileCount(&tm->adjust) == mmp->num) ? TRANS_MOVE_PLACE_END : TRANS_MOVE_PLACE;
+	tm->type = (adjustTileCount(&tm->adjust) == mmp->num) ? transMovePlaceEnd : transMovePlace;
 
 	return true;
 }
@@ -329,40 +325,40 @@ bool updateTransMovePlaceWild(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(c);
 	NOT(b);
 	NOT(p);
-	assert(tm->type == TRANS_MOVE_PLACE_WILD);
+	assert(tm->type == transMovePlaceWild);
 	
 	mmp = &tm->place;
 	
 	switch (c->type) {
-	case CMD_BOARD_SELECT: {
+	case cmdBoardSelect: {
 		mmp->num++;
 		assert(mmp->num > 0 && mmp->num <= adjustTileCount(&tm->adjust));
 		if (adjustTileCount(&tm->adjust) == mmp->num) {
-			tm->type = TRANS_MOVE_PLACE_END;
+			tm->type = transMovePlaceEnd;
 		} else {
-			tm->type = TRANS_MOVE_PLACE;
+			tm->type = transMovePlace;
 			findNextMoveModePlaceIdx(tm);
 		}
 		return true;
 	}
-	case CMD_BOARD_CANCEL: {
-		tm->type = TRANS_MOVE_PLACE;
+	case cmdBoardCancel: {
+		tm->type = transMovePlace;
 		mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x] = -1;
 		mmp->boardIdx[mmp->idx].x = -1;
 		mmp->boardIdx[mmp->idx].y = -1;
 		return true;
 	}
-	case CMD_BOARD_UP: {
+	case cmdBoardUp: {
 		int idx = tm->adjust.data.tile[mmp->idx].idx;
-		p->tile[idx].letter += LETTER_COUNT;
+		p->tile[idx].letter += letterCount;
 		p->tile[idx].letter--;
-		p->tile[idx].letter %= LETTER_COUNT;
+		p->tile[idx].letter %= letterCount;
 		return true;
 	}
-	case CMD_BOARD_DOWN: {
+	case cmdBoardDown: {
 		int idx = tm->adjust.data.tile[mmp->idx].idx;
 		p->tile[idx].letter++;
-		p->tile[idx].letter %= LETTER_COUNT;
+		p->tile[idx].letter %= letterCount;
 		return true;
 	}
 	default: break;
@@ -378,14 +374,14 @@ bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(tm);
 	NOT(c);
 	NOT(b);
-	assert(tm->type == TRANS_MOVE_PLACE_END);
-	assert(c->type != CMD_QUIT);
+	assert(tm->type == transMovePlaceEnd);
+	assert(c->type != cmdQuit);
 	
 	mmp = &tm->place;
 	
 	switch (c->type) {
-	case CMD_BOARD_SELECT:
-	case CMD_BOARD_CANCEL: {
+	case cmdBoardSelect:
+	case cmdBoardCancel: {
 		Coor bIdx;
 		int rIdx;
 		
@@ -398,22 +394,18 @@ bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
 			mmp->boardIdx[rIdx].x = -1;
 			mmp->boardIdx[rIdx].y = -1;
 			mmp->num--;
-			tm->type = TRANS_MOVE_PLACE;
+			tm->type = transMovePlace;
 			mmp->idx = rIdx;
 			return true;
 		} 
 		break;
 	}
-	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_SKIP;
+	case cmdModeToggle: {
+		tm->type = transMoveDiscard;
 		return true;
 	}
-	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_DISCARD;
-		return true;
-	}
-	case CMD_RECALL: {
-		tm->type = TRANS_MOVE_PLACE;
+	case cmdRecall: {
+		tm->type = transMovePlace;
 		clrMoveModePlace(mmp, b);
 		return true;
 	}
@@ -430,14 +422,14 @@ bool updateTransMoveDiscard(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(c);
 	NOT(b);
 	NOT(p);
-	assert(tm->type == TRANS_MOVE_DISCARD);
-	assert(c->type != CMD_BOARD_SELECT);
-	assert(c->type != CMD_QUIT);
+	assert(tm->type == transMoveDiscard);
+	assert(c->type != cmdBoardSelect);
+	assert(c->type != cmdQuit);
 	
 	mmd = &tm->discard;
 	
 	switch (c->type) {
-	case CMD_RACK_SELECT: {
+	case cmdRackSelect: {
 		mmd->rack[c->data.rack] = !mmd->rack[c->data.rack];
 		if (mmd->rack[c->data.rack]) {
 			mmd->num++;
@@ -449,23 +441,19 @@ bool updateTransMoveDiscard(TransMove *tm, Cmd *c, Board *b, Player *p)
 		}
 		return true;
 	}
-	case CMD_RECALL: {
+	case cmdRecall: {
 		clrMoveModeDiscard(mmd);
 		return true;
 	}
-	case CMD_PLAY: {
-		tm->type = TRANS_MOVE_DISCARD_PLAY;
+	case cmdPlay: {
+		tm->type = transMoveDiscardPlay;
 		return true;
 	}
-	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_PLACE;
+	case cmdModeToggle: {
+		tm->type = transMovePlace;
 		return true;
 	}
-	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_SKIP;
-		return true;
-	}
-	case CMD_RACK_CANCEL: {
+	case cmdRackCancel: {
 		if (mmd->rack[c->data.rack]) {
 			assert(mmd->num > 0);
 			mmd->num--;
@@ -473,7 +461,7 @@ bool updateTransMoveDiscard(TransMove *tm, Cmd *c, Board *b, Player *p)
 		}
 		return true;
 	}
-	case CMD_SHUFFLE: {
+	case cmdShuffle: {
 		shuffleRackTransMove(tm);
 		return true;
 	}
@@ -488,25 +476,25 @@ bool updateTransMoveSkip(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(c);
 	NOT(b);
 	NOT(p);
-	assert(tm->type == TRANS_MOVE_SKIP);
-	assert(c->type != CMD_BOARD_SELECT);
-	assert(c->type != CMD_RACK_SELECT);
-	assert(c->type != CMD_RECALL);
+	assert(tm->type == transMoveSkip);
+	assert(c->type != cmdBoardSelect);
+	assert(c->type != cmdRackSelect);
+	assert(c->type != cmdRecall);
 	
 	switch (c->type) {
-	case CMD_MODE_UP: {
-		tm->type = TRANS_MOVE_DISCARD;
+	case cmdModeUp: {
+		tm->type = transMoveDiscard;
 		return true;
 	}
-	case CMD_MODE_DOWN: {
-		tm->type = TRANS_MOVE_PLACE;
+	case cmdModeDown: {
+		tm->type = transMovePlace;
 		return true;
 	}
-	case CMD_PLAY: {
-		tm->type = TRANS_MOVE_SKIP_PLAY;
+	case cmdPlay: {
+		tm->type = transMoveSkipPlay;
 		return true;
 	}
-	case CMD_SHUFFLE: {
+	case cmdShuffle: {
 		shuffleRackTransMove(tm);
 		return true;
 	}
@@ -534,16 +522,16 @@ bool updateTransMove(TransMove *tm, Cmd *c, Board *b, Player *p)
 	NOT(p);
 	
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: return updateTransMovePlace(tm, c, b, p);
-	case TRANS_MOVE_PLACE_WILD: return updateTransMovePlaceWild(tm, c, b, p);
-	case TRANS_MOVE_PLACE_END: return updateTransMovePlaceEnd(tm, c, b, p);
-	case TRANS_MOVE_PLACE_PLAY: return updateTransMovePlacePlay(tm, c, b, p);
-	case TRANS_MOVE_DISCARD: return updateTransMoveDiscard(tm, c, b, p);
-	case TRANS_MOVE_SKIP: return updateTransMoveSkip(tm, c, b, p);
-	case TRANS_MOVE_QUIT: return updateTransMoveQuit(tm, c, b, p);
-	case TRANS_MOVE_NONE:
-	case TRANS_MOVE_INVALID: 
-	default: tm->type = TRANS_MOVE_INVALID; break;
+	case transMovePlace: return updateTransMovePlace(tm, c, b, p);
+	case transMovePlaceWild: return updateTransMovePlaceWild(tm, c, b, p);
+	case transMovePlaceEnd: return updateTransMovePlaceEnd(tm, c, b, p);
+	case transMovePlacePlay: return updateTransMovePlacePlay(tm, c, b, p);
+	case transMoveDiscard: return updateTransMoveDiscard(tm, c, b, p);
+	case transMoveSkip: return updateTransMoveSkip(tm, c, b, p);
+	case transMoveQuit: return updateTransMoveQuit(tm, c, b, p);
+	case transMoveNone:
+	case transMoveInvalid: 
+	default: tm->type = transMoveInvalid; break;
 	}
 	return false;
 }
@@ -552,7 +540,7 @@ void clrTransMove(TransMove *tm, int pidx, Player *p, Board *b)
 {
 	NOT(tm);
 
-	tm->type = TRANS_MOVE_PLACE;
+	tm->type = transMovePlace;
 	tm->playerIdx = pidx;
 	mkAdjust(&tm->adjust, p);
 	clrMoveModePlace(&tm->place, b);
@@ -611,18 +599,18 @@ bool transMoveToMove(Move *m, TransMove *tm)
 	
 	m->playerIdx = tm->playerIdx;
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE_PLAY: {
+	case transMovePlacePlay: {
 		m->type = MOVE_PLACE;
 		moveModePlaceToMovePlace(&m->data.place, &tm->place, &tm->adjust);
 		return true;
 	}
-	case TRANS_MOVE_DISCARD_PLAY: {
+	case transMoveDiscardPlay: {
 		m->type = MOVE_DISCARD;
 		moveModeDiscardToMoveDiscard(&m->data.discard, &tm->discard, &tm->adjust);
 		return true;
 	}
-	case TRANS_MOVE_SKIP_PLAY: m->type = MOVE_SKIP; return true;
-	case TRANS_MOVE_QUIT: m->type = MOVE_QUIT; return true;
+	case transMoveSkipPlay: m->type = MOVE_SKIP; return true;
+	case transMoveQuit: m->type = MOVE_QUIT; return true;
 	default: m->type = MOVE_INVALID; break;
 	}
 	return false;
@@ -633,19 +621,19 @@ void updateTitle(GUI *g, Controls *c)
 	NOT(g);
 	NOT(c);
 
-	if (c->start.type == KEY_STATE_PRESSED) {
-		g->next = GUI_FOCUS_MENU;
+	if (c->start.type == keyStatePressed) {
+		g->next = guiFocusMenu;
 	}
 }
 
 bool submitted(Controls *c)
 {
-	return c->a.type == KEY_STATE_PRESSED || c->start.type == KEY_STATE_PRESSED;
+	return c->a.type == keyStatePressed || c->start.type == keyStatePressed;
 }
 
 bool goBack(Controls *c)
 {
-	return c->b.type == KEY_STATE_PRESSED;
+	return c->b.type == keyStatePressed;
 }
 
 void updateMenuWidget(MenuWidget *m, Controls *c)
@@ -657,13 +645,13 @@ void updateMenuWidget(MenuWidget *m, Controls *c)
 		m->focus = m->init;
 	}
 
-	if (c->up.type == KEY_STATE_PRESSED) {
+	if (c->up.type == keyStatePressed) {
 		m->focus += m->max;
 		m->focus--;
 		m->focus %= m->max;
 		return;
 	}
-	if (c->down.type == KEY_STATE_PRESSED) {
+	if (c->down.type == keyStatePressed) {
 		m->focus++;
 		m->focus %= m->max;
 	}
@@ -685,15 +673,15 @@ bool updateMenu(GUI *g, Controls *c)
 
 	if (submitted(c)) {
 		switch (m->focus) {
-		case MENU_FOCUS_PLAY: g->next = GUI_FOCUS_PLAY_MENU; break;
-		case MENU_FOCUS_SETTINGS: g->next = GUI_FOCUS_SETTINGS; break;
-		case MENU_FOCUS_EXIT: return true;
+		case menuFocusPlay: g->next = guiFocusPlayMenu; break;
+		case menuFocusSettings: g->next = guiFocusSettings; break;
+		case menuFocusExit: return true;
 		default: break;
 		}
 
 	}
 	if (goBack(c)) {
-		g->next = GUI_FOCUS_TITLE;
+		g->next = guiFocusTitle;
 	}
 	return false;
 }
@@ -706,10 +694,10 @@ int updateVolumes(int curVol, Controls *c)
 
 	newVol = curVol;
 	
-	if (c->left.type == KEY_STATE_PRESSED) {
+	if (c->left.type == keyStatePressed) {
 		newVol --;
 	} 
-	if (c->right.type == KEY_STATE_PRESSED) {
+	if (c->right.type == keyStatePressed) {
 		newVol ++;
 	}
 
@@ -736,8 +724,8 @@ void updateSettings(GUI *g, Controls *c)
 	}
 	
 	switch (s->menu.focus) {
-	case SETTINGS_FOCUS_MUSIC: s->musVolume = updateVolumes(s->musVolume, c); break;
-	case SETTINGS_FOCUS_SFX: s->sfxVolume = updateVolumes(s->sfxVolume, c); break;
+	case settingsFocusMusic: s->musVolume = updateVolumes(s->musVolume, c); break;
+	case settingsFocusSfx: s->sfxVolume = updateVolumes(s->sfxVolume, c); break;
 	default: break;
 	}
 
@@ -758,9 +746,9 @@ void resetNewGameGui(GUI *g, Game *gm)
 	NOT(g);
 	NOT(gm);
 
-	g->next = GUI_FOCUS_GAME_GUI;
+	g->next = guiFocusGameGUI;
 	clrTransMove(&g->transMove, gm->turn, &gm->player[gm->turn], &gm->board);
-	c.type = CMD_INVALID;
+	c.type = cmdInvalid;
 	updateTransMove(&g->transMove, &c, &gm->board, &gm->player[gm->turn]);
 	updateGameGUIWidgets(&g->gameGui, &g->transMove, &gm->board);
 }
@@ -778,19 +766,19 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	updateMenuWidget(m, c);
 
 	if (goBack(c)) {
-		g->next = GUI_FOCUS_MENU;
+		g->next = guiFocusMenu;
 		return;
 	}
 
 	if (submitted(c)) {
 		switch (m->focus) {
-		case PLAY_MENU_FOCUS_HUMAN_VS_HUMAN: {
+		case playMenuFocusHumanVsHuman: {
 			initGame1vs1Human(gm);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
 			break;
 		}
-		case PLAY_MENU_FOCUS_HUMAN_VS_AI: {
+		case playMenuFocusHumanVsAI: {
 			initGame1vs1HumanAI(gm);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
@@ -803,15 +791,15 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 
 GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)
 {
-	assert(pt >= 0 && pt < PLAYER_COUNT);
+	assert(pt >= 0 && pt < playerCount);
 
 	switch (pt) {
-	case PLAYER_HUMAN: return GUI_FOCUS_GAME_HOTSEAT_PAUSE;
-	case PLAYER_AI: return GUI_FOCUS_GAME_AI_PAUSE;
+	case playerHuman: return guiFocusGameHotseatPause;
+	case playerAI: return guiFocusGameAIPause;
 	default: break;
 	}
 	assert(false);
-	return GUI_FOCUS_GAME_GUI;
+	return guiFocusGameGUI;
 }
 
 void updateScoreBoard(ScoreBoard *sb, Game *gm, float timeStep)
@@ -866,55 +854,57 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	gg = &g->gameGui;
 	tm = &g->transMove;
 
-	if (c->start.type == KEY_STATE_PRESSED) {
-		g->next = GUI_FOCUS_GAME_MENU;
+	if (c->start.type == keyStatePressed) {
+		g->next = guiFocusGameMenu;
 		return;
 	}
 	
-	if (tm->type == TRANS_MOVE_INVALID) {
+	if (tm->type == transMoveInvalid) {
 		resetNewGameGui(g, gm);
 	}
 	
 	switch (gg->focus) {
-	case GAME_GUI_FOCUS_BOARD: boardWidgetControls(&cmd, gg, c); break;
-	case GAME_GUI_FOCUS_CHOICE: choiceWidgetControls(&cmd, gg, c); break;
-	case GAME_GUI_FOCUS_RACK: rackWidgetControls(&cmd, gg, c); break;
+	case gameGUIFocusBoard: boardWidgetControls(&cmd, gg, c); break;
+	case gameGUIFocusChoice: choiceWidgetControls(&cmd, gg, c); break;
+	case gameGUIFocusRack: rackWidgetControls(&cmd, gg, c); break;
 	default: break;
 	}
 	updateGameGUIViaCmd(gg, &cmd, tm->type);
 	
 	switch (cmd.type) {
-	case CMD_FOCUS_TOP: {
-		if (tm->type == TRANS_MOVE_PLACE ||
-		    tm->type == TRANS_MOVE_PLACE_WILD ||
-		    tm->type == TRANS_MOVE_PLACE_END ||
-		    tm->type == TRANS_MOVE_PLACE_PLAY) {
-			gg->focus = GAME_GUI_FOCUS_BOARD;
+	case cmdFocusTop: {
+		if (tm->type == transMovePlace ||
+		    tm->type == transMovePlaceEnd ||
+		    tm->type == transMovePlacePlay) {
+			gg->focus = gameGUIFocusBoard;
 		}
 		break;
 	}
-	case CMD_FOCUS_BOTTOM: {
-		gg->focus = gg->bottomLast != GAME_GUI_FOCUS_CHOICE 
-			? GAME_GUI_FOCUS_RACK
-			: GAME_GUI_FOCUS_CHOICE;
+	case cmdFocusBottom: {
+		if (tm->type == transMovePlaceWild) {
+			break;
+		}
+		gg->focus = gg->bottomLast != gameGUIFocusChoice 
+			? gameGUIFocusRack
+			: gameGUIFocusChoice;
 		break;
 	}
-	case CMD_BOARD: {
-		gg->focus = GAME_GUI_FOCUS_BOARD;
+	case cmdBoard: {
+		gg->focus = gameGUIFocusBoard;
 		gg->boardWidget.index = cmd.data.board;
 		break;
 	}
-	case CMD_RACK: {
-		if (tm->type == TRANS_MOVE_SKIP) {
+	case cmdRack: {
+		if (tm->type == transMoveSkip) {
 			break;
 		}
-		gg->focus = GAME_GUI_FOCUS_RACK;
+		gg->focus = gameGUIFocusRack;
 		gg->rackWidget.index.x = cmd.data.rack;
 		gg->rackWidget.index.y = 0;
 		break;
 	}
-	case CMD_CHOICE: {
-		gg->focus = GAME_GUI_FOCUS_CHOICE;
+	case cmdChoice: {
+		gg->focus = gameGUIFocusChoice;
 		gg->choiceWidget.index.x = cmd.data.choice;
 		gg->choiceWidget.index.y = 0;
 		break;
@@ -922,7 +912,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	default: break;
 	}
 
-	if (gg->focus != GAME_GUI_FOCUS_BOARD) {
+	if (gg->focus != gameGUIFocusBoard) {
 		gg->bottomLast = gg->focus;
 	}
 
@@ -940,31 +930,31 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	mkAction(&a, gm, &m);
 	applyAction(gm, &a);
 
-	if (cmd.type == CMD_PLAY || cmd.type == CMD_QUIT) {
+	if (cmd.type == cmdPlay || cmd.type == cmdQuit) {
 		mkLog(&a, &l);
 		/* printLog(&l); */
 	}
 
-	if (a.type != ACTION_INVALID) {
+	if (a.type != actionInvalid) {
 		applyAdjust(&gm->player[a.playerIdx], &tm->adjust);
 		if (endGame(gm)) {
-			g->next = GUI_FOCUS_GAME_OVER;
+			g->next = guiFocusGameOver;
 		} else {
 			nextTurn(gm);
 			clrTransMove(tm, gm->turn, &gm->player[gm->turn], &gm->board);
 			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 		}
-		tm->type = TRANS_MOVE_INVALID;
+		tm->type = transMoveInvalid;
 	} else {
 		if (m.type != MOVE_INVALID) {
 			/* printActionErr(a.type); */
 		}
 	} 
 
-	if (cmd.type == CMD_PLAY) {
-		gg->validPlay = a.type != ACTION_INVALID ? YES : NO;
+	if (cmd.type == cmdPlay) {
+		gg->validPlay = a.type != actionInvalid ? yes : no;
 	} else {
-		gg->validPlay = YES_NO_INVALID;
+		gg->validPlay = yesNoInvalid;
 	}
 
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
@@ -984,23 +974,23 @@ void updateGameMenu(GUI *g, Controls *c, Game *gm)
 
 	if (submitted(c)) {
 		switch (m->focus) {
-		case GAME_MENU_FOCUS_RESUME: {
-			g->next = GUI_FOCUS_GAME_GUI;
+		case gameMenuFocusResume: {
+			g->next = guiFocusGameGUI;
 			break;
 		}
-		case GAME_MENU_FOCUS_SETTINGS: {
+		case gameMenuFocusSettings: {
 			g->settings.previous = g->focus;
-			g->next = GUI_FOCUS_SETTINGS;
+			g->next = guiFocusSettings;
 			break;
 		}
-		case GAME_MENU_FOCUS_SKIP: {
-			g->transMove.type = TRANS_MOVE_SKIP_PLAY;
+		case gameMenuFocusSkip: {
+			g->transMove.type = transMoveSkipPlay;
 			nextTurn(gm);
 			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 			break;
 		}
-		case GAME_MENU_FOCUS_QUIT: {
-			g->next = GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT;
+		case gameMenuFocusQuit: {
+			g->next = guiFocusGameAreYouSureQuit;
 			break;
 		}
 		default: break;
@@ -1015,7 +1005,7 @@ void updateGameHotseatPause(GUI *g, Controls *c, Game *gm)
 	NOT(c);
 
 	if (submitted(c)) {
-		g->next = GUI_FOCUS_GAME_GUI;
+		g->next = guiFocusGameGUI;
 	}
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
@@ -1046,13 +1036,13 @@ void updateGameAreYouSureQuit(GUI *g, Controls *c)
 	updateMenuWidget(&g->gameAreYouSureQuit, c);
 	
 	if (submitted(c)) {
-		g->next = g->gameAreYouSureQuit.focus == YES
-				? GUI_FOCUS_GAME_OVER
-				: GUI_FOCUS_GAME_MENU;
+		g->next = g->gameAreYouSureQuit.focus == yes
+				? guiFocusGameOver
+				: guiFocusGameMenu;
 		return;
 	}
 	if (goBack(c)) {
-		g->next = GUI_FOCUS_GAME_MENU;
+		g->next = guiFocusGameMenu;
 	}
 }
 
@@ -1061,8 +1051,8 @@ void updateGameOver(GUI *g, Controls *c, Game *gm)
 	NOT(g);
 	NOT(c);
 		
-	if (c->start.type == KEY_STATE_PRESSED) {
-		g->next = GUI_FOCUS_TITLE;
+	if (c->start.type == keyStatePressed) {
+		g->next = guiFocusTitle;
 	}
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
@@ -1077,16 +1067,16 @@ void update(Env *e)
 		return;
 	}
 	switch (e->gui.focus) {
-	case GUI_FOCUS_TITLE: updateTitle(&e->gui, &e->controls); break;
-	case GUI_FOCUS_MENU: e->quit = updateMenu(&e->gui, &e->controls); break;
-	case GUI_FOCUS_SETTINGS: updateSettings(&e->gui, &e->controls); break;
-	case GUI_FOCUS_PLAY_MENU: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_GUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_MENU: updateGameMenu(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_HOTSEAT_PAUSE: updateGameHotseatPause(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_AI_PAUSE: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_OVER: updateGameOver(&e->gui, &e->controls, &e->game); break;
-	case GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT: updateGameAreYouSureQuit(&e->gui, &e->controls); break;
+	case guiFocusTitle: updateTitle(&e->gui, &e->controls); break;
+	case guiFocusMenu: e->quit = updateMenu(&e->gui, &e->controls); break;
+	case guiFocusSettings: updateSettings(&e->gui, &e->controls); break;
+	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameGUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameMenu: updateGameMenu(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameHotseatPause: updateGameHotseatPause(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameAIPause: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameOver: updateGameOver(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameAreYouSureQuit: updateGameAreYouSureQuit(&e->gui, &e->controls); break;
 	default: break;
 	}
 	e->io.time += 1.0f / ((float)(FPS));

@@ -15,142 +15,134 @@
 
 typedef enum
 {
-	AUDIO_CHAN_MUSIC = 0,
-	AUDIO_CHAN_SFX,
-	AUDIO_CHAN_COUNT
+	audioChanMusic = 0,
+	audioChanSfx,
+	audioChanCount
 } AudioChanType;
 
 typedef enum
 {
-	YES_NO_INVALID = -1,
-	YES = 0,
-	NO = 1,
-	YES_NO_COUNT
+	yesNoInvalid = -1,
+	yes = 0,
+	no = 1,
+	yesNoCount
 } YesNoType;
 
 typedef enum
 {
-	KEY_STATE_UNTOUCHED = 0,
-	KEY_STATE_PRESSED,
-	KEY_STATE_HELD,
-	KEY_STATE_RELEASED,
-	KEY_STATE_COUNT
-} KeyStateType;
-
-typedef enum
-{
-	CHOICE_INVALID = -1,
-	CHOICE_RECALL = 0,
-	CHOICE_MODE,
-	CHOICE_PLAY,
-	CHOICE_SHUFFLE,
-	CHOICE_COUNT
+	choiceInvalid = -1,
+	choiceRecall = 0,
+	choiceMode,
+	choicePlay,
+	choiceShuffle,
+	choiceCount
 } ChoiceType;
 
 typedef enum
 {
-	MODE_INVALID = -1,
-	MODE_PLACE = 0,
-	MODE_DISCARD,
-	MODE_SKIP,
-	MODE_COUNT
+	modeInvalid = -1,
+	modePlace = 0,
+	modeDiscard,
+	modeSkip,
+	modeCount
 } ModeType;
 
 typedef enum
 {
-	CMD_INVALID = -1,
-	CMD_FOCUS_TOP = 0,
-	CMD_FOCUS_BOTTOM,
-	CMD_BOARD_SELECT,
-	CMD_RACK_SELECT,
-	CMD_BOARD,
-	CMD_BOARD_LEFT,
-	CMD_BOARD_RIGHT,
-	CMD_BOARD_UP,
-	CMD_BOARD_DOWN,
-	CMD_RACK,
-	CMD_RACK_LEFT,
-	CMD_RACK_RIGHT,
-	CMD_CHOICE,
-	CMD_CHOICE_LEFT,
-	CMD_CHOICE_RIGHT,
-	CMD_RECALL,
-	CMD_MODE_UP,
-	CMD_MODE_DOWN,
-	CMD_PLAY,
-	CMD_SHUFFLE,
-	CMD_BOARD_CANCEL,
-	CMD_RACK_CANCEL,
-	CMD_CHOICE_CANCEL,
-	CMD_TILE_PREV,
-	CMD_TILE_NEXT,
-	CMD_QUIT,
-	CMD_COUNT
+	cmdInvalid = -1,
+	cmdFocusTop = 0,
+	cmdFocusBottom,
+	cmdBoardSelect,
+	cmdRackSelect,
+	cmdBoard,
+	cmdBoardLeft,
+	cmdBoardRight,
+	cmdBoardUp,
+	cmdBoardDown,
+	cmdRack,
+	cmdRackLeft,
+	cmdRackRight,
+	cmdChoice,
+	cmdChoiceLeft,
+	cmdChoiceRight,
+	cmdRecall,
+	cmdModeUp,
+	cmdModeDown,
+	cmdModeToggle,
+	cmdPlay,
+	cmdShuffle,
+	cmdBoardCancel,
+	cmdRackCancel,
+	cmdChoiceCancel,
+	cmdTilePrev,
+	cmdTileNext,
+	cmdQuit,
+	cmdCount
 } CmdType;
 
 typedef enum
 {
-	TRANS_MOVE_INVALID = -1,
-	TRANS_MOVE_NONE = 0,
-	TRANS_MOVE_PLACE,
-	TRANS_MOVE_PLACE_WILD,
-	TRANS_MOVE_PLACE_END,
-	TRANS_MOVE_PLACE_PLAY,
-	TRANS_MOVE_DISCARD,
-	TRANS_MOVE_DISCARD_PLAY,
-	TRANS_MOVE_SKIP,
-	TRANS_MOVE_SKIP_PLAY,
-	TRANS_MOVE_QUIT,
-	TRANS_MOVE_COUNT
+	transMoveInvalid = -1,
+	transMoveNone = 0,
+	transMovePlace,
+	transMovePlaceWild,
+	transMovePlaceEnd,
+	transMovePlacePlay,
+	transMoveDiscard,
+	transMoveDiscardPlay,
+	transMoveSkip,
+	transMoveSkipPlay,
+	transMoveQuit,
+	transMoveCount
 } TransMoveType;
 
 typedef enum
 {
-	TILE_LOOK_DISABLE = 0,
-	TILE_LOOK_NORMAL,
-	TILE_LOOK_HOLD,
-	TILE_LOOK_GHOST,
-	TILE_LOOK_COUNT
+	tileLookDisable = 0,
+	tileLookNormal,
+	tileLookHold,
+	tileLookGhost,
+	tileLookCount
 } TileLookType;
 
 typedef enum
 {
-	MENU_FOCUS_INAVLID = -1,
-	MENU_FOCUS_PLAY = 0,
-	MENU_FOCUS_RULES,
-	MENU_FOCUS_SETTINGS,
-	MENU_FOCUS_EXIT,
-	MENU_FOCUS_COUNT
+	menuFocusInvalid = -1,
+	menuFocusPlay = 0,
+	menuFocusRules,
+	menuFocusSettings,
+	menuFocusExit,
+	menuFocusCount
 } MenuFocusType;
 
 typedef enum
 {
-	GAME_MENU_FOCUS_INVALID = -1,
-	GAME_MENU_FOCUS_RESUME = 0,
-	GAME_MENU_FOCUS_SETTINGS,
-	GAME_MENU_FOCUS_SKIP,
-	GAME_MENU_FOCUS_QUIT,
-	GAME_MENU_FOCUS_COUNT
+	gameMenuFocusInvalid = -1,
+	gameMenuFocusResume = 0,
+	gameMenuFocusSettings,
+	gameMenuFocusSkip,
+	gameMenuFocusQuit,
+	gameMenuFocusCount
 } GameMenuFocusType;
 
 typedef enum
 {
-	SETTINGS_FOCUS_INVALID = -1,
-	SETTINGS_FOCUS_MUSIC,
-	SETTINGS_FOCUS_SFX,
-	SETTINGS_FOCUS_CONTROLS,
-	SETTINGS_FOCUS_BACK,
-	SETTINGS_FOCUS_COUNT
+	settingsFocusInvalid = -1,
+	settingsFocusMusic,
+	settingsFocusSfx,
+	settingsFocusControls,
+	settingsFocusCount
 } SettingsFocusType;
 
 typedef enum
 {
-	PLAY_MENU_FOCUS_INVALID = -1,
-	PLAY_MENU_FOCUS_HUMAN_VS_AI = 0,
-	PLAY_MENU_FOCUS_HUMAN_VS_HUMAN,
-	PLAY_MENU_FOCUS_NETPLAY,
-	PLAY_MENU_FOCUS_COUNT
+	playMenuFocusInvaid = -1,
+	playMenuFocusHumanVsAI = 0,
+	playMenuFocusHumanVsHuman,
+	playMenuFocusNetplay,
+	playMenuFocusCount
 } PlayMenuFocusType;
+
 
 struct MenuWidget;
 
@@ -203,8 +195,9 @@ typedef struct IO
 	SDL_Surface *screen;
 	SDL_Surface *back;
 	SDL_Surface *fader;
-	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][TILE_LOOK_COUNT];
-	SDL_Surface *wild[TILE_LOOK_COUNT];
+	SDL_Surface *menuBg;
+	SDL_Surface *tile[tileCount][letterCount][tileLookCount];
+	SDL_Surface *wild[tileLookCount];
 	SDL_Surface *wildUp;
 	SDL_Surface *wildDown;
 	SDL_Surface *lockon;
@@ -222,12 +215,14 @@ typedef struct IO
 	SDL_Surface *playDisable;
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
-	SDL_Surface *sq[SQ_COUNT];
+	SDL_Surface *sq[sqCount];
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *titleScreen;
 	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
+
+	SDL_Joystick *joystick;
 	
 	MenuView menuMV;
 	MenuView gameMenuMV;
@@ -235,11 +230,11 @@ typedef struct IO
 	MenuView settingsMV;
 	MenuView yesNoMV;
 	
-	HighText menuFocus[MENU_FOCUS_COUNT];
-	HighText gameMenuFocus[GAME_MENU_FOCUS_COUNT];
-	HighText playMenuFocus[PLAY_MENU_FOCUS_COUNT];
-	HighText yesNo[YES_NO_COUNT];
-	HighText settingsFocus[SETTINGS_FOCUS_COUNT];
+	HighText menuFocus[menuFocusCount];
+	HighText gameMenuFocus[gameMenuFocusCount];
+	HighText playMenuFocus[playMenuFocusCount];
+	HighText yesNo[yesNoCount];
+	HighText settingsFocus[settingsFocusCount];
 
 	Font whiteFont;
 	Font blackFont;
@@ -262,6 +257,7 @@ typedef struct KeyState
 typedef struct Controls
 {
 	KeyState start;
+	KeyState select;
 	KeyState up;
 	KeyState down;
 	KeyState left;
@@ -272,6 +268,8 @@ typedef struct Controls
 	KeyState y;
 	KeyState l;
 	KeyState r;
+	float axisX;
+	float axisY;
 } Controls;
 
 typedef struct Cmd
@@ -294,27 +292,27 @@ typedef struct GridWidget
 
 typedef enum
 {
-	GAME_GUI_FOCUS_INVALID = -1,
-	GAME_GUI_FOCUS_BOARD = 0,
-	GAME_GUI_FOCUS_RACK,
-	GAME_GUI_FOCUS_CHOICE,
-	GAME_GUI_FOCUS_COUNT
+	gameGUIFocusInvalid = -1,
+	gameGUIFocusBoard = 0,
+	gameGUIFocusRack,
+	gameGUIFocusChoice,
+	gameGUIFocusCount
 } GameGUIFocusType;
 
 typedef enum
 {
-	GUI_FOCUS_INVALID = -1,
-	GUI_FOCUS_TITLE,
-	GUI_FOCUS_MENU,
-	GUI_FOCUS_SETTINGS,
-	GUI_FOCUS_PLAY_MENU,
-	GUI_FOCUS_GAME_GUI,
-	GUI_FOCUS_GAME_MENU,
-	GUI_FOCUS_GAME_HOTSEAT_PAUSE,
-	GUI_FOCUS_GAME_AI_PAUSE,
-	GUI_FOCUS_GAME_OVER,
-	GUI_FOCUS_GAME_ARE_YOU_SURE_QUIT,
-	GUI_FOCUS_COUNT
+	guiFocusInvalid = -1,
+	guiFocusTitle,
+	guiFocusMenu,
+	guiFocusSettings,
+	guiFocusPlayMenu,
+	guiFocusGameGUI,
+	guiFocusGameMenu,
+	guiFocusGameHotseatPause,
+	guiFocusGameAIPause,
+	guiFocusGameOver,
+	guiFocusGameAreYouSureQuit,
+	guiFocusCount
 } GUIFocusType;
 
 typedef struct MenuWidget

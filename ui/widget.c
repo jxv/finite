@@ -34,7 +34,7 @@ void mkChoiceWidget(GridWidget *gw)
 {
 	NOT(gw);
 	
-	gw->width = CHOICE_COUNT;
+	gw->width = choiceCount;
 	gw->height = 1;
 	mkGridWidgetByDim(gw);
 }
@@ -55,47 +55,55 @@ void boardWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	NOT(cmd);
 	NOT(gg);
 	NOT(c);
-	assert(gg->focus == GAME_GUI_FOCUS_BOARD);
+	assert(gg->focus == gameGUIFocusBoard);
 
 	bw = &gg->boardWidget;
-	cmd->type = CMD_INVALID;
+	cmd->type = cmdInvalid;
 
-	if (c->l.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_TILE_PREV;
+	if (c->l.type == keyStatePressed) {
+		cmd->type = cmdTilePrev;
 		return;
 	}
-	if (c->r.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_TILE_NEXT;
+	if (c->r.type == keyStatePressed) {
+		cmd->type = cmdTileNext;
 		return;
 	}
-	if (c->b.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_BOTTOM;
+	if (c->b.type == keyStatePressed) {
+		cmd->type = cmdFocusBottom;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED && bw->button[bw->index.y][bw->index.x]) {
-		cmd->type = CMD_BOARD_SELECT;
+	if (c->select.type == keyStatePressed) {
+		cmd->type = cmdPlay;
+		return;
+	}
+	if (c->a.type == keyStatePressed && bw->button[bw->index.y][bw->index.x]) {
+		cmd->type = cmdBoardSelect;
 		cmd->data.board = bw->index;
 		return;
 	}
-	if (c->up.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_BOARD_UP;
+	if (c->up.type == keyStatePressed) {
+		cmd->type = cmdBoardUp;
 		return;
 	}
-	if (c->down.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_BOARD_DOWN;
+	if (c->down.type == keyStatePressed) {
+		cmd->type = cmdBoardDown;
 		return;
 	}
-	if (c->left.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_BOARD_LEFT;
+	if (c->left.type == keyStatePressed) {
+		cmd->type = cmdBoardLeft;
 		return;
 	}
-	if (c->right.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_BOARD_RIGHT;
+	if (c->right.type == keyStatePressed) {
+		cmd->type = cmdBoardRight;
 		return;
 	}
-	if (c->x.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_BOARD_CANCEL;
+	if (c->x.type == keyStatePressed) {
+		cmd->type = cmdBoardCancel;
 		cmd->data.board = bw->index;
+	}
+	if (c->y.type == keyStatePressed) {
+		cmd->type = cmdModeToggle;
+		return;
 	}
 }
 
@@ -106,73 +114,82 @@ void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	NOT(cmd);
 	NOT(gg);
 	NOT(c);
-	assert(gg->focus == GAME_GUI_FOCUS_CHOICE);
+	assert(gg->focus == gameGUIFocusChoice);
 
 	cw = &gg->choiceWidget;
 	cw->index.y = 0;
-	cmd->type = CMD_INVALID;
+	cmd->type = cmdInvalid;
 
-	if (c->l.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_TILE_PREV;
+	if (c->l.type == keyStatePressed) {
+		cmd->type = cmdTilePrev;
 		return;
 	}
-	if (c->r.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_TILE_NEXT;
+	if (c->r.type == keyStatePressed) {
+		cmd->type = cmdTileNext;
 		return;
 	}
-	if (c->b.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_TOP;
+	if (c->b.type == keyStatePressed) {
+		cmd->type = cmdFocusTop;
+		/*cmd->type = cmdRecall;*/
+		return;
+	}
+	if (c->select.type == keyStatePressed) {
+		cmd->type = cmdPlay;
+		return;
+	}
+	if (c->y.type == keyStatePressed) {
+		cmd->type = cmdModeToggle;
 		return;
 	}
 	if (cw->button[cw->index.y][cw->index.x]) {
-		if (c->a.type == KEY_STATE_PRESSED) {
+		if (c->a.type == keyStatePressed) {
 			switch (cw->index.x) {
-			case CHOICE_RECALL: cmd->type = CMD_RECALL; return;
-			case CHOICE_PLAY: cmd->type = CMD_PLAY; return;
-			case CHOICE_SHUFFLE: cmd->type = CMD_SHUFFLE; return;
-			case CHOICE_MODE: /* fall through */
+			case choiceRecall: cmd->type = cmdRecall; return;
+			case choicePlay: cmd->type = cmdPlay; return;
+			case choiceShuffle: cmd->type = cmdShuffle; return;
+			case choiceMode: /* fall through */
 			default: break;
 			}
 		}
-		if (c->up.type == KEY_STATE_PRESSED) {
+		if (c->up.type == keyStatePressed) {
 			switch (cw->index.x) {
-			case CHOICE_MODE: cmd->type = CMD_MODE_UP; return;
-			case CHOICE_RECALL: /* fall through */
-			case CHOICE_PLAY:
+			case choiceMode: cmd->type = cmdModeUp; return;
+			case choiceRecall: /* fall through */
+			case choicePlay:
 			default: break;
 			}
 		}
-		if (c->down.type == KEY_STATE_PRESSED) {
+		if (c->down.type == keyStatePressed) {
 			switch (cw->index.x) {
-			case CHOICE_MODE: cmd->type = CMD_MODE_DOWN; return;
-			case CHOICE_RECALL: /* fall through */
-			case CHOICE_PLAY:
+			case choiceMode: cmd->type = cmdModeDown; return;
+			case choiceRecall: /* fall through */
+			case choicePlay:
 			default: break;
 			}
 		}
 	}
-	if (c->left.type == KEY_STATE_PRESSED) {
+	if (c->left.type == keyStatePressed) {
 		assert(cw->index.x >= 0);
 		if (cw->index.x == 0) {
-			cmd->type = CMD_RACK;
+			cmd->type = cmdRack;
 			cmd->data.rack = RACK_SIZE - 1;
 		} else {
-			cmd->type = CMD_CHOICE_LEFT;
+			cmd->type = cmdChoiceLeft;
 		}
 		return;
 	}
-	if (c->right.type == KEY_STATE_PRESSED) {
-		assert(cw->index.x < CHOICE_COUNT);
-		if (cw->index.x + 1 == CHOICE_COUNT) {
-			cmd->type = CMD_RACK;
+	if (c->right.type == keyStatePressed) {
+		assert(cw->index.x < choiceCount);
+		if (cw->index.x + 1 == choiceCount) {
+			cmd->type = cmdRack;
 			cmd->data.rack = 0;
 		} else {
-			cmd->type = CMD_CHOICE_RIGHT;
+			cmd->type = cmdChoiceRight;
 		}
 		return;
 	}
-	if (c->x.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_CHOICE_CANCEL;
+	if (c->x.type == keyStatePressed) {
+		cmd->type = cmdChoiceCancel;
 	}
 }
 
@@ -183,51 +200,60 @@ void rackWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	NOT(cmd);
 	NOT(gg);
 	NOT(c);
-	assert(gg->focus == GAME_GUI_FOCUS_RACK);
+	assert(gg->focus == gameGUIFocusRack);
 	
 	rw = &gg->rackWidget;
 	rw->index.y = 0;
-	cmd->type = CMD_INVALID;
+	cmd->type = cmdInvalid;
 
-	if (c->l.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_TILE_PREV;
+	if (c->l.type == keyStatePressed) {
+		cmd->type = cmdTilePrev;
 		return;
 	}
-	if (c->r.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_TILE_NEXT;
+	if (c->r.type == keyStatePressed) {
+		cmd->type = cmdTileNext;
 		return;
 	}
-	if (c->a.type == KEY_STATE_PRESSED && rw->button[rw->index.y][rw->index.x]) {
-		cmd->type = CMD_RACK_SELECT;
+	if (c->a.type == keyStatePressed && rw->button[rw->index.y][rw->index.x]) {
+		cmd->type = cmdRackSelect;
 		cmd->data.rack = rw->index.x;
 		return;
 	}
-	if (c->b.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_FOCUS_TOP;
+	if (c->b.type == keyStatePressed) {
+		cmd->type = cmdFocusTop;
+		/* cmd->type = cmdRecall; */
 		return;
 	}
-	if (c->left.type == KEY_STATE_PRESSED) {
+	if (c->select.type == keyStatePressed) {
+		cmd->type = cmdPlay;
+		return;
+	}
+	if (c->y.type == keyStatePressed) {
+		cmd->type = cmdModeToggle;
+		return;
+	}
+	if (c->left.type == keyStatePressed) {
 		assert(rw->index.x >= 0);
 		if (rw->index.x == 0) {
-			cmd->type = CMD_CHOICE;
-			cmd->data.choice = CHOICE_COUNT - 1;
+			cmd->type = cmdChoice;
+			cmd->data.choice = choiceCount - 1;
 		} else {
-			cmd->type = CMD_RACK_LEFT;
+			cmd->type = cmdRackLeft;
 		}
 		return;
 	}
-	if (c->right.type == KEY_STATE_PRESSED) {
+	if (c->right.type == keyStatePressed) {
 		assert(rw->index.x <=  RACK_SIZE);
 		if (rw->index.x + 1 == RACK_SIZE) {
-			cmd->type = CMD_CHOICE;
+			cmd->type = cmdChoice;
 			cmd->data.choice = 0;
 		} else {
-			cmd->type = CMD_RACK_RIGHT;
+			cmd->type = cmdRackRight;
 		}
 		return;
 	}
-	if (c->x.type == KEY_STATE_PRESSED) {
-		cmd->type = CMD_RACK_CANCEL;
+	if (c->x.type == keyStatePressed) {
+		cmd->type = cmdRackCancel;
 		cmd->data.rack = rw->index.x;
 	}
 }
@@ -241,15 +267,15 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 	NOT(b);
 	
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: {
+	case transMovePlace: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-				bw->button[idx.y][idx.x] = b->tile[idx.y][idx.x].type == TILE_NONE;
+				bw->button[idx.y][idx.x] = b->tile[idx.y][idx.x].type == tileNone;
 			}
 		}
 		break;
 	}
-	case TRANS_MOVE_PLACE_WILD: {
+	case transMovePlaceWild: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 				bw->button[idx.y][idx.x] = idx.x == bw->index.x && idx.y == bw->index.y;
@@ -257,7 +283,7 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 		}
 		break;
 	}
-	case TRANS_MOVE_PLACE_END: {
+	case transMovePlaceEnd: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 				bw->button[idx.y][idx.x] = false;
@@ -265,7 +291,7 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 		}
 		break;
 	}
-	case TRANS_MOVE_DISCARD: {
+	case transMoveDiscard: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 				bw->button[idx.y][idx.x] = false;
@@ -273,7 +299,7 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 		}
 		break;
 	}
-	case TRANS_MOVE_SKIP: {
+	case transMoveSkip: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 				bw->button[idx.y][idx.x] = false;
@@ -292,31 +318,31 @@ void updateRackWidget(GridWidget *rw, TransMove *tm)
 
 	NOT(rw);
 	NOT(tm);
-	assert(tm->adjust.type == ADJUST_RACK);
+	assert(tm->adjust.type == adjustRack);
 
 	idx.y = 0;
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: {
+	case transMovePlace: {
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			rw->button[idx.y][idx.x] = true; 
 		}	
 		break;
 	}
-	case TRANS_MOVE_PLACE_END: {
+	case transMovePlaceEnd: {
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			rw->button[idx.y][idx.x] = false; 
 		}	
 		break;
 	}
-	case TRANS_MOVE_DISCARD: {
+	case transMoveDiscard: {
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			tt = tm->adjust.data.tile[idx.x].type;
-			assert(tt == TILE_NONE || tt == TILE_WILD || tt == TILE_LETTER);
-			rw->button[idx.y][idx.x] = tt != TILE_NONE; 
+			assert(tt == tileNone || tt == tileWild || tt == tileLetter);
+			rw->button[idx.y][idx.x] = tt != tileNone; 
 		}
 		break;
 	}
-	case TRANS_MOVE_SKIP: {
+	case transMoveSkip: {
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			rw->button[idx.y][idx.x] = false;
 		}
@@ -331,32 +357,32 @@ void updateChoiceWidget(GridWidget *cw, TransMove *tm)
 	NOT(tm);
 	
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE: {
-		cw->button[0][CHOICE_RECALL] = tm->place.num > 0;
-		cw->button[0][CHOICE_MODE] = true;
-		cw->button[0][CHOICE_PLAY] = true;
-		cw->button[0][CHOICE_SHUFFLE] = true;
+	case transMovePlace: {
+		cw->button[0][choiceRecall] = tm->place.num > 0;
+		cw->button[0][choiceMode] = true;
+		cw->button[0][choicePlay] = true;
+		cw->button[0][choiceShuffle] = true;
 		break;
 	}
-	case TRANS_MOVE_PLACE_END: {
-		cw->button[0][CHOICE_RECALL] = true;
-		cw->button[0][CHOICE_MODE] = true;
-		cw->button[0][CHOICE_PLAY] = true; 
-		cw->button[0][CHOICE_SHUFFLE] = false;
+	case transMovePlaceEnd: {
+		cw->button[0][choiceRecall] = true;
+		cw->button[0][choiceMode] = true;
+		cw->button[0][choicePlay] = true; 
+		cw->button[0][choiceShuffle] = false;
 		break;
 	}
-	case TRANS_MOVE_DISCARD: {
-		cw->button[0][CHOICE_RECALL] = tm->discard.num > 0;
-		cw->button[0][CHOICE_MODE] = true;
-		cw->button[0][CHOICE_PLAY] = true;
-		cw->button[0][CHOICE_SHUFFLE] = true;
+	case transMoveDiscard: {
+		cw->button[0][choiceRecall] = tm->discard.num > 0;
+		cw->button[0][choiceMode] = true;
+		cw->button[0][choicePlay] = true;
+		cw->button[0][choiceShuffle] = true;
 		break;
 	}
-	case TRANS_MOVE_SKIP: {
-		cw->button[0][CHOICE_RECALL] = false;
-		cw->button[0][CHOICE_MODE] = true;
-		cw->button[0][CHOICE_PLAY] = true;
-		cw->button[0][CHOICE_SHUFFLE] = true;
+	case transMoveSkip: {
+		cw->button[0][choiceRecall] = false;
+		cw->button[0][choiceMode] = true;
+		cw->button[0][choicePlay] = true;
+		cw->button[0][choiceShuffle] = true;
 		break;
 	}
 	default: break;
@@ -376,29 +402,29 @@ void updateGameGUIViaCmd(GameGUI *gg, Cmd *c, TransMoveType tmt)
 	cw = &gg->choiceWidget;
 
 	switch (gg->focus) {
-	case GAME_GUI_FOCUS_BOARD: {
-		if (tmt == TRANS_MOVE_PLACE_WILD) {
+	case gameGUIFocusBoard: {
+		if (tmt == transMovePlaceWild) {
 			break;
 		}
 		switch (c->type) {
-		case CMD_BOARD_UP: {
+		case cmdBoardUp: {
 			bw->index.y += BOARD_Y;
 			bw->index.y--;
 			bw->index.y %= BOARD_Y;
 			break;
 		}
-		case CMD_BOARD_DOWN: {
+		case cmdBoardDown: {
 			bw->index.y++;
 			bw->index.y %= BOARD_Y;
 			break;
 		}
-		case CMD_BOARD_LEFT: {
+		case cmdBoardLeft: {
 			bw->index.x += BOARD_X;
 			bw->index.x--;
 			bw->index.x %= BOARD_X;
 			break;
 		}
-		case CMD_BOARD_RIGHT: {
+		case cmdBoardRight: {
 			bw->index.x++;
 			bw->index.x %= BOARD_X;
 			break;
@@ -407,15 +433,15 @@ void updateGameGUIViaCmd(GameGUI *gg, Cmd *c, TransMoveType tmt)
 		}
 		break;
 	}
-	case GAME_GUI_FOCUS_RACK: {
+	case gameGUIFocusRack: {
 		switch (c->type) {
-		case CMD_RACK_LEFT: {
+		case cmdRackLeft: {
 			rw->index.x += RACK_SIZE;
 			rw->index.x--;
 			rw->index.x %= RACK_SIZE;
 			break;
 		}
-		case CMD_RACK_RIGHT: {
+		case cmdRackRight: {
 			rw->index.x++;
 			rw->index.x %= RACK_SIZE;
 			break;
@@ -424,17 +450,17 @@ void updateGameGUIViaCmd(GameGUI *gg, Cmd *c, TransMoveType tmt)
 		}
 		break;
 	}
-	case GAME_GUI_FOCUS_CHOICE: {
+	case gameGUIFocusChoice: {
 		switch (c->type) {
-		case CMD_CHOICE_LEFT: {
-			cw->index.x += CHOICE_COUNT;
+		case cmdChoiceLeft: {
+			cw->index.x += choiceCount;
 			cw->index.x--;
-			cw->index.x %= CHOICE_COUNT;
+			cw->index.x %= choiceCount;
 			break;
 		}
-		case CMD_CHOICE_RIGHT: {
+		case cmdChoiceRight: {
 			cw->index.x++;
-			cw->index.x %= CHOICE_COUNT;
+			cw->index.x %= choiceCount;
 			break;
 		}
 		default: break;
@@ -462,25 +488,25 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * 14 + 106, idx.y * 14 + 6);
 			t = &b->tile[idx.y][idx.x];
-			if (t->type != TILE_NONE) {
-				ts = io->tile[t->type][t->letter][TILE_LOOK_NORMAL];
+			if (t->type != tileNone) {
+				ts = io->tile[t->type][t->letter][tileLookNormal];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 			}
 		}
 	}
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE:
-	case TRANS_MOVE_PLACE_WILD:
-	case TRANS_MOVE_PLACE_PLAY:
-	case TRANS_MOVE_PLACE_END: {
+	case transMovePlace:
+	case transMovePlaceWild:
+	case transMovePlacePlay:
+	case transMovePlaceEnd: {
 		int j;
 		for (i = 0; i < RACK_SIZE; i++) {
 			j = tm->adjust.data.tile[i].idx;
 			idx = tm->place.boardIdx[j];
 			if (validBoardIdx(idx)) {
 				t = &p->tile[tm->adjust.data.tile[tm->place.rackIdx[idx.y][idx.x]].idx];
-				ts = io->tile[t->type][t->letter][TILE_LOOK_HOLD];
+				ts = io->tile[t->type][t->letter][tileLookHold];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 			}
 		}
@@ -504,23 +530,23 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 	offset = 176;
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE:
-	case TRANS_MOVE_PLACE_PLAY:
-	case TRANS_MOVE_PLACE_WILD: {
+	case transMovePlace:
+	case transMovePlacePlay:
+	case transMovePlaceWild: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == TILE_NONE) {
+			if (t->type == tileNone) {
 				continue;
 			}
 			s = NULL;
 			if (tm->place.idx != i) {
 				if (!validBoardIdx(tm->place.boardIdx[i])) {
-					tt = TILE_LOOK_NORMAL;
-					s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
+					tt = tileLookNormal;
+					s = t->type == tileWild ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 				}
 			} else {
-				tt = TILE_LOOK_HOLD;
-				s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
+				tt = tileLookHold;
+				s = t->type == tileWild ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 			}
 			if (s) {
 				surfaceDraw(io->screen, s, i * dim.x + offset, 220);
@@ -528,18 +554,18 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 		}
 		break;
 	}
-	case TRANS_MOVE_PLACE_END: {
+	case transMovePlaceEnd: {
 		break;
 	}
-	case TRANS_MOVE_DISCARD: {
+	case transMoveDiscard: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == TILE_NONE) {
+			if (t->type == tileNone) {
 				continue;
 			}
 			VALID_TILE(*t);
-			tt = tm->discard.rack[i] ? TILE_LOOK_DISABLE : TILE_LOOK_NORMAL;
-			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
+			tt = tm->discard.rack[i] ? tileLookDisable : tileLookNormal;
+			s = t->type == tileWild ? io->wild[tt] : io->tile[tileLetter][t->letter][tt];
 			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
 			
 		}
@@ -548,10 +574,10 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 	default: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == TILE_NONE) {
+			if (t->type == tileNone) {
 				continue;
 			}
-			s = t->type == TILE_WILD ? io->wild[TILE_LOOK_NORMAL] : io->tile[TILE_LETTER][t->letter][TILE_LOOK_NORMAL];
+			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[tileLetter][t->letter][tileLookNormal];
 			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
 		}
 		break;
@@ -568,36 +594,36 @@ void choiceWidgetDraw(IO *io, TransMove *tm, GridWidget *cw, Coor pos, Coor dim)
 	NOT(tm);
 	NOT(cw);
 
-	type = MODE_INVALID;
-	recall = cw->button[0][CHOICE_RECALL];
-	mode = cw->button[0][CHOICE_MODE]; 
-	play = cw->button[0][CHOICE_PLAY];
-	shuffle = cw->button[0][CHOICE_SHUFFLE];
+	type = modeInvalid; 
+	recall = cw->button[0][choiceRecall];
+	mode = cw->button[0][choiceMode]; 
+	play = cw->button[0][choicePlay];
+	shuffle = cw->button[0][choiceShuffle];
 
 	switch (tm->type) {
-	case TRANS_MOVE_PLACE:
-	case TRANS_MOVE_PLACE_WILD:
-	case TRANS_MOVE_PLACE_PLAY:
-	case TRANS_MOVE_PLACE_END: type = MODE_PLACE; break;
-	case TRANS_MOVE_DISCARD: type = MODE_DISCARD; break;
-	case TRANS_MOVE_SKIP: type = MODE_SKIP; break;
+	case transMovePlace:
+	case transMovePlaceWild:
+	case transMovePlacePlay:
+	case transMovePlaceEnd: type = modePlace; break;
+	case transMoveDiscard: type = modeDiscard; break;
+	case transMoveSkip: type = modeSkip; break;
 	default: break;
 	}
 
 	if (mode) {
 		surfaceDraw(io->screen, io->mode, 119, 217);
 		switch (type) {
-		case MODE_PLACE: surfaceDraw(io->screen, io->place, 119, 220); break;
-		case MODE_DISCARD: surfaceDraw(io->screen, io->discard, 119, 220); break;
-		case MODE_SKIP: surfaceDraw(io->screen, io->skip, 119, 220); break;
+		case modePlace: surfaceDraw(io->screen, io->place, 119, 220); break;
+		case modeDiscard: surfaceDraw(io->screen, io->discard, 119, 220); break;
+		case modeSkip: surfaceDraw(io->screen, io->skip, 119, 220); break;
 		default: break;
 		}
 	} else {
 		surfaceDraw(io->screen, io->modeDisable, 119, 217);
 		switch (type) {
-		case MODE_PLACE: surfaceDraw(io->screen, io->placeDisable, 119, 220); break;
-		case MODE_DISCARD: surfaceDraw(io->screen, io->discardDisable, 119, 220); break;
-		case MODE_SKIP:	surfaceDraw(io->screen, io->skip, 119, 220); break;
+		case modePlace: surfaceDraw(io->screen, io->placeDisable, 119, 220); break;
+		case modeDiscard: surfaceDraw(io->screen, io->discardDisable, 119, 220); break;
+		case modeSkip:	surfaceDraw(io->screen, io->skip, 119, 220); break;
 		default: break;
 		}
 	}

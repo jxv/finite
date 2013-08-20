@@ -1,4 +1,5 @@
 #include <math.h>
+#include <limits.h>
 
 #include "gui.h"
 #include "update.h"
@@ -33,7 +34,7 @@ void keystateInit(KeyState *ks)
 {
 	NOT(ks);
 	
-	ks->type = KEY_STATE_UNTOUCHED;
+	ks->type = keyStateUntouched;
 	ks->time = 0.0f;
 }
 
@@ -42,6 +43,7 @@ void controlsInit(Controls *c)
 	NOT(c);
 	
 	keystateInit(&c->start);
+	keystateInit(&c->select);
 	keystateInit(&c->up);
 	keystateInit(&c->down);
 	keystateInit(&c->right);
@@ -52,6 +54,9 @@ void controlsInit(Controls *c)
 	keystateInit(&c->y);
 	keystateInit(&c->l);
 	keystateInit(&c->r);
+
+	c->axisX = 0.f;
+	c->axisY = 0.f;
 }
 
 void initDefaultRule(Rule *r)
@@ -128,8 +133,8 @@ void initSettings(Settings *s)
 
 	s->sfxVolume = MAX_GUI_VOLUME;
 	s->musVolume = MAX_GUI_VOLUME;
-	s->previous = GUI_FOCUS_MENU; 
-	initMenuWidget(&s->menu, SETTINGS_FOCUS_MUSIC, SETTINGS_FOCUS_COUNT);
+	s->previous = guiFocusMenu; 
+	initMenuWidget(&s->menu, settingsFocusMusic, settingsFocusCount);
 }
 
 void initGameGUI(GameGUI *gg)
@@ -139,21 +144,21 @@ void initGameGUI(GameGUI *gg)
 	mkRackWidget(&gg->rackWidget);
 	mkChoiceWidget(&gg->choiceWidget);
 	mkBoardWidget(&gg->boardWidget);
-	gg->focus = GAME_GUI_FOCUS_CHOICE;
-	gg->bottomLast = GAME_GUI_FOCUS_CHOICE;
+	gg->focus = gameGUIFocusChoice;
+	gg->bottomLast = gameGUIFocusChoice;
 	gg->choiceWidget.index.x = 1;
 }
 
 void initGUI(GUI *g)
 {
-	initMenuWidget(&g->menu, MENU_FOCUS_PLAY, MENU_FOCUS_COUNT);
-	initMenuWidget(&g->gameMenu, GAME_MENU_FOCUS_RESUME, GAME_MENU_FOCUS_COUNT);
-	initMenuWidget(&g->playMenu, PLAY_MENU_FOCUS_HUMAN_VS_AI, PLAY_MENU_FOCUS_COUNT);
+	initMenuWidget(&g->menu, menuFocusPlay, menuFocusCount);
+	initMenuWidget(&g->gameMenu, gameMenuFocusResume, gameMenuFocusCount);
+	initMenuWidget(&g->playMenu, playMenuFocusHumanVsAI, playMenuFocusCount);
 	initSettings(&g->settings);
 	initGameGUI(&g->gameGui);
-	initMenuWidget(&g->gameAreYouSureQuit, YES, YES_NO_COUNT);
-	g->focus = GUI_FOCUS_TITLE;
-	g->next = GUI_FOCUS_TITLE;
+	initMenuWidget(&g->gameAreYouSureQuit, yes, yesNoCount);
+	g->focus = guiFocusTitle;
+	g->next = guiFocusTitle;
 }
 
 SDL_Surface *createText(Font *f, char *str)
@@ -280,11 +285,11 @@ bool initMenuViews(IO *io, GUI *g)
 {
 	Font *n, *h;
 
-	char *menuText[MENU_FOCUS_COUNT] = {"Play", "Rules", "Settings", "Exit"};
-	char *playMenuText[PLAY_MENU_FOCUS_COUNT] = {"1 Player", "2 Player", "Netplay (N/A)"};
-	char *gameMenuText[GAME_MENU_FOCUS_COUNT] = {"Resume", "Settings", "Skip", "Quit"};
-	char *settingsText[SETTINGS_FOCUS_COUNT] = {"Music:     ", "  SFX:     ", "Controls", "Back"};
-	char *yesNoText[YES_NO_COUNT] = {"Yes", "No"};
+	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
+	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Netplay (N/A)"};
+	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
+	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
+	char *yesNoText[yesNoCount] = {"Yes", "No"};
 
 	NOT(io);
 	NOT(g);
@@ -314,7 +319,7 @@ bool init(Env *e)
 {
 	int i, j;
 	char str[32];
-	SDL_Surface *tile[TILE_LOOK_COUNT];
+	SDL_Surface *tile[tileLookCount];
 
 	e->io.time = 0;
 	e->quit = false;
@@ -324,11 +329,25 @@ bool init(Env *e)
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
 	}
-	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, AUDIO_CHAN_COUNT, 4096 ) == -1) {
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, audioChanCount, 4096 ) == -1) {
 		return false;
 	}
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("finite", NULL);
+
+
+
+	e->io.joystick = NULL;
+	if (SDL_NumJoysticks() < 1) {
+		return false;
+	}
+	SDL_JoystickEventState(SDL_ENABLE);
+	e->io.joystick = SDL_JoystickOpen(0);
+	if (SDL_JoystickNumAxes(e->io.joystick) < 1) {
+		return false;
+	}
+
+
 	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE)) == NULL) {
 		return false;
 	}
@@ -342,6 +361,9 @@ bool init(Env *e)
 		return false;
 	}
 	if ((e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png")) == NULL) {
+		return false;
+	}
+	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.back = surfaceAlphaLoad(RES_PATH "back.png")) == NULL) {
@@ -424,45 +446,46 @@ bool init(Env *e)
 	}
 	e->io.highlightFont.spacing = -2;
 
-	e->io.sq[SQ_NORMAL] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
-	e->io.sq[SQ_DBL_LET] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
-	e->io.sq[SQ_DBL_WRD] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
-	e->io.sq[SQ_TRP_LET] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
-	e->io.sq[SQ_TRP_WRD] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
-	e->io.sq[SQ_FREE] = surfaceAlphaLoad(RES_PATH "sq_free.png");
+	e->io.sq[sqNormal] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
+	e->io.sq[sqDblLet] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
+	e->io.sq[sqDblWrd] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
+	e->io.sq[sqTrpLet] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
+	e->io.sq[sqTrpWrd] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
+	e->io.sq[sqFree] = surfaceAlphaLoad(RES_PATH "sq_free.png");
+	e->io.sq[sqMystery] = surfaceAlphaLoad(RES_PATH "sq_mystery.png");
 
-	for (i = 0; i < SQ_COUNT; i++) {
+	for (i = 0; i < sqCount; i++) {
 		if (e->io.sq[i] == NULL) { 
 			return false;
 		}
 	}
 
-	tile[TILE_LOOK_DISABLE] = surfaceAlphaLoad(RES_PATH "tile_disable.png");
-	tile[TILE_LOOK_NORMAL] = surfaceAlphaLoad(RES_PATH "tile_normal.png");
-	tile[TILE_LOOK_HOLD] = surfaceAlphaLoad(RES_PATH "tile_hold.png");
-	tile[TILE_LOOK_GHOST] = surfaceAlphaLoad(RES_PATH "tile_ghost.png");
+	tile[tileLookDisable] = surfaceAlphaLoad(RES_PATH "tile_disable.png");
+	tile[tileLookNormal] = surfaceAlphaLoad(RES_PATH "tile_normal.png");
+	tile[tileLookHold] = surfaceAlphaLoad(RES_PATH "tile_hold.png");
+	tile[tileLookGhost] = surfaceAlphaLoad(RES_PATH "tile_ghost.png");
 
-	for (i = 0; i < TILE_LOOK_COUNT; i++) {
+	for (i = 0; i < tileLookCount; i++) {
 		e->io.wild[i] = tile[i];
 		if (!e->io.wild[i]) {
 			return false;
 		}
 	}
 
-	for (i = 0; i < LETTER_COUNT; i++) {
-		for (j = 0; j < TILE_LOOK_COUNT; j++) {
-			e->io.tile[TILE_WILD][i][j] = surfaceCpy(tile[j]);
-			if (!e->io.tile[TILE_WILD][i][j]) {
+	for (i = 0; i < letterCount; i++) {
+		for (j = 0; j < tileLookCount; j++) {
+			e->io.tile[tileWild][i][j] = surfaceCpy(tile[j]);
+			if (!e->io.tile[tileWild][i][j]) {
 				return false;
 			}
-			e->io.tile[TILE_LETTER][i][j] = surfaceCpy(tile[j]);
-			if (!e->io.tile[TILE_LETTER][i][j]) {
+			e->io.tile[tileLetter][i][j] = surfaceCpy(tile[j]);
+			if (!e->io.tile[tileLetter][i][j]) {
 				return false;
 			}
 			sprintf(str,"%c", i + 'a');
-			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.blackFont, str, 3, 0);
+			strDraw(e->io.tile[tileWild][i][j], &e->io.blackFont, str, 3, 0);
 			sprintf(str,"%c", i + 'A');
-			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.blackFont, str, 3, 0);
+			strDraw(e->io.tile[tileLetter][i][j], &e->io.blackFont, str, 3, 0);
 		}
 	}
 
@@ -478,10 +501,10 @@ bool init(Env *e)
 
 	e->io.areYouSureQuit = createText(&e->io.normalFont, "Are you sure?");
 	{
-		char *text[GAME_MENU_FOCUS_COUNT] = {"Yes", "No"};
-		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, YES_NO_COUNT);
+		char *text[gameMenuFocusCount] = {"Yes", "No"};
+		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, yesNoCount);
 	}
-	if (!areHighTextsLoaded(e->io.yesNo, YES_NO_COUNT)) {
+	if (!areHighTextsLoaded(e->io.yesNo, yesNoCount)) {
 		return false;
 	}
 
@@ -502,11 +525,17 @@ void quit(Env *e)
 	int i, j;
 
 	NOT(e);
-
+	
 	dictQuit(&e->game.dict);
+
+	if (e->io.joystick) {
+		SDL_JoystickClose(e->io.joystick);
+	}
+
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
 	surfaceFree(e->io.titleHover);
+	surfaceFree(e->io.menuBg);
 	surfaceFree(e->io.titleBackground);
 	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
@@ -526,23 +555,23 @@ void quit(Env *e)
 	surfaceFree(e->io.playDisable);
 	surfaceFree(e->io.shuffle);
 	surfaceFree(e->io.shuffleDisable);
-	for (i = 0; i < SQ_COUNT; i++) {
+	for (i = 0; i < sqCount; i++) {
 		surfaceFree(e->io.sq[i]);
 	}
-	for (i = 0; i < TILE_LOOK_COUNT; i++) {
+	for (i = 0; i < tileLookCount; i++) {
 		surfaceFree(e->io.wild[i]);
 	}	
-	for (i = 0; i < LETTER_COUNT; i++) {
-		for (j = 0; j < TILE_LOOK_COUNT; j++) {
-			surfaceFree(e->io.tile[TILE_WILD][i][j]);
-			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
+	for (i = 0; i < letterCount; i++) {
+		for (j = 0; j < tileLookCount; j++) {
+			surfaceFree(e->io.tile[tileWild][i][j]);
+			surfaceFree(e->io.tile[tileLetter][i][j]);
 		}
 	}
 	freeMenuViews(&e->io);
-	freeHighTexts(e->io.menuFocus, MENU_FOCUS_COUNT);
-	freeHighTexts(e->io.gameMenuFocus, GAME_MENU_FOCUS_COUNT);
+	freeHighTexts(e->io.menuFocus, menuFocusCount);
+	freeHighTexts(e->io.gameMenuFocus, gameMenuFocusCount);
 	surfaceFree(e->io.areYouSureQuit);
-	freeHighTexts(e->io.yesNo, YES_NO_COUNT);
+	freeHighTexts(e->io.yesNo, yesNoCount);
 	fontmapQuit(&e->io.whiteFont);
 	fontmapQuit(&e->io.blackFont);
 	fontmapQuit(&e->io.yellowFont);
@@ -550,6 +579,13 @@ void quit(Env *e)
 	Mix_CloseAudio();
 	SDL_Quit();
 }
+
+
+float normalizeAxis(int v)
+{
+	return (float)v / (float)(v > 0 ? INT_MAX : INT_MIN);
+}
+
 
 bool handleEvent(Controls *c)
 {
@@ -565,10 +601,19 @@ bool handleEvent(Controls *c)
 		case SDL_QUIT: return true;
 		case SDL_KEYDOWN: ks[event.key.keysym.sym] = true; break;
 		case SDL_KEYUP: ks[event.key.keysym.sym] = false; break;
+		case SDL_JOYAXISMOTION: {
+			if (event.jaxis.axis == 0) {
+				c->axisX = normalizeAxis(event.jaxis.value);
+			}
+			if (event.jaxis.axis == 1) {
+				c->axisY = -normalizeAxis(event.jaxis.value);
+			}
+		}
 		default: break;
 		}
 	}
 	keyStateUpdate(&c->start, ks[SDLK_RETURN]);
+	keyStateUpdate(&c->select, ks[SDLK_ESCAPE]);
 	keyStateUpdate(&c->up, ks[SDLK_UP]);
 	keyStateUpdate(&c->down, ks[SDLK_DOWN]);
 	keyStateUpdate(&c->left, ks[SDLK_LEFT]);

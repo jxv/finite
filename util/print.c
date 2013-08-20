@@ -5,10 +5,10 @@
 
 void printLetter(LetterType l)
 {
-	assert(l >= LETTER_A);
-	assert(l <= LETTER_Z);
+	assert(l >= letterA);
+	assert(l <= letterZ);
 
-	putchar('A' + l - LETTER_A);
+	putchar('A' + l - letterA);
 }
 
 void printWord(struct Word *w)
@@ -19,7 +19,7 @@ void printWord(struct Word *w)
 	NOT(w);
 
 	for (j = 0; j < w->len; j++) {
-		str[j] = 'A' + w->letter[j] - LETTER_A;
+		str[j] = 'A' + w->letter[j] - letterA;
 	}
 	str[j] = '\0';
 	printf("[%s]\n", str);
@@ -44,8 +44,8 @@ void printTile(struct Tile *t)
 	NOT(t);
 
 	switch (t->type) {
-	case TILE_WILD: c = 'a' + t->letter; break;
-	case TILE_LETTER: c = 'A' + t->letter; break;
+	case tileWild: c = 'a' + t->letter; break;
+	case tileLetter: c = 'A' + t->letter; break;
 	default: return;
 	}
 	putchar(c);
@@ -71,13 +71,13 @@ void printAction(struct Action *a)
 	NOT(a);
 
 	switch (a->type) {
-	case ACTION_INVALID: printf("action invalid\n"); break;
-	case ACTION_PLACE: {
+	case actionInvalid: printf("action invalid\n"); break;
+	case actionPlace: {
 		printf("action place\n");
 		switch (a->data.place.path.type) {
-		case PATH_DOT: printf("path_dot\n"); break;
-		case PATH_HORZ: printf("path_horz\n");break;
-		case PATH_VERT: printf("path_vert\n"); break;
+		case pathDot: printf("path_dot\n"); break;
+		case pathHorz: printf("path_horz\n");break;
+		case pathVert: printf("path_vert\n"); break;
 		default: break;
 		}
 		printf("score: %d\n", a->data.place.score);
@@ -111,16 +111,16 @@ void printBoard(struct Board *b)
 		for (x = 0; x < BOARD_X; x++) {
 			t = &b->tile[y][x];
 			sq = b->sq[y][x];
-			if (t->type != TILE_NONE) {
+			if (t->type != tileNone) {
 				printTile(t);
 			} else {
 				switch (sq) {
-				case SQ_DBL_LET: c = '-'; break;
-				case SQ_TRP_LET: c = '='; break;
-				case SQ_DBL_WRD: c = '+'; break;
-				case SQ_TRP_WRD: c = '#'; break;
-				case SQ_FREE: c = '$'; break;
-				case SQ_NORMAL: /* fall through */
+				case sqDblLet: c = '-'; break;
+				case sqTrpLet: c = '='; break;
+				case sqDblWrd: c = '+'; break;
+				case sqTrpWrd: c = '#'; break;
+				case sqFree: c = '$'; break;
+				case sqNormal: /* fall through */
 				default: c = '.'; break;
 				}
 				putchar(c);
@@ -140,10 +140,10 @@ void printRack(struct Player *p)
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		t = &p->tile[i];
-		if (t->type != TILE_NONE) {
+		if (t->type != tileNone) {
 			switch(t->type) {
-			case TILE_WILD: c = '*'; break;
-			case TILE_LETTER: c = 'A' + t->letter; break;
+			case tileWild: c = '*'; break;
+			case tileLetter: c = 'A' + t->letter; break;
 			default: c = ' '; break;
 			}
 			printf("(%d:%c)", i, c);
@@ -166,20 +166,20 @@ void printPlace(struct MovePlace *mp)
 void printActionErr(ActionErrType err)
 {
 	switch (err) {
-	case ACTION_ERR_UNKNOWN: puts("[err: unknown]"); break;
-	case ACTION_ERR_PLACE_OUT_OF_RANGE: puts("[err: out of range]"); break;
-	case ACTION_ERR_PLACE_SELF_OVERLAP: puts("[err: self overlap]"); break;
-	case ACTION_ERR_PLACE_BOARD_OVERLAP: puts("[err: board overlap]"); break;
-	case ACTION_ERR_PLACE_INVALID_RACK_ID: puts("[err: invalid rack id]"); break;
-	case ACTION_ERR_PLACE_INVALID_SQ: puts("[err: place on free sq. or adjacent to a tile]"); break;
-	case ACTION_ERR_PLACE_NO_RACK: puts("[err: no tiles placed on the board]"); break;
-	case ACTION_ERR_PLACE_NO_DIR: puts("[err: tiles don't form a continuous line]"); break;
-	case ACTION_ERR_PLACE_INVALID_PATH: puts("[err: invalid path]"); break;
-	case ACTION_ERR_PLACE_INVALID_WORD: puts("[err: misspelled word(s)]"); break;
-	case ACTION_ERR_DISCARD_RULE: puts("[err: discard rule]"); break;
-	case ACTION_ERR_SKIP_RULE: puts("[err: skip rule]"); break;
-	case ACTION_ERR_QUIT_RULE: puts("[err: quit rule]"); break;
-	case ACTION_ERR_NONE: /* fall through */
+	case actionErrUnknown: puts("[err: unknown]"); break;
+	case actionErrPlaceOutOfRange: puts("[err: out of range]"); break;
+	case actionErrPlaceSelfOverlap: puts("[err: self overlap]"); break;
+	case actionErrPlaceBoardOverlap: puts("[err: board overlap]"); break;
+	case actionErrPlaceInvalidRackId: puts("[err: invalid rack id]"); break;
+	case actionErrPlaceInvalidSq: puts("[err: place on free sq. or adjacent to a tile]"); break;
+	case actionErrPlaceNoRack: puts("[err: no tiles placed on the board]"); break;
+	case actionErrPlaceNoDir: puts("[err: tiles don't form a continuous line]"); break;
+	case actionErrPlaceInvalidPath: puts("[err: invalid path]"); break;
+	case actionErrPlaceInvalidWord: puts("[err: misspelled word(s)]"); break;
+	case actionErrDiscardRule: puts("[err: discard rule]"); break;
+	case actionErrSkipRule: puts("[err: skip rule]"); break;
+	case actionErrQuitRule: puts("[err: quit rule]"); break;
+	case actionErrNone: /* fall through */
 	default: break;
 	}
 }
@@ -189,23 +189,23 @@ void printLog(struct Log *l)
 	NOT(l);
 
 	switch (l->type) {
-	case ACTION_INVALID: {
+	case actionInvalid: {
 		switch (l->data.err) {
-		case ACTION_ERR_NONE: break;
+		case actionErrNone: break;
 		default: break;
 		}
 		break;
 	}
-	case ACTION_PLACE: {
+	case actionPlace: {
 		break;
 	}
-	case ACTION_DISCARD: {
+	case actionDiscard: {
 		break;
 	}
-	case ACTION_SKIP: {
+	case actionSkip: {
 		break;
 	}
-	case ACTION_QUIT: {
+	case actionQuit: {
 		break;
 	}
 	default: break;
