@@ -4,32 +4,32 @@
 int defaultLetterScore(LetterType l)
 {
 	switch (l) {
-	case LETTER_A: return 1;
-	case LETTER_B: return 3;
-	case LETTER_C: return 3;
-	case LETTER_D: return 2;
-	case LETTER_E: return 1;
-	case LETTER_F: return 4;
-	case LETTER_G: return 2;
-	case LETTER_H: return 4;
-	case LETTER_I: return 1;
-	case LETTER_J: return 8;
-	case LETTER_K: return 5;
-	case LETTER_L: return 1;
-	case LETTER_M: return 3;
-	case LETTER_N: return 1;
-	case LETTER_O: return 1;
-	case LETTER_P: return 3;
-	case LETTER_Q: return 10;
-	case LETTER_R: return 1;
-	case LETTER_S: return 1;
-	case LETTER_T: return 1;
-	case LETTER_U: return 1;
-	case LETTER_V: return 4;
-	case LETTER_W: return 4;
-	case LETTER_X: return 8;
-	case LETTER_Y: return 4;
-	case LETTER_Z: return 10;
+	case letterA: return 1;
+	case letterB: return 3;
+	case letterC: return 3;
+	case letterD: return 2;
+	case letterE: return 1;
+	case letterF: return 4;
+	case letterG: return 2;
+	case letterH: return 4;
+	case letterI: return 1;
+	case letterJ: return 8;
+	case letterK: return 5;
+	case letterL: return 1;
+	case letterM: return 3;
+	case letterN: return 1;
+	case letterO: return 1;
+	case letterP: return 3;
+	case letterQ: return 10;
+	case letterR: return 1;
+	case letterS: return 1;
+	case letterT: return 1;
+	case letterU: return 1;
+	case letterV: return 4;
+	case letterW: return 4;
+	case letterX: return 8;
+	case letterY: return 4;
+	case letterZ: return 10;
 	default: break;
 	}
 	return 0;
@@ -39,7 +39,7 @@ int tileScore(Tile *t)
 {
 	NOT(t);
 
-	if (t->type == TILE_LETTER) {
+	if (t->type == tileLetter) {
 		return defaultLetterScore(t->letter);
 	}
 	return 0;
@@ -53,7 +53,7 @@ bool canUseDblLet(Board *b, Dir *d, int p, int x, int y)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	return d->pos[p] && b->sq[y][x] == SQ_DBL_LET;
+	return d->pos[p] && b->sq[y][x] == sqDblLet;
 }
 
 bool canUseTrpLet(Board *b, Dir *d, int p, int x, int y)
@@ -64,7 +64,7 @@ bool canUseTrpLet(Board *b, Dir *d, int p, int x, int y)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	return d->pos[p] && b->sq[y][x] == SQ_TRP_LET;
+	return d->pos[p] && b->sq[y][x] == sqTrpLet;
 }
 
 bool canUseDblWrd(Board *b, Dir *d, int p, int x, int y)
@@ -75,7 +75,7 @@ bool canUseDblWrd(Board *b, Dir *d, int p, int x, int y)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	return d->pos[p] && b->sq[y][x] == SQ_DBL_WRD;
+	return d->pos[p] && b->sq[y][x] == sqDblWrd;
 }
 	
 
@@ -87,7 +87,7 @@ bool canUseTrpWrd(Board *b, Dir *d, int p, int x, int y)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	return d->pos[p] && b->sq[y][x] == SQ_TRP_WRD;
+	return d->pos[p] && b->sq[y][x] == sqTrpWrd;
 }
 
 int dirScore(Board *b, Dir *d)
@@ -103,7 +103,7 @@ int dirScore(Board *b, Dir *d)
 	y = d->y;
 	s = 0;
 	switch (d->type) {
-	case DIR_RIGHT: {
+	case dirRight: {
 		for (i = d->x; i < d->len + d->x; i++) {
 			t = tileScore(&b->tile[y][i]);
 			t *= canUseDblLet(b, d, i, i, y) ? 2 : 1;
@@ -114,7 +114,7 @@ int dirScore(Board *b, Dir *d)
 		}
 		break;
 	}
-	case DIR_DOWN: {
+	case dirDown: {
 		for (i = d->y; i < d->len + d->y; i++) {
 			t = tileScore(&b->tile[i][x]);
 			t *= canUseDblLet(b, d, i, x, i) ? 2 : 1;
@@ -125,7 +125,7 @@ int dirScore(Board *b, Dir *d)
 		}
 		break;
 	}
-	case DIR_INVALID: /* fall through */
+	case dirInvalid: /* fall through */
 	default: return 0;
 	}
 
@@ -147,10 +147,10 @@ int metaPathScore(Dir *d, Dir *adj, int n, Board *b)
 	NOT(b);
 
 	s = 0;
-	if (d->type != DIR_INVALID) {
+	if (d->type != dirInvalid) {
 		s = dirScore(b, d);
 		for (i = 0; i < n; i++) {
-			if (adj[i].type != DIR_INVALID) {
+			if (adj[i].type != dirInvalid) {
 				s += dirScore(b, &adj[i]);
 			}
 		}
@@ -169,24 +169,24 @@ int pathScore(Path *p)
 	b = &p->board;
 
 	switch (p->type) {
-	case PATH_DOT: {
-		if (p->data.dot.right.type == DIR_RIGHT) {
+	case pathDot: {
+		if (p->data.dot.right.type == dirRight) {
 			s = dirScore(b, &p->data.dot.right);
 		}
-		if (p->data.dot.down.type == DIR_DOWN) {
+		if (p->data.dot.down.type == dirDown) {
 			s += dirScore(b, &p->data.dot.down);
 		}
 		break;
 	}
-	case PATH_HORZ: {
+	case pathHorz: {
 		s = metaPathScore(&p->data.horz.right, p->data.horz.down, BOARD_X, b);
 		break;
 	}
-	case PATH_VERT: {
+	case pathVert: {
 		s = metaPathScore(&p->data.vert.down, p->data.vert.right, BOARD_Y, b);
 		break;
 	}
-	case PATH_INVALID: /* fall through */
+	case pathInvalid: /* fall through */
 	default: return 0;
 	}
 	return s;
@@ -222,7 +222,7 @@ Tile bagPeek(Bag *b)
 
 	NOT(b);
 
-	next.type = TILE_NONE;
+	next.type = tileNone;
 	if (b->head != b->tail) {
 		next = b->tile[b->head];
 	}
@@ -251,7 +251,7 @@ bool adjustOutOfRange(Adjust *a)
 	int i;
 
 	NOT(a);
-	assert(a->type == ADJUST_RACK);
+	assert(a->type == adjustRack);
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		if (a->data.tile[i].idx < 0) {
@@ -269,7 +269,7 @@ void adjustSwap(Adjust *a, int i, int j)
 	TileAdjust tmp;
 
 	NOT(a);
-	assert(a->type == ADJUST_RACK);
+	assert(a->type == adjustRack);
 	VALID_RACK_SIZE(i);
 	VALID_RACK_SIZE(j);
 
@@ -285,7 +285,7 @@ void mkAdjust(Adjust *a, Player *p)
 	NOT(a);
 	NOT(p);
 
-	a->type = ADJUST_RACK;
+	a->type = adjustRack;
 	for (i = 0; i < RACK_SIZE; i++) {
 		a->data.tile[i].type = p->tile[i].type;
 		a->data.tile[i].idx = i;
@@ -298,7 +298,7 @@ bool adjustDuplicateIndex(Adjust *a)
 
 	NOT(a);
 
-	assert(a->type == ADJUST_RACK);
+	assert(a->type == adjustRack);
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		idx = a->data.tile[i].idx;
@@ -318,15 +318,15 @@ AdjustErrType fdAdjustErr(Adjust *a, Player *p)
 	NOT(a);
 	NOT(p);
 	
-	assert(a->type == ADJUST_RACK);
+	assert(a->type == adjustRack);
 	
 	if (adjustOutOfRange(a)) {
-		return ADJUST_ERR_RACK_OUT_OF_RANGE;
+		return adjustErrRackOutOfRange;
 	}
 	if (adjustDuplicateIndex(a)) {
-		return ADJUST_ERR_RACK_DUPLICATE_INDEX;
+		return adjustErrRackDuplicateIdx;
 	}
-	return ADJUST_ERR_NONE;
+	return adjustErrNone;
 }
 
 void applyAdjust(Player *p, Adjust *a)
@@ -336,7 +336,7 @@ void applyAdjust(Player *p, Adjust *a)
 
 	NOT(p);
 	NOT(a);
-	assert(a->type == ADJUST_RACK);
+	assert(a->type == adjustRack);
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		idx = a->data.tile[i].idx;
@@ -348,9 +348,9 @@ void applyAdjust(Player *p, Adjust *a)
 CmpType cmpWord(Word *w0, Word *w1) 
 {
 	/*
-	w0 > w1 -> CMP_GREATER
-	w0 < w1 -> CMP_LESS
-	w0 == w1 -> CMP_EQUAL
+	w0 > w1 -> cmpGreater
+	w0 < w1 -> cmpLess
+	w0 == w1 -> cmpEqual
 	*/
 	int i;
 
@@ -359,25 +359,25 @@ CmpType cmpWord(Word *w0, Word *w1)
 
 	for (i = 0; ; i++) {
 		if (w0->len  > w1->len && i == w1->len) {
-			return CMP_GREATER;
+			return cmpGreater;
 		}
 		if (w0->len  < w1->len && i == w0->len) {
-			return  CMP_LESS;
+			return  cmpLess;
 		}
 		if (w0->len == w1->len && i == w1->len) {
-			return CMP_EQUAL;
+			return cmpEqual;
 		}
 		if (w0->letter[i] == w1->letter[i]) {
 			continue;
 		}
 		if (w0->letter[i]  > w1->letter[i]) {
-			return CMP_GREATER;
+			return cmpGreater;
 		}
 		if (w0->letter[i]  < w1->letter[i]) {
-			return CMP_LESS;
+			return cmpLess;
 		}
 	}
-	return CMP_EQUAL;
+	return cmpEqual;
 }
 
 bool wordValid(Word *w, Dict *d)
@@ -393,9 +393,9 @@ bool wordValid(Word *w, Dict *d)
 
 	while (min <= max) {
 		switch (cmpWord(w, &d->words[mid])) {
-		case CMP_EQUAL: return true;
-		case CMP_GREATER: min = mid + 1; break;
-		case CMP_LESS: max = mid - 1; break;
+		case cmpEqual: return true;
+		case cmpGreater: min = mid + 1; break;
+		case cmpLess: max = mid - 1; break;
 		default: return false; /* Should never arrive here via cmpWord */
 		}
 		mid = (min + max) / 2;
@@ -415,9 +415,9 @@ bool dirValid(Dir *dir, Board *b, Dict *dict, Word *w)
 	y = dir->y;
 	w->len = dir->len;
 	switch (dir->type) {
-	case DIR_RIGHT: {
+	case dirRight: {
 		for (i = 0; i < w->len; i++) {
-			if (b->tile[y][x + i].type != TILE_NONE) {
+			if (b->tile[y][x + i].type != tileNone) {
 				w->letter[i] = b->tile[y][x + i].letter;
 			} else {
 				return false;
@@ -425,9 +425,9 @@ bool dirValid(Dir *dir, Board *b, Dict *dict, Word *w)
 		}
 		break;
 	}
-	case DIR_DOWN: {
+	case dirDown: {
 		for (i = 0; i < w->len; i++) {
-			if (b->tile[y + i][x].type != TILE_NONE) {
+			if (b->tile[y + i][x].type != tileNone) {
 				w->letter[i] = b->tile[y + i][x].letter;
 			} else {
 				return false;
@@ -435,7 +435,7 @@ bool dirValid(Dir *dir, Board *b, Dict *dict, Word *w)
 		}
 		break;
 	}
-	case DIR_INVALID: /* fall through */
+	case dirInvalid: /* fall through */
 	default: return false;
 	}
 	return true;
@@ -452,7 +452,7 @@ bool pathValid(Path *p, Dict *d, bool (*rule)(Word *, PathType, DirType))
 
 	result = true;
 	switch (p->type) {
-	case PATH_DOT: {
+	case pathDot: {
 		bool a0, a1, b0, b1;
 		a0 = dirValid(&p->data.dot.right, &p->board, d, &w0);
 		b0 = dirValid(&p->data.dot.down, &p->board, d, &w1);
@@ -460,8 +460,8 @@ bool pathValid(Path *p, Dict *d, bool (*rule)(Word *, PathType, DirType))
 		a0 = a0 ? wordValid(&w0, d) : a0;
 		b0 = b0 ? wordValid(&w1, d) : b0;
 
-		a0 = a0 && rule ? rule(&w0, p->type, DIR_RIGHT) : a0;
-		b0 = b0 && rule ? rule(&w1, p->type, DIR_DOWN) : b0;
+		a0 = a0 && rule ? rule(&w0, p->type, dirRight) : a0;
+		b0 = b0 && rule ? rule(&w1, p->type, dirDown) : b0;
 
 		a1 = p->data.dot.right.len > 1;
 		b1 = p->data.dot.down.len > 1;
@@ -471,49 +471,49 @@ bool pathValid(Path *p, Dict *d, bool (*rule)(Word *, PathType, DirType))
 		}
 		break;
 	}
-	case PATH_HORZ: {
+	case pathHorz: {
 		if (!dirValid(&p->data.horz.right, &p->board, d, &w0)) {
 			result = false;
 		} else if (!wordValid(&w0, d)) {
 			result = false;
-		} else if (rule && !rule(&w0, p->type, DIR_RIGHT)) {
+		} else if (rule && !rule(&w0, p->type, dirRight)) {
 			result = false;
 		}
 		for (i = 0; i < BOARD_X; i++) {
-			if (p->data.horz.down[i].type == DIR_DOWN) {
+			if (p->data.horz.down[i].type == dirDown) {
 				if (!dirValid(&p->data.horz.down[i], &p->board, d, &w1)) {
 					result = false;
 				} else if (w1.len > 1 && !wordValid(&w1, d)) {
 					result = false;
-				} else if (w1.len > 1 && rule && !rule(&w1, p->type, DIR_DOWN)) {
+				} else if (w1.len > 1 && rule && !rule(&w1, p->type, dirDown)) {
 					result = false;
 				}
 			}
 		}
 		break;
 	}
-	case PATH_VERT: {
+	case pathVert: {
 		if (!dirValid(&p->data.vert.down, &p->board, d, &w0)) {
 			result = false;
 		} else if (!wordValid(&w0, d)) {
 			result = false;
-		} else if (rule && !rule(&w0, p->type, DIR_DOWN)) {
+		} else if (rule && !rule(&w0, p->type, dirDown)) {
 			result = false;
 		}
 		for (i = 0; i < BOARD_Y; i++) {
-			if (p->data.vert.right[i].type == DIR_RIGHT) {
+			if (p->data.vert.right[i].type == dirRight) {
 				if(!dirValid(&p->data.vert.right[i], &p->board, d, &w1)) {
 					result = false;
 				} else if (w1.len > 1 && !wordValid(&w1, d)) {
 					result = false;
-				} else if (w1.len > 1 && rule && !rule(&w1, p->type, DIR_RIGHT)) {
+				} else if (w1.len > 1 && rule && !rule(&w1, p->type, dirRight)) {
 					result = false;
 				}
 			}
 		}
 		break;
 	}
-	case PATH_INVALID: /* fall through */
+	case pathInvalid: /* fall through */
 	default: result = false; break; 
 	}
 	return result; 
@@ -529,7 +529,7 @@ PathErrType pathValidWithErr(Path *p, Dict *d)
 	NOT(d);
 
 	switch (p->type) {
-	case PATH_DOT: {
+	case pathDot: {
 		bool a0, a1, b0, b1;
 		a0 = dirValid(&p->data.dot.right, &p->board, d, &w0);
 		b0 = dirValid(&p->data.dot.down, &p->board, d, &w1);
@@ -543,48 +543,48 @@ PathErrType pathValidWithErr(Path *p, Dict *d)
 		}
 		break;
 	}
-	case PATH_HORZ: {
+	case pathHorz: {
 		if (!dirValid(&p->data.horz.right, &p->board, d, &w0)) {
-			return PATH_ERR_NON_CONT;
+			return pathErrNonCont;
 		}
 		if (!wordValid(&w0, d)) {
-			return PATH_ERR_INVALID_WORD;
+			return pathErrInvalidWord;
 		}
 		for (i = 0; i < BOARD_X; i++) {
-			if (p->data.horz.down[i].type == DIR_DOWN) {
+			if (p->data.horz.down[i].type == dirDown) {
 				if (!dirValid(&p->data.horz.down[i], &p->board, d, &w1)) {
-					return PATH_ERR_NON_CONT;
+					return pathErrNonCont;
 				}
 				if (!wordValid(&w1, d)) {
-					return PATH_ERR_INVALID_WORD;
+					return pathErrInvalidWord;
 				}
 			}
 		}
 		break;
 	}
-	case PATH_VERT: {
+	case pathVert: {
 		if (!dirValid(&p->data.vert.down, &p->board, d, &w0)) {
-			return PATH_ERR_NON_CONT; 
+			return pathErrNonCont; 
 		}
 		if (!wordValid(&w0, d)) {
-			return PATH_ERR_INVALID_WORD;
+			return pathErrInvalidWord;
 		}
 		for (i = 0; i < BOARD_Y; i++) {
-			if (p->data.vert.right[i].type == DIR_RIGHT) {
+			if (p->data.vert.right[i].type == dirRight) {
 				if(!dirValid(&p->data.vert.right[i], &p->board, d, &w1)) {
-					return PATH_ERR_NON_CONT;
+					return pathErrNonCont;
 				}
 				if (!wordValid(&w1, d)) {
-					return PATH_ERR_INVALID_WORD;
+					return pathErrInvalidWord;
 				}
 			}
 		}
 		break;
 	}
-	case PATH_INVALID:
-	default: return PATH_ERR_INVALID_PATH;
+	case pathInvalid:
+	default: return pathErrInvalidPath;
 	}
-	return PATH_ERR_NONE;
+	return pathErrNone;
 }
 */
 
@@ -600,19 +600,19 @@ bool tilesAdjacent(Board *b, MovePlace *mp, Player *p)
 		r = mp->rackIdx[i];
 		y = mp->coor[i].y;
 		x = mp->coor[i].x;
-		if (p->tile[r].type != TILE_NONE) {
-			if (x > 0 && b->tile[y][x - 1].type != TILE_NONE) {
+		if (p->tile[r].type != tileNone) {
+			if (x > 0 && b->tile[y][x - 1].type != tileNone) {
 				return true;
 			}
-			if (y > 0 && b->tile[y - 1][x].type != TILE_NONE) {
+			if (y > 0 && b->tile[y - 1][x].type != tileNone) {
 				return true;
 			}
 			if (x < BOARD_X - 1 &&
-					b->tile[y][x + 1].type != TILE_NONE) {
+					b->tile[y][x + 1].type != tileNone) {
 				return true;
 			}
 			if (y < BOARD_Y - 1 &&
-					b->tile[y + 1][x].type != TILE_NONE) {
+					b->tile[y + 1][x].type != tileNone) {
 				return true;
 			}
 		}
@@ -633,7 +633,7 @@ bool onFreeSquares(Board *b, MovePlace *mp, Player *p)
 		r = mp->rackIdx[i];
 		y = mp->coor[i].y;
 		x = mp->coor[i].x;
-		if (p->tile[r].type != TILE_NONE && b->sq[y][x] == SQ_FREE) {
+		if (p->tile[r].type != tileNone && b->sq[y][x] == sqFree) {
 			return true;
 		}
 	}
@@ -690,7 +690,7 @@ bool placeOverlapBoard(MovePlace *mp, Board *b)
 	for (i = 0; i < mp->num; i++) {
 		x = mp->coor[i].x;
 		y = mp->coor[i].y;
-		if (b->tile[y][x].type != TILE_NONE) {
+		if (b->tile[y][x].type != tileNone) {
 			return true;
 		}
 	}
@@ -706,7 +706,7 @@ bool placeRackExist(MovePlace *mp, Player *p)
 
 	for (i = 0; i < mp->num; i++) {
 		r = mp->rackIdx[i];
-		if (p->tile[r].type == TILE_NONE) {
+		if (p->tile[r].type == tileNone) {
 			return false;
 		}
 	}
@@ -757,7 +757,7 @@ bool isHorz(Action *a, Move *m)
 		}
 	}
 	for (i = min; i <= max; i++) {
-		if (b->tile[y][i].type == TILE_NONE) {
+		if (b->tile[y][i].type == tileNone) {
 			return false;
 		}
 	}
@@ -793,7 +793,7 @@ bool isVert(Action *a, Move *m)
 		}
 	}
 	for (i = min; i <= max; i++) {
-		if (board->tile[i][x].type == TILE_NONE) {
+		if (board->tile[i][x].type == tileNone) {
 			return false;
 		}
 	}
@@ -809,24 +809,24 @@ void mkRight(Dir *d, int x, int y, Board *b)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	d->type = DIR_RIGHT;
+	d->type = dirRight;
 	d->x = x;
 	d->y = y;
 	memSet(d->pos, false, sizeof(bool) * BOARD_SIZE);
 	d->pos[x] = true;
 
-	for (i = x; i >= 0 && b->tile[y][i].type != TILE_NONE; i--) {
+	for (i = x; i >= 0 && b->tile[y][i].type != tileNone; i--) {
 		d->x = i;
 	}
 
-	for (i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++) {
+	for (i = x; i < BOARD_X && b->tile[y][i].type != tileNone; i++) {
 		d->len = i;
 	}
 	d->len -= d->x - 1;
 
 	/* a word cannot be 1 letter long */
 	if (d->len == 1) {
-		 d->type = DIR_INVALID;
+		 d->type = dirInvalid;
 	}
 }
 
@@ -839,24 +839,24 @@ void mkDown(Dir *d, int x, int y, Board *b)
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
 
-	d->type = DIR_DOWN;
+	d->type = dirDown;
 	d->x = x;
 	d->y = y;
 	memSet(d->pos, false, sizeof(bool) * BOARD_SIZE);
 	d->pos[y] = true;
 
-	for (i = y; i >= 0 && b->tile[i][x].type != TILE_NONE; i--) {
+	for (i = y; i >= 0 && b->tile[i][x].type != tileNone; i--) {
 		d->y = i;
 	}
 
-	for (i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++) {
+	for (i = y; i < BOARD_Y && b->tile[i][x].type != tileNone; i++) {
 		d->len = i;
 	}
 	d->len -= d->y - 1;
 
 	/* a word cannot be 1 letter long */
 	if (d->len == 1) {	
-		d->type = DIR_INVALID;
+		d->type = dirInvalid;
 	}
 }
 
@@ -876,7 +876,7 @@ void mkDot(Action *a, Move *m)
 	b = &a->data.place.path.board;
 	d = NULL;
 
-	p->type = PATH_DOT;
+	p->type = pathDot;
 
 	d = &p->data.dot.right;
 	mkRight(d, x, y, b);
@@ -900,7 +900,7 @@ void mkHorz(Action *a, Move *m)
 	p = &a->data.place.path; 
 	b = &a->data.place.path.board;
 
-	p->type = PATH_HORZ;
+	p->type = pathHorz;
 
 	d = &p->data.horz.right;
 	mkRight(d, x, y, b);
@@ -910,7 +910,7 @@ void mkHorz(Action *a, Move *m)
 		d->pos[x] = true;
 	}
 	for (i = 0; i < BOARD_X; i++) {
-		p->data.horz.down[i].type = DIR_INVALID;
+		p->data.horz.down[i].type = dirInvalid;
 	}
 	for (i = 0; i < m->data.place.num; i++) {
 		d = &p->data.horz.down[i];
@@ -938,7 +938,7 @@ void mkVert(Action *a, Move *m)
 	path = &a->data.place.path; 
 	d = &path->data.vert.down;
 
-	path->type = PATH_VERT;
+	path->type = pathVert;
 	mkDown(d, x, y, b);
 
 	for (i = 0; i < m->data.place.num; i++) {
@@ -946,7 +946,7 @@ void mkVert(Action *a, Move *m)
 		d->pos[y] = true;
 	}
 	for (i = 0; i < BOARD_Y; i++) {
-		path->data.vert.right[i].type = DIR_INVALID;
+		path->data.vert.right[i].type = dirInvalid;
 	}
 	for (i = 0; i < m->data.place.num; i++) {
 		d = &path->data.vert.right[i];
@@ -963,21 +963,21 @@ ActionErrType fdPlaceErr(MovePlace *mp,Player *p, Board *b)
 	NOT(b);
 	
 	if (!placeInRange(mp)) {
-		return ACTION_ERR_PLACE_OUT_OF_RANGE;
+		return actionErrPlaceOutOfRange;
 	}
 	if (placeOverlap(mp)) {
-		return ACTION_ERR_PLACE_SELF_OVERLAP;
+		return actionErrPlaceSelfOverlap;
 	}
 	if (placeOverlapBoard(mp, b)) {
-		return ACTION_ERR_PLACE_BOARD_OVERLAP;
+		return actionErrPlaceBoardOverlap;
 	}
 	if (!placeRackExist(mp, p)) {
-		return ACTION_ERR_PLACE_INVALID_RACK_ID;
+		return actionErrPlaceInvalidRackId;
 	}
 	if (!tilesAdjacent(b, mp, p) && !onFreeSquares(b, mp, p)) {
-		return ACTION_ERR_PLACE_INVALID_SQ;
+		return actionErrPlaceInvalidSq;
 	}
-	return ACTION_ERR_NONE;
+	return actionErrNone;
 }
 
 bool ruleZ4Char(Word *w, PathType pt, DirType dt)
@@ -985,7 +985,7 @@ bool ruleZ4Char(Word *w, PathType pt, DirType dt)
 	NOT(w);
 	printWord(w);
 	putchar('\n');
-	return w->len == 4 && w->letter[0] == LETTER_Z;
+	return w->len == 4 && w->letter[0] == letterZ;
 }
 
 void mkPlace(Action *a, Game *g, Move *m)
@@ -1002,15 +1002,15 @@ void mkPlace(Action *a, Game *g, Move *m)
 	num = m->data.place.num;
 	path = &a->data.place.path;
 	player = &g->player[m->playerIdx];
-	a->type = ACTION_PLACE;
+	a->type = actionPlace;
 
 	a->data.place.num = m->data.place.num;
 	for (i = 0; i < num; i++) {
 		a->data.place.rackIdx[i] = m->data.place.rackIdx[i];
 	}
 	err = fdPlaceErr(&m->data.place, player, &g->board);
-	if (err != ACTION_ERR_NONE) {
-		a->type = ACTION_INVALID;
+	if (err != actionErrNone) {
+		a->type = actionInvalid;
 		a->data.err = err;
 		return;
 	}
@@ -1021,8 +1021,8 @@ void mkPlace(Action *a, Game *g, Move *m)
 	assert(num >= 0);
 	switch (num) {
 	case 0: {
-		a->type = ACTION_INVALID;
-		a->data.err = ACTION_ERR_PLACE_NO_RACK;
+		a->type = actionInvalid;
+		a->data.err = actionErrPlaceNoRack;
 		return;
 	}
 	case 1: {
@@ -1037,8 +1037,8 @@ void mkPlace(Action *a, Game *g, Move *m)
 			if (isVert(a, m)) {
 				mkVert(a, m);
 			} else {
-				a->type = ACTION_INVALID;
-				a->data.err = ACTION_ERR_PLACE_NO_DIR;
+				a->type = actionInvalid;
+				a->data.err = actionErrPlaceNoDir;
 				return;
 			}
 		}
@@ -1047,8 +1047,8 @@ void mkPlace(Action *a, Game *g, Move *m)
 	}
 
 	if (!pathValid(path, &g->dict, NULL)) {
-		a->type = ACTION_INVALID;
-		a->data.err = ACTION_ERR_PLACE_INVALID_PATH;
+		a->type = actionInvalid;
+		a->data.err = actionErrPlaceInvalidPath;
 		return;
 	}
 	a->data.place.score = pathScore(path);
@@ -1061,7 +1061,7 @@ void mkDiscard(Action *a, Game *g, Move *m)
 	NOT(g);
 	NOT(m);
 
-	a->type = ACTION_DISCARD;
+	a->type = actionDiscard;
 	a->data.discard.num = m->data.discard.num;
 	assert(sizeof(a->data.discard) == sizeof(m->data.discard));
 	memCpy(&a->data.discard, &m->data.discard, sizeof(m->data.discard));
@@ -1073,11 +1073,11 @@ void mkSkip(Action *a, Game *g)
 	NOT(g);
 	
 	if (g->rule.skip && !g->rule.skip(g)) {
-		a->type = ACTION_INVALID;
-		a->data.err = ACTION_ERR_SKIP_RULE;
+		a->type = actionInvalid;
+		a->data.err = actionErrSkipRule;
 		return;
 	}
-	a->type = ACTION_SKIP;
+	a->type = actionSkip;
 }
 
 void mkQuit(Action *a, Game *g)
@@ -1086,11 +1086,11 @@ void mkQuit(Action *a, Game *g)
 	NOT(g);
 	
 	if (g->rule.quit && !g->rule.quit(g)) {
-		a->type = ACTION_INVALID;
-		a->data.err = ACTION_ERR_QUIT_RULE;
+		a->type = actionInvalid;
+		a->data.err = actionErrQuitRule;
 		return;
 	}
-	a->type = ACTION_QUIT;
+	a->type = actionQuit;
 }
 
 void mkAction(Action *a, Game *g, Move *m)
@@ -1106,7 +1106,7 @@ void mkAction(Action *a, Game *g, Move *m)
 	case MOVE_SKIP: mkSkip(a, g); break;
 	case MOVE_QUIT: mkQuit(a, g); break;
 	case MOVE_INVALID: /* fall through */
-	default: a->type = ACTION_INVALID; break;
+	default: a->type = actionInvalid; break;
 	}
 }
 
@@ -1119,7 +1119,7 @@ void rackShift(Player *p)
 	j = 0;
 	i = 0;
 	while (i < RACK_SIZE) {
-		while (p->tile[i].type == TILE_NONE && i < RACK_SIZE) {
+		while (p->tile[i].type == tileNone && i < RACK_SIZE) {
 			i++;
 		}
 		if (i == RACK_SIZE) {
@@ -1130,7 +1130,7 @@ void rackShift(Player *p)
 		j++;
 	}
 	while (j < RACK_SIZE) {
-		p->tile[j].type = TILE_NONE;
+		p->tile[j].type = tileNone;
 		j++;
 	}
 }
@@ -1143,7 +1143,7 @@ void rackRefill(Player *p, Bag *b)
 	NOT(b);
 	
 	for (i = 0; i < RACK_SIZE && !bagEmpty(b); i++) {
-		if (p->tile[i].type == TILE_NONE) {
+		if (p->tile[i].type == tileNone) {
 			p->tile[i] = bagPeek(b);
 			bagDrop(b);
 		}
@@ -1162,22 +1162,22 @@ bool applyAction(Game *g, Action *a)
 		return false;
 	}
 	switch (a->type) {
-	case ACTION_PLACE: {
+	case actionPlace: {
 		memCpy(&g->board, &a->data.place.path.board,
 				sizeof(Board));
 		g->player[id].score += a->data.place.score;
 		for (i = 0; i < a->data.place.num; i++) {
 			r = a->data.place.rackIdx[i];
-			g->player[id].tile[r].type = TILE_NONE;
+			g->player[id].tile[r].type = tileNone;
 		}
 		rackRefill(&g->player[id], &g->bag);
 		rackShift(&g->player[id]);
 		break;
 	}
-	case ACTION_DISCARD: {
+	case actionDiscard: {
 		for (i = 0; i < a->data.discard.num; i++) {
 			r = a->data.discard.rackIdx[i];
-			g->player[id].tile[r].type = TILE_NONE;
+			g->player[id].tile[r].type = tileNone;
 		}
 		rackRefill(&g->player[id], &g->bag);
 		rackShift(&g->player[id]);
@@ -1187,14 +1187,14 @@ bool applyAction(Game *g, Action *a)
 		}
 		break;
 	}
-	case ACTION_SKIP: {
+	case actionSkip: {
 		break;
 	}
-	case ACTION_QUIT: {
+	case actionQuit: {
 		g->player[id].active = false;
 		break;
 	}
-	case ACTION_INVALID: /* fall through */
+	case actionInvalid: /* fall through */
 	default: return false;
 	}
 	return true;
@@ -1208,7 +1208,7 @@ void rmRackTile(Player *p, int *rackIdx, int n)
 	NOT(rackIdx);
 
 	for (i = 0; i < n; i++) {
-		p->tile[rackIdx[i]].type = TILE_NONE;
+		p->tile[rackIdx[i]].type = tileNone;
 	}
 }
 
@@ -1235,7 +1235,7 @@ void actionClr(Action *a)
 	NOT(a);
 
 	memSet(a, 0, sizeof(Action));
-	a->type = ACTION_INVALID;
+	a->type = actionInvalid;
 }
 
 bool endGame(Game *g)
@@ -1259,7 +1259,7 @@ bool endGame(Game *g)
 	for (i = 0; i < g->playerNum; i++) {
 		if (g->player[i].active) {
 			for (k = 0; k < RACK_SIZE; k++) {
-				if (g->player[i].tile[k].type != TILE_NONE) {
+				if (g->player[i].tile[k].type != tileNone) {
 					j++;
 				}
 			}
@@ -1322,8 +1322,8 @@ int rackCount(Player *p)
 	
 	count = 0;
 	for (i = 0; i < RACK_SIZE; i++) {
-		assert(p->tile[i].type == TILE_NONE || p->tile[i].type == TILE_WILD || p->tile[i].type == TILE_LETTER);
-		if (p->tile[i].type != TILE_NONE) {
+		assert(p->tile[i].type == tileNone || p->tile[i].type == tileWild || p->tile[i].type == tileLetter);
+		if (p->tile[i].type != tileNone) {
 			count++;
 		}
 	}
@@ -1338,8 +1338,8 @@ int adjustTileCount(Adjust *a)
 	
 	count = 0;
 	for (i = 0; i < RACK_SIZE; i++) {
-		assert(a->data.tile[i].type == TILE_NONE || a->data.tile[i].type == TILE_WILD || a->data.tile[i].type == TILE_LETTER);
-		if (a->data.tile[i].type != TILE_NONE) {
+		assert(a->data.tile[i].type == tileNone || a->data.tile[i].type == tileWild || a->data.tile[i].type == tileLetter);
+		if (a->data.tile[i].type != tileNone) {
 			count++;
 		}
 	}
@@ -1354,7 +1354,7 @@ bool boardEmpty(Board *b)
 
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
-			if (b->tile[y][x].type != TILE_NONE) {
+			if (b->tile[y][x].type != tileNone) {
 				return false;
 			}
 		}

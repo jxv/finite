@@ -30,7 +30,7 @@ void fontmapQuit(Font *f)
 	}
 }
 
-void keystateInit(KeyState *ks)
+void initKeyState(KeyState *ks)
 {
 	NOT(ks);
 	
@@ -38,25 +38,41 @@ void keystateInit(KeyState *ks)
 	ks->time = 0.0f;
 }
 
+void initGameControls(GameControls *gc)
+{
+	NOT(gc);
+	
+	gc->key[gameKeyPlay] = hardwareKeySelect;
+	gc->key[gameKeyRecall] = hardwareKeyY;
+	gc->key[gameKeyShuffle] = -1;
+	gc->key[gameKeyCancel] = hardwareKeyX;
+	gc->key[gameKeyMode] = hardwareKeyB;
+	gc->key[gameKeySelect] = hardwareKeyA;
+	gc->key[gameKeyUp] = hardwareKeyUp;
+	gc->key[gameKeyDown] = hardwareKeyDown;
+	gc->key[gameKeyLeft] = hardwareKeyLeft;
+	gc->key[gameKeyRight] = hardwareKeyRight;
+	gc->key[gameKeyPrevTile] = hardwareKeyL;
+	gc->key[gameKeyNextTile] = hardwareKeyR;
+}
+
 void controlsInit(Controls *c)
 {
-	NOT(c);
-	
-	keystateInit(&c->start);
-	keystateInit(&c->select);
-	keystateInit(&c->up);
-	keystateInit(&c->down);
-	keystateInit(&c->right);
-	keystateInit(&c->left);
-	keystateInit(&c->a);
-	keystateInit(&c->b);
-	keystateInit(&c->x);
-	keystateInit(&c->y);
-	keystateInit(&c->l);
-	keystateInit(&c->r);
+	int i;
+	HardwareControls *hc;
 
-	c->axisX = 0.f;
-	c->axisY = 0.f;
+	NOT(c);
+
+	hc = &c->hardware;
+
+	for (i = 0; i < hardwareKeyCount; i++) {
+		initKeyState(&hc->key[i]);
+	}
+
+	hc->axisX = 0.f;
+	hc->axisY = 0.f;
+
+	initGameControls(&c->game);
 }
 
 void initDefaultRule(Rule *r)
@@ -144,7 +160,7 @@ void initGameGUI(GameGUI *gg)
 	mkRackWidget(&gg->rackWidget);
 	mkChoiceWidget(&gg->choiceWidget);
 	mkBoardWidget(&gg->boardWidget);
-	gg->focus = gameGUIFocusChoice;
+	gg->focus = gameGUIFocusBoard;
 	gg->bottomLast = gameGUIFocusChoice;
 	gg->choiceWidget.index.x = 1;
 }
@@ -591,9 +607,11 @@ bool handleEvent(Controls *c)
 {
 	SDL_Event event;
 	Uint8 *ks;
+	HardwareControls *hc;
 
 	NOT(c);
 
+	hc = &c->hardware;
 	ks = SDL_GetKeyState(NULL);
 	NOT(ks);
 	while (SDL_PollEvent(&event)) {
@@ -603,27 +621,28 @@ bool handleEvent(Controls *c)
 		case SDL_KEYUP: ks[event.key.keysym.sym] = false; break;
 		case SDL_JOYAXISMOTION: {
 			if (event.jaxis.axis == 0) {
-				c->axisX = normalizeAxis(event.jaxis.value);
+				hc->axisX = normalizeAxis(event.jaxis.value);
 			}
 			if (event.jaxis.axis == 1) {
-				c->axisY = -normalizeAxis(event.jaxis.value);
+				hc->axisY = -normalizeAxis(event.jaxis.value);
 			}
 		}
 		default: break;
 		}
 	}
-	keyStateUpdate(&c->start, ks[SDLK_RETURN]);
-	keyStateUpdate(&c->select, ks[SDLK_ESCAPE]);
-	keyStateUpdate(&c->up, ks[SDLK_UP]);
-	keyStateUpdate(&c->down, ks[SDLK_DOWN]);
-	keyStateUpdate(&c->left, ks[SDLK_LEFT]);
-	keyStateUpdate(&c->right, ks[SDLK_RIGHT]);
-	keyStateUpdate(&c->a, ks[SDLK_LCTRL]);
-	keyStateUpdate(&c->b, ks[SDLK_LALT]);
-	keyStateUpdate(&c->x, ks[SDLK_LSHIFT]);
-	keyStateUpdate(&c->y, ks[SDLK_SPACE]);
-	keyStateUpdate(&c->l, ks[SDLK_TAB]);
-	keyStateUpdate(&c->r, ks[SDLK_BACKSPACE]);
+
+	keyStateUpdate(&hc->key[hardwareKeyStart], ks[SDLK_RETURN]);
+	keyStateUpdate(&hc->key[hardwareKeySelect], ks[SDLK_ESCAPE]);
+	keyStateUpdate(&hc->key[hardwareKeyUp], ks[SDLK_UP]);
+	keyStateUpdate(&hc->key[hardwareKeyDown], ks[SDLK_DOWN]);
+	keyStateUpdate(&hc->key[hardwareKeyLeft], ks[SDLK_LEFT]);
+	keyStateUpdate(&hc->key[hardwareKeyRight], ks[SDLK_RIGHT]);
+	keyStateUpdate(&hc->key[hardwareKeyA], ks[SDLK_LCTRL]);
+	keyStateUpdate(&hc->key[hardwareKeyB], ks[SDLK_LALT]);
+	keyStateUpdate(&hc->key[hardwareKeyX], ks[SDLK_LSHIFT]);
+	keyStateUpdate(&hc->key[hardwareKeyY], ks[SDLK_SPACE]);
+	keyStateUpdate(&hc->key[hardwareKeyL], ks[SDLK_TAB]);
+	keyStateUpdate(&hc->key[hardwareKeyR], ks[SDLK_BACKSPACE]);
 	return false;
 }
 

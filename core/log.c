@@ -14,7 +14,7 @@ void mkLog(struct Action *a, struct Log *l)
 	NOT(l);
 
 	switch (a->type) {
-	case ACTION_PLACE: mkPlaceLog(a, l); break;
+	case actionPlace: mkPlaceLog(a, l); break;
 	default: break;
 	}
 }

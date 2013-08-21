@@ -19,6 +19,12 @@ typedef enum
 	keyStateCount
 } KeyStateType;
 
+typedef struct
+{
+	KeyStateType type;
+	float time;
+} KeyState;
+
 void surfaceFree(SDL_Surface *s);
 SDL_Surface *surfaceLoad(const char *filename);
 SDL_Surface *surfaceAlphaLoad(const char *filename);

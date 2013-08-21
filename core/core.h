@@ -26,75 +26,76 @@
 
 typedef enum
 {
-	TILE_NONE = -1,
-	TILE_WILD = 0,
-	TILE_LETTER,
-	TILE_COUNT
+	tileNone = -1,
+	tileWild = 0,
+	tileLetter,
+	tileCount
 } TileType;
 
 typedef enum
 {
-	SQ_NORMAL = 0,
-	SQ_DBL_LET,
-	SQ_DBL_WRD,
-	SQ_TRP_LET,
-	SQ_TRP_WRD,
-	SQ_FREE,
-	SQ_COUNT
+	sqNormal = 0,
+	sqDblLet,
+	sqDblWrd,
+	sqTrpLet,
+	sqTrpWrd,
+	sqFree,
+	sqMystery,
+	sqCount
 } SqType;
 
 typedef enum
 {
-	LETTER_INVALID = -1,
-	LETTER_A = 0,
-	LETTER_B,
-	LETTER_C,
-	LETTER_D,
-	LETTER_E,
-	LETTER_F,
-	LETTER_G,
-	LETTER_H,
-	LETTER_I,
-	LETTER_J,
-	LETTER_K,
-	LETTER_L,
-	LETTER_M,
-	LETTER_N,
-	LETTER_O,
-	LETTER_P,
-	LETTER_Q,
-	LETTER_R,
-	LETTER_S,
-	LETTER_T, 
-	LETTER_U,
-	LETTER_V,
-	LETTER_W,
-	LETTER_X,
-	LETTER_Y,
-	LETTER_Z,
-	LETTER_COUNT
+	letterInvalid = -1,
+	letterA = 0,
+	letterB,
+	letterC,
+	letterD,
+	letterE,
+	letterF,
+	letterG,
+	letterH,
+	letterI,
+	letterJ,
+	letterK,
+	letterL,
+	letterM,
+	letterN,
+	letterO,
+	letterP,
+	letterQ,
+	letterR,
+	letterS,
+	letterT, 
+	letterU,
+	letterV,
+	letterW,
+	letterX,
+	letterY,
+	letterZ,
+	letterCount
 } LetterType;
 
 typedef enum
 {
-	PLAYER_HUMAN = 0,
-	PLAYER_AI,
-	PLAYER_COUNT
+	playerHuman = 0,
+	playerAI,
+	playerCount
 } PlayerType;
 
 typedef enum
 {
-	ADJUST_INVALID = -1,
-	ADJUST_RACK = 0,
-	ADJUST_COUNT
+	adjustInvalid = -1,
+	adjustRack = 0,
+	adjustCount
 } AdjustType;
 
 typedef enum
 {
-	ADJUST_ERR_NONE = 0,
-	ADJUST_ERR_RACK_OUT_OF_RANGE,
-	ADJUST_ERR_RACK_DUPLICATE_INDEX,
-	ADJUST_ERR_COUNT
+	adjustErrNone = 0,
+	adjustErrRackOutOfRange,
+	adjustErrRackDuplicateIdx,
+	adjustErrCount
 } AdjustErrType;
 
 typedef enum
@@ -109,73 +110,73 @@ typedef enum
 
 typedef enum
 {
-	ACTION_ERR_NONE = 0,
-	ACTION_ERR_UNKNOWN,
-	ACTION_ERR_PLACE_OUT_OF_RANGE,
-	ACTION_ERR_PLACE_SELF_OVERLAP,
-	ACTION_ERR_PLACE_BOARD_OVERLAP,
-	ACTION_ERR_PLACE_INVALID_RACK_ID,
-	ACTION_ERR_PLACE_INVALID_SQ,
-	ACTION_ERR_PLACE_NO_RACK,
-	ACTION_ERR_PLACE_NO_DIR,
-	ACTION_ERR_PLACE_INVALID_PATH,
-	ACTION_ERR_PLACE_INVALID_WORD,
-	ACTION_ERR_DISCARD_RULE,
-	ACTION_ERR_SKIP_RULE,
-	ACTION_ERR_QUIT_RULE,
-	ACTION_ERR_COUNT
+	actionErrNone = 0,
+	actionErrUnknown,
+	actionErrPlaceOutOfRange,
+	actionErrPlaceSelfOverlap,
+	actionErrPlaceBoardOverlap,
+	actionErrPlaceInvalidRackId,
+	actionErrPlaceInvalidSq,
+	actionErrPlaceNoRack,
+	actionErrPlaceNoDir,
+	actionErrPlaceInvalidPath,
+	actionErrPlaceInvalidWord,
+	actionErrDiscardRule,
+	actionErrSkipRule,
+	actionErrQuitRule,
+	actionErrCount
 } ActionErrType;
 
 typedef enum
 {
-	DIR_ERR_NONE = 0,
-	DIR_ERR_NON_CONTINUOUS,
-	DIR_ERR_INVALID_WORD,
-	DIR_ERR_COUNT
+	dirErrNone = 0,
+	dirErrNonContinuous,
+	dirErrInvalidWord,
+	dirErrCount
 } DirErrType;
 
 typedef enum
 {
-	PATH_ERR_NONE = 0,
-	PATH_ERR_NON_CONT,
-	PATH_ERR_INVALID_WORD,
-	PATH_ERR_INVALID_RULE,
-	PATH_ERR_INVALID_PATH,
-	PATH_ERR_COUNT
+	pathErrNone = 0,
+	pathErrNonCont,
+	pathErrInvalidWord,
+	pathErrInvalidRule,
+	pathErrInvalidPath,
+	pathErrCount
 } PathErrType;
 
 typedef enum
 {
-	DIR_INVALID = -1,
-	DIR_RIGHT = 0,
-	DIR_DOWN,
-	DIR_COUNT
+	dirInvalid = -1,
+	dirRight = 0,
+	dirDown,
+	dirCount
 } DirType;
 
 typedef enum
 {
-	PATH_INVALID = -1,
-	PATH_DOT = 0,
-	PATH_HORZ,
-	PATH_VERT,
-	PATH_COUNT
+	pathInvalid = -1,
+	pathDot = 0,
+	pathHorz,
+	pathVert,
+	pathCount
 } PathType;
 
 typedef enum
 {
-	CMP_LESS = -1,
-	CMP_EQUAL = 0,
-	CMP_GREATER = 1
+	cmpLess = -1,
+	cmpEqual = 0,
+	cmpGreater = 1
 } CmpType;
 
 typedef enum
 {
-	ACTION_INVALID = -1,
-	ACTION_PLACE = 0,
-	ACTION_DISCARD,
-	ACTION_SKIP,
-	ACTION_QUIT,
-	ACTION_COUNT
+	actionInvalid = -1,
+	actionPlace = 0,
+	actionDiscard,
+	actionSkip,
+	actionQuit,
+	actionCount
 } ActionType;
 
 
@@ -193,12 +194,12 @@ typedef struct Tile
 	LetterType letter;
 } Tile;
 
-#define VALID_TILE_TYPE(tt) (RANGE(tt, 0, TILE_COUNT - 1))
-#define VALID_LETTER_TYPE(lt) (RANGE(lt, 0, LETTER_COUNT - 1))
+#define VALID_TILE_TYPE(tt) (RANGE(tt, 0, tileCount - 1))
+#define VALID_letterTYPE(lt) (RANGE(lt, 0, letterCount - 1))
 #define VALID_TILE(t) do { \
 			VALID_TILE_TYPE((t).type); \
-			if ((t).type != TILE_NONE) { \
-				VALID_LETTER_TYPE((t).letter); \
+			if ((t).type != tileNone) { \
+				VALID_letterTYPE((t).letter); \
 			} \
 		} while(0)
 

@@ -58,8 +58,7 @@ void printCmd(Cmd *c)
 	case cmdChoiceLeft: puts("[cmd:choice-left]"); break;
 	case cmdChoiceRight: puts("[cmd:choice-right]"); break;
 	case cmdRecall: puts("[cmd:recall]"); break;
-	case cmdModeUp: puts("[cmd:mode-up]"); break;
-	case cmdModeDown: puts("[cmd:mode-down]"); break;
+	case cmdMode: puts("[cmd:mode]"); break;
 	case cmdPlay: puts("[cmd:play]"); break;
 	case cmdShuffle: puts("[cmd:shuffle]"); break;
 	case cmdBoardCancel: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
@@ -199,21 +198,12 @@ void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
 
 void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 {
-	Coor pos, dim;
-	
 	NOT(io);
 	NOT(g);
 	NOT(tm);
 	
-	dim.x = 14;
-	dim.y = 14;
-
 	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm);
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
-	
-	pos.x = 106;
-	pos.y = 222;
-	choiceWidgetDraw(io, tm, &g->gameGui.choiceWidget, pos, dim);
 	
 	if (gm->turn == tm->playerIdx && ((io->time * 2.0 - floorf(io->time * 2.0)) ) < (1.0/2.0)) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
@@ -330,6 +320,7 @@ void draw_guiFocusTitle(Env *e)
 	if ((e->io.time - floorf(e->io.time)) > 0.5) {
 		surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
 	}
+	drawDemoInfo(e);
 }
 
 void draw_guiFocusMenu(Env *e)
@@ -472,7 +463,6 @@ void draw(Env *e)
 	case guiFocusGameAreYouSureQuit: draw_guiFocusGameAreYouSureQuit(e); break;
 	default: break;
 	}
-	drawDemoInfo(e);
 	SDL_Flip(e->io.screen);
 }
 

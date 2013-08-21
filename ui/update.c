@@ -59,6 +59,29 @@ void keyStateUpdate(KeyState *ks, bool touched)
 	}
 }
 
+bool isPressed(Controls *c, GameKeyType gkt)
+{
+	NOT(c);
+	assert(gkt >= 0);
+	assert(gkt < gameKeyCount);
+
+	return c->hardware.key[c->game.key[gkt]].type == keyStatePressed;
+}
+
+bool isPressedHeld(Controls *c, GameKeyType gkt)
+{
+	const float delayTime = 0.33f; /* secs */
+	KeyState *ks;
+
+	NOT(c);
+	assert(gkt >= 0);
+	assert(gkt < gameKeyCount);
+
+	ks = &c->hardware.key[c->game.key[gkt]];
+
+	return isPressed(c, gkt) || (ks->type == keyStateHeld && ks->time >= delayTime);
+}
+
 void clrMoveModePlace(MoveModePlace *mmp, Board *b) 
 {
 	int i;
@@ -280,10 +303,10 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			assert(mmp->idx != original);
 #endif
 	
-		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
+		} while (validBoardIdx(mmp->boardIdx[mmp->idx]));
 		return true;
 	}
-	case cmdModeToggle: {
+	case cmdMode: {
 		tm->type = transMoveDiscard;
 		return true;
 	}
@@ -400,7 +423,7 @@ bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
 		} 
 		break;
 	}
-	case cmdModeToggle: {
+	case cmdMode: {
 		tm->type = transMoveDiscard;
 		return true;
 	}
@@ -449,7 +472,7 @@ bool updateTransMoveDiscard(TransMove *tm, Cmd *c, Board *b, Player *p)
 		tm->type = transMoveDiscardPlay;
 		return true;
 	}
-	case cmdModeToggle: {
+	case cmdMode: {
 		tm->type = transMovePlace;
 		return true;
 	}
@@ -482,14 +505,6 @@ bool updateTransMoveSkip(TransMove *tm, Cmd *c, Board *b, Player *p)
 	assert(c->type != cmdRecall);
 	
 	switch (c->type) {
-	case cmdModeUp: {
-		tm->type = transMoveDiscard;
-		return true;
-	}
-	case cmdModeDown: {
-		tm->type = transMovePlace;
-		return true;
-	}
 	case cmdPlay: {
 		tm->type = transMoveSkipPlay;
 		return true;
@@ -621,19 +636,20 @@ void updateTitle(GUI *g, Controls *c)
 	NOT(g);
 	NOT(c);
 
-	if (c->start.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
 		g->next = guiFocusMenu;
 	}
 }
 
 bool submitted(Controls *c)
 {
-	return c->a.type == keyStatePressed || c->start.type == keyStatePressed;
+	return c->hardware.key[hardwareKeyA].type == keyStatePressed
+		|| c->hardware.key[hardwareKeyStart].type == keyStatePressed;
 }
 
 bool goBack(Controls *c)
 {
-	return c->b.type == keyStatePressed;
+	return c->hardware.key[hardwareKeyB].type == keyStatePressed;
 }
 
 void updateMenuWidget(MenuWidget *m, Controls *c)
@@ -645,13 +661,13 @@ void updateMenuWidget(MenuWidget *m, Controls *c)
 		m->focus = m->init;
 	}
 
-	if (c->up.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyUp].type == keyStatePressed) {
 		m->focus += m->max;
 		m->focus--;
 		m->focus %= m->max;
 		return;
 	}
-	if (c->down.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyDown].type == keyStatePressed) {
 		m->focus++;
 		m->focus %= m->max;
 	}
@@ -694,10 +710,10 @@ int updateVolumes(int curVol, Controls *c)
 
 	newVol = curVol;
 	
-	if (c->left.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyLeft].type == keyStatePressed) {
 		newVol --;
 	} 
-	if (c->right.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyRight].type == keyStatePressed) {
 		newVol ++;
 	}
 
@@ -854,7 +870,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	gg = &g->gameGui;
 	tm = &g->transMove;
 
-	if (c->start.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
 		g->next = guiFocusGameMenu;
 		return;
 	}
@@ -865,7 +881,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	
 	switch (gg->focus) {
 	case gameGUIFocusBoard: boardWidgetControls(&cmd, gg, c); break;
-	case gameGUIFocusChoice: choiceWidgetControls(&cmd, gg, c); break;
+	/*case gameGUIFocusChoice: choiceWidgetControls(&cmd, gg, c); break;*/
 	case gameGUIFocusRack: rackWidgetControls(&cmd, gg, c); break;
 	default: break;
 	}
@@ -923,6 +939,13 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		updateBoardWidget(&gg->boardWidget, tm, &gm->board); 
 		updateChoiceWidget(&gg->choiceWidget, tm);
 		updateRackWidget(&gg->rackWidget, tm);
+
+		if (tm->type == transMovePlace || tm->type == transMovePlaceEnd) {
+			gg->focus = gameGUIFocusBoard;
+		}
+		if (tm->type == transMoveDiscard) {
+			gg->focus = gameGUIFocusRack;
+		}
 	}
 
 	transMoveToMove(&m, tm);
@@ -1051,7 +1074,7 @@ void updateGameOver(GUI *g, Controls *c, Game *gm)
 	NOT(g);
 	NOT(c);
 		
-	if (c->start.type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
 		g->next = guiFocusTitle;
 	}
 	updateScoreBoard(&g->scoreBoard, gm, SPF);

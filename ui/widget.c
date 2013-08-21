@@ -60,53 +60,54 @@ void boardWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	bw = &gg->boardWidget;
 	cmd->type = cmdInvalid;
 
-	if (c->l.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyPrevTile)) {
 		cmd->type = cmdTilePrev;
 		return;
 	}
-	if (c->r.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyNextTile)) {
 		cmd->type = cmdTileNext;
 		return;
 	}
-	if (c->b.type == keyStatePressed) {
-		cmd->type = cmdFocusBottom;
+	if (isPressed(c, gameKeyMode)) {
+		cmd->type = cmdMode;
 		return;
 	}
-	if (c->select.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyPlay)) {
 		cmd->type = cmdPlay;
 		return;
 	}
-	if (c->a.type == keyStatePressed && bw->button[bw->index.y][bw->index.x]) {
+	if (isPressed(c, gameKeySelect) && bw->button[bw->index.y][bw->index.x]) {
 		cmd->type = cmdBoardSelect;
 		cmd->data.board = bw->index;
 		return;
 	}
-	if (c->up.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyUp)) {
 		cmd->type = cmdBoardUp;
 		return;
 	}
-	if (c->down.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyDown)) {
 		cmd->type = cmdBoardDown;
 		return;
 	}
-	if (c->left.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyLeft)) {
 		cmd->type = cmdBoardLeft;
 		return;
 	}
-	if (c->right.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyRight)) {
 		cmd->type = cmdBoardRight;
 		return;
 	}
-	if (c->x.type == keyStatePressed) {
+	if (isPressed(c, gameKeyCancel)) {
 		cmd->type = cmdBoardCancel;
 		cmd->data.board = bw->index;
+		return;
 	}
-	if (c->y.type == keyStatePressed) {
-		cmd->type = cmdModeToggle;
+	if (isPressedHeld(c, gameKeyRecall)) {
+		cmd->type = cmdRecall;
 		return;
 	}
 }
-
+/*
 void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 {
 	GridWidget *cw;
@@ -130,7 +131,6 @@ void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	}
 	if (c->b.type == keyStatePressed) {
 		cmd->type = cmdFocusTop;
-		/*cmd->type = cmdRecall;*/
 		return;
 	}
 	if (c->select.type == keyStatePressed) {
@@ -147,14 +147,12 @@ void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 			case choiceRecall: cmd->type = cmdRecall; return;
 			case choicePlay: cmd->type = cmdPlay; return;
 			case choiceShuffle: cmd->type = cmdShuffle; return;
-			case choiceMode: /* fall through */
 			default: break;
 			}
 		}
 		if (c->up.type == keyStatePressed) {
 			switch (cw->index.x) {
 			case choiceMode: cmd->type = cmdModeUp; return;
-			case choiceRecall: /* fall through */
 			case choicePlay:
 			default: break;
 			}
@@ -162,7 +160,6 @@ void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 		if (c->down.type == keyStatePressed) {
 			switch (cw->index.x) {
 			case choiceMode: cmd->type = cmdModeDown; return;
-			case choiceRecall: /* fall through */
 			case choicePlay:
 			default: break;
 			}
@@ -192,6 +189,7 @@ void choiceWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 		cmd->type = cmdChoiceCancel;
 	}
 }
+*/
 
 void rackWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 {
@@ -206,53 +204,52 @@ void rackWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	rw->index.y = 0;
 	cmd->type = cmdInvalid;
 
-	if (c->l.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyPrevTile)) {
 		cmd->type = cmdTilePrev;
 		return;
 	}
-	if (c->r.type == keyStatePressed) {
+	if (isPressedHeld(c, gameKeyNextTile)) {
 		cmd->type = cmdTileNext;
 		return;
 	}
-	if (c->a.type == keyStatePressed && rw->button[rw->index.y][rw->index.x]) {
+	if (isPressed(c, gameKeySelect) && rw->button[rw->index.y][rw->index.x]) {
 		cmd->type = cmdRackSelect;
 		cmd->data.rack = rw->index.x;
 		return;
 	}
-	if (c->b.type == keyStatePressed) {
-		cmd->type = cmdFocusTop;
-		/* cmd->type = cmdRecall; */
+	if (isPressed(c, gameKeyRecall)) {
+		cmd->type = cmdRecall;
 		return;
 	}
-	if (c->select.type == keyStatePressed) {
+	if (isPressed(c, gameKeyPlay)) {
 		cmd->type = cmdPlay;
 		return;
 	}
-	if (c->y.type == keyStatePressed) {
-		cmd->type = cmdModeToggle;
+	if (isPressed(c, gameKeyMode)) {
+		cmd->type = cmdMode;
 		return;
 	}
-	if (c->left.type == keyStatePressed) {
+	if (isPressed(c, gameKeyLeft)) {
 		assert(rw->index.x >= 0);
 		if (rw->index.x == 0) {
-			cmd->type = cmdChoice;
-			cmd->data.choice = choiceCount - 1;
+			cmd->type = cmdRack;
+			cmd->data.rack = RACK_SIZE - 1;
 		} else {
 			cmd->type = cmdRackLeft;
 		}
 		return;
 	}
-	if (c->right.type == keyStatePressed) {
+	if (isPressed(c, gameKeyRight)) {
 		assert(rw->index.x <=  RACK_SIZE);
 		if (rw->index.x + 1 == RACK_SIZE) {
-			cmd->type = cmdChoice;
-			cmd->data.choice = 0;
+			cmd->type = cmdRack;
+			cmd->data.rack = 0;
 		} else {
 			cmd->type = cmdRackRight;
 		}
 		return;
 	}
-	if (c->x.type == keyStatePressed) {
+	if (isPressed(c, gameKeyCancel)) {
 		cmd->type = cmdRackCancel;
 		cmd->data.rack = rw->index.x;
 	}
@@ -584,7 +581,7 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 	}
 	}
 }
-
+/*
 void choiceWidgetDraw(IO *io, TransMove *tm, GridWidget *cw, Coor pos, Coor dim)
 {
 	bool mode, recall, play, shuffle;
@@ -631,6 +628,7 @@ void choiceWidgetDraw(IO *io, TransMove *tm, GridWidget *cw, Coor pos, Coor dim)
 	surfaceDraw(io->screen, play ? io->play : io->playDisable, 133, 220);
 	surfaceDraw(io->screen, shuffle ? io->shuffle : io->shuffleDisable, 147, 220);
 }
+*/
 
 void gridWidgetDraw(SDL_Surface *s, GridWidget *gw, Coor pos, Coor dim)
 {

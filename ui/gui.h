@@ -66,9 +66,7 @@ typedef enum
 	cmdChoiceLeft,
 	cmdChoiceRight,
 	cmdRecall,
-	cmdModeUp,
-	cmdModeDown,
-	cmdModeToggle,
+	cmdMode,
 	cmdPlay,
 	cmdShuffle,
 	cmdBoardCancel,
@@ -248,14 +246,59 @@ typedef struct IO
 	Mix_Chunk *correctSnd;
 } IO;
 
-typedef struct KeyState
+typedef enum
 {
-	KeyStateType type;
-	float time;
-} KeyState;
+	hardwareKeyStart = 0,
+	hardwareKeySelect,
+	hardwareKeyUp,
+	hardwareKeyDown,
+	hardwareKeyLeft,
+	hardwareKeyRight,
+	hardwareKeyA,
+	hardwareKeyB,
+	hardwareKeyX,
+	hardwareKeyY,
+	hardwareKeyL,
+	hardwareKeyR,
+	hardwareKeyCount
+} HardwareKeyType;
 
-typedef struct Controls
+typedef struct
 {
+	KeyState key[hardwareKeyCount];
+	float axisX;
+	float axisY;
+} HardwareControls;
+
+typedef enum
+{
+	gameKeyPlay = 0,
+	gameKeyRecall,
+	gameKeyShuffle,
+	gameKeyMode,
+	gameKeySelect,
+	gameKeyCancel,
+	gameKeyPrevTile,
+	gameKeyNextTile,
+	gameKeyUp,
+	gameKeyDown,
+	gameKeyLeft,
+	gameKeyRight,
+	gameKeyCount
+} GameKeyType;
+
+typedef struct
+{
+	HardwareKeyType key[gameKeyCount];
+	float axisX;
+	float axisY;
+} GameControls;
+
+typedef struct
+{
+	HardwareControls hardware;
+	GameControls game;
+/*
 	KeyState start;
 	KeyState select;
 	KeyState up;
@@ -270,6 +313,7 @@ typedef struct Controls
 	KeyState r;
 	float axisX;
 	float axisY;
+*/
 } Controls;
 
 typedef struct Cmd
@@ -394,6 +438,9 @@ void initGame1vs1HumanAI(Game *g);
 void initScoreBoard(ScoreBoard *sb, Game *g);
 
 void keyStateUpdate(KeyState *ks, bool);
+
+bool isPressed(Controls *c, GameKeyType gkt);
+bool isPressedHeld(Controls *c, GameKeyType gkt);
 
 #define TILE_WIDTH 14
 #define TILE_HEIGHT 14

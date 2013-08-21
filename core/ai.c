@@ -7,10 +7,10 @@
 
 typedef enum
 {
-	PLACEMENT_INVALID = -1,
-	PLACEMENT_HORIZONTAL = 0,
-	PLACEMENT_VERTICAL,
-	PLACEMENT_COUNT
+	placementInvalid = -1,
+	placementHorizontal = 0,
+	placementVertical,
+	placementCount
 } PlacementType;
 
 typedef struct Cont
@@ -69,16 +69,16 @@ void syncTaken(Cont *c, Board *b, DirType dt, int idx)
 
 	assert(idx >= 0);
 
-	if (dt == DIR_DOWN) {
+	if (dt == dirDown) {
 		assert(idx < BOARD_X);
 		for (i = 0; i < BOARD_Y; i++) {
-			c->taken[i] = b->tile[i][idx].type != TILE_NONE;
+			c->taken[i] = b->tile[i][idx].type != tileNone;
 		}
 	} else {
-		assert(dt == DIR_RIGHT);
+		assert(dt == dirRight);
 		assert(idx < BOARD_Y);
 		for (i = 0; i < BOARD_X; i++) {
-			c->taken[i] = b->tile[idx][i].type != TILE_NONE;
+			c->taken[i] = b->tile[idx][i].type != tileNone;
 		}
 	}
 }
@@ -223,67 +223,67 @@ bool eligibleCont(Cont *c, Board *b, DirType dt, int idx, bool firstMove)
 
 	NOT(c);
 	NOT(b);
-	assert(dt >= 0 && dt < DIR_COUNT);
+	assert(dt >= 0 && dt < dirCount);
 
 	if (c->num == 0) {
 		return false;
 	}
 
 	switch (dt) {
-	case DIR_DOWN: {
-		if (c->offset > 0 && b->tile[c->offset - 1][idx].type != TILE_NONE) {
+	case dirDown: {
+		if (c->offset > 0 && b->tile[c->offset - 1][idx].type != tileNone) {
 			return true;
 		}
-		if (c->offset + c->len < BOARD_Y && b->tile[c->offset + c->len][idx].type != TILE_NONE) {
+		if (c->offset + c->len < BOARD_Y && b->tile[c->offset + c->len][idx].type != tileNone) {
 			return true;
 		}
 		if (idx > 0) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[i][idx - 1].type != TILE_NONE) {
+				if (b->tile[i][idx - 1].type != tileNone) {
 					return true;
 				}
 			}
 		}
 		if (idx < BOARD_X - 1) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[i][idx + 1].type != TILE_NONE) {
+				if (b->tile[i][idx + 1].type != tileNone) {
 					return true;
 				}
 			}
 		}
 		if (firstMove) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->sq[i][idx] == SQ_FREE) {
+				if (b->sq[i][idx] == sqFree) {
 					return true;
 				}
 			}
 		}
 		break;
 	}
-	case DIR_RIGHT: {
-		if (c->offset > 0 && b->tile[idx][c->offset - 1].type != TILE_NONE) {
+	case dirRight: {
+		if (c->offset > 0 && b->tile[idx][c->offset - 1].type != tileNone) {
 			return true;
 		}
-		if (c->offset + c->len < BOARD_X && b->tile[idx][c->offset + c->len].type != TILE_NONE) {
+		if (c->offset + c->len < BOARD_X && b->tile[idx][c->offset + c->len].type != tileNone) {
 			return true;
 		}
 		if (idx > 0) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[idx - 1][i].type != TILE_NONE) {
+				if (b->tile[idx - 1][i].type != tileNone) {
 					return true;
 				}
 			}
 		}
 		if (idx < BOARD_Y - 1) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[idx + 1][i].type != TILE_NONE) {
+				if (b->tile[idx + 1][i].type != tileNone) {
 					return true;
 				}
 			}
 		}
 		if (firstMove) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->sq[idx][i] == SQ_FREE) {
+				if (b->sq[idx][i] == sqFree) {
 					return true;
 				}
 			}
@@ -315,10 +315,10 @@ bool placementToMovePlace(struct MovePlace *mp, Placement *p)
 
 	NOT(mp);
 	NOT(p);
-	assert(p->type == PLACEMENT_HORIZONTAL || p->type == PLACEMENT_VERTICAL || p->type == PLACEMENT_INVALID);
+	assert(p->type == placementHorizontal || p->type == placementVertical || p->type == placementInvalid);
 
 	switch (p->type) {
-	case PLACEMENT_HORIZONTAL: {
+	case placementHorizontal: {
 		assert(p->num > 0); 
 		assert(p->num <= RACK_SIZE);
 		mp->num = p->num;
@@ -331,7 +331,7 @@ bool placementToMovePlace(struct MovePlace *mp, Placement *p)
 		}
 		break;
 	}
-	case PLACEMENT_VERTICAL: {
+	case placementVertical: {
 		assert(p->num > 0);
 	       	assert(p->num <= RACK_SIZE);
 		mp->num = p->num;
@@ -344,7 +344,7 @@ bool placementToMovePlace(struct MovePlace *mp, Placement *p)
 		}
 		break;
 	}
-	case PLACEMENT_INVALID:
+	case placementInvalid:
 	default: return false;
 	}
 
@@ -365,13 +365,13 @@ void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 	assert(cb->pathCount <= RACK_SIZE);*/
 
 	if (cb->pathCount == 0) {
-		p->type = PLACEMENT_INVALID;
+		p->type = placementInvalid;
 		return;
 	}
 
 	switch (dt) {
-	case DIR_DOWN: {
-		p->type = PLACEMENT_VERTICAL;
+	case dirDown: {
+		p->type = placementVertical;
 		assert(idx >= 0 && idx < BOARD_X);
 		p->idx = idx;
 		p->num = cb->pathCount; 
@@ -381,8 +381,8 @@ void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 		}
 		break;
 	}
-	case DIR_RIGHT: {
-		p->type = PLACEMENT_HORIZONTAL;
+	case dirRight: {
+		p->type = placementHorizontal;
 		assert(idx >= 0 && idx < BOARD_Y);
 		p->idx = idx;
 		p->num = cb->pathCount;
@@ -392,7 +392,7 @@ void mkPlacement(Placement *p, Combo *cb, Cont *cn, DirType dt, int idx)
 		}
 		break;
 	}
-	default: p->type = PLACEMENT_INVALID; break;
+	default: p->type = placementInvalid; break;
 	}
 }
 
@@ -403,9 +403,9 @@ void printPlacement(Placement *p)
 	NOT(p);
 	
 	switch (p->type) {
-	case PLACEMENT_HORIZONTAL: 
-	case PLACEMENT_VERTICAL: {
-		printf("[type:%s, idx:%d, num:%d] [", p->type == PLACEMENT_HORIZONTAL ? "horz" : "vert", p->idx, p->num);
+	case placementHorizontal: 
+	case placementVertical: {
+		printf("[type:%s, idx:%d, num:%d] [", p->type == placementHorizontal ? "horz" : "vert", p->idx, p->num);
 		for (i = 0; i < p->num; i++) {
 			printf("(%d-%d),", p->tile[i].rIdx, p->tile[i].bIdx);
 		}
@@ -441,8 +441,8 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	bd[0] = BOARD_X;
 	bd[1] = BOARD_Y;
 
-	dir[0] = DIR_DOWN;
-	dir[1] = DIR_RIGHT;
+	dir[0] = dirDown;
+	dir[1] = dirRight;
 
 	maxScore = 0;
 	
@@ -485,7 +485,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 						continue;
 					}
 					mkAction(&action, g, &move);
-					if (action.type == ACTION_PLACE) {
+					if (action.type == actionPlace) {
 						if (action.data.place.score > maxScore) {
 							maxScore = action.data.place.score;
 							memCpy(&m->data.place, &move.data.place, sizeof(move.data.place));
