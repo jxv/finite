@@ -734,7 +734,7 @@ void updateSettings(GUI *g, Controls *c)
 	
 	updateMenuWidget(&s->menu, c);
 	
-	if (submitted(c) || goBack(c)) {
+	if (goBack(c)) {
 		g->next = s->previous;
 		return;
 	}
@@ -742,10 +742,37 @@ void updateSettings(GUI *g, Controls *c)
 	switch (s->menu.focus) {
 	case settingsFocusMusic: s->musVolume = updateVolumes(s->musVolume, c); break;
 	case settingsFocusSfx: s->sfxVolume = updateVolumes(s->sfxVolume, c); break;
+	case settingsFocusControls: {
+		if (submitted(c)) {
+			g->next =  guiFocusControls;
+		}
+		break;
+	}
 	default: break;
 	}
 
 
+}
+
+void update_guiFocusControls(GUI *g, Controls *c)
+{
+	ControlsMenu *cm;
+
+	NOT(g);
+	NOT(c);
+	
+	cm = &g->controlsMenu;
+	
+	updateMenuWidget(&cm->menu, c);
+
+	if (goBack(c)) {
+		g->next = guiFocusSettings;
+		return;
+	}
+
+	switch (cm->menu.focus) {
+	default: break;
+	}
 }
 
 void updateGameGUIWidgets(GameGUI *gg, TransMove *tm, Board *b)
@@ -1093,6 +1120,7 @@ void update(Env *e)
 	case guiFocusTitle: updateTitle(&e->gui, &e->controls); break;
 	case guiFocusMenu: e->quit = updateMenu(&e->gui, &e->controls); break;
 	case guiFocusSettings: updateSettings(&e->gui, &e->controls); break;
+	case guiFocusControls: update_guiFocusControls(&e->gui, &e->controls); break;
 	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
 	case guiFocusGameGUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
 	case guiFocusGameMenu: updateGameMenu(&e->gui, &e->controls, &e->game); break;

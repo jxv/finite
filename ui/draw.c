@@ -358,6 +358,16 @@ void draw_guiFocusSettings(Env *e)
 	/* surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 200); */
 }
 
+void draw_guiFocusControls(Env *e)
+{
+	NOT(e);
+	
+	drawScrollingBackground(e);
+	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+
+	drawMenuView(e->io.screen, &e->io.controlsMV);
+}
+
 void draw_guiFocusGameGUI(Env *e)
 {
 	NOT(e);
@@ -454,6 +464,7 @@ void draw(Env *e)
 	case guiFocusTitle: draw_guiFocusTitle(e); break;
 	case guiFocusMenu: draw_guiFocusMenu(e); break;
 	case guiFocusSettings: draw_guiFocusSettings(e); break;
+	case guiFocusControls: draw_guiFocusControls(e); break;
 	case guiFocusGameGUI: draw_guiFocusGameGUI(e); break;
 	case guiFocusGameMenu: draw_guiFocusGameMenu(e); break;
 	case guiFocusPlayMenu: draw_guiFocusPlayMenu(e); break;

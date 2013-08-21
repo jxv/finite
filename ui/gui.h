@@ -227,6 +227,7 @@ typedef struct IO
 	MenuView playMenuMV;
 	MenuView settingsMV;
 	MenuView yesNoMV;
+	MenuView controlsMV;
 	
 	HighText menuFocus[menuFocusCount];
 	HighText gameMenuFocus[gameMenuFocusCount];
@@ -349,6 +350,7 @@ typedef enum
 	guiFocusTitle,
 	guiFocusMenu,
 	guiFocusSettings,
+	guiFocusControls,
 	guiFocusPlayMenu,
 	guiFocusGameGUI,
 	guiFocusGameMenu,
@@ -384,6 +386,11 @@ typedef struct Settings
 	GUIFocusType previous;
 } Settings;
 
+typedef struct ControlsMenu
+{
+	MenuWidget menu;
+} ControlsMenu;
+
 typedef struct MoveModePlace
 {
 	int num;
@@ -417,6 +424,7 @@ typedef struct GUI
 	MenuWidget gameMenu;
 	MenuWidget playMenu;
 	Settings settings;
+	ControlsMenu controlsMenu;
 	MenuWidget gameAreYouSureQuit;
 	TransMove transMove;
 	ScoreBoard scoreBoard;

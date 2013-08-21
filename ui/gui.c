@@ -173,6 +173,7 @@ void initGUI(GUI *g)
 	initSettings(&g->settings);
 	initGameGUI(&g->gameGui);
 	initMenuWidget(&g->gameAreYouSureQuit, yes, yesNoCount);
+	initMenuWidget(&g->controlsMenu.menu, gameKeyPlay,gameKeyCount);
 	g->focus = guiFocusTitle;
 	g->next = guiFocusTitle;
 }
@@ -306,6 +307,7 @@ bool initMenuViews(IO *io, GUI *g)
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
 	char *yesNoText[yesNoCount] = {"Yes", "No"};
+	char *controlsText[gameKeyCount] = {"Play", "Recall", "Shuffle", "Mode", "Select", "Cancel", "Prev Tile","Next Tile", "Up", "Down", "Left", "Right"};
 
 	NOT(io);
 	NOT(g);
@@ -328,6 +330,12 @@ bool initMenuViews(IO *io, GUI *g)
 	if (!initMenuView(&io->yesNoMV, &g->gameAreYouSureQuit, yesNoText, n, h)) {
 		return false;
 	}
+	if (!initMenuView(&io->controlsMV, &g->controlsMenu.menu, controlsText, n, h)) {
+		return false;
+	}
+
+	io->controlsMV.spacing.y = n->height + 2;
+	io->controlsMV.pos.y = (SCREEN_HEIGHT - io->controlsMV.menu->max * (n->height + 2)) / 2;
 	return true;
 }
 
@@ -350,8 +358,6 @@ bool init(Env *e)
 	}
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("finite", NULL);
-
-
 
 	e->io.joystick = NULL;
 	if (SDL_NumJoysticks() < 1) {
