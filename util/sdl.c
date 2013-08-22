@@ -13,8 +13,7 @@ SDL_Surface *surfaceLoad(const char *filename)
 	SDL_Surface *s, *tmp;
 	Uint32 a;
 
-	NOT(filename);
-
+	NOT(filename); 
 	s = NULL;
 	tmp = IMG_Load(filename);
 	if (!tmp) {
@@ -22,8 +21,7 @@ SDL_Surface *surfaceLoad(const char *filename)
 	}
 	s = SDL_DisplayFormat(tmp);
 	SDL_FreeSurface(tmp);
-	if (!s) {
-		return NULL;
+	if (!s) { return NULL;
 	}
 	a = SDL_MapRGB(s->format, ALPHA_R, ALPHA_G, ALPHA_B);
 	SDL_SetColorKey(s, SDL_SRCCOLORKEY, a);

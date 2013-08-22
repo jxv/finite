@@ -25,12 +25,31 @@ typedef struct
 	float time;
 } KeyState;
 
+typedef enum
+{
+	axisStateInDeadZone = 0,
+	axisStateExitDeadZone,
+	axisStateOutDeadZone,
+	axisStateEnterDeadZone,
+	axisStateCount
+} AxisStateType;
+
+typedef struct
+{
+	AxisStateType type;
+	float deadZone;
+	float value;
+	float time;
+} AxisState;
+
 void surfaceFree(SDL_Surface *s);
 SDL_Surface *surfaceLoad(const char *filename);
 SDL_Surface *surfaceAlphaLoad(const char *filename);
 void delay(int st, int et, int fps);
 void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y);
 SDL_Surface *surfaceCpy(SDL_Surface *s);
+
+void axisStateUpdate(AxisState *as);
 
 #endif
 

@@ -6,6 +6,61 @@
 #include "widget.h"
 #include "print.h"
 
+void axisStateUpdate(AxisState *as)
+{
+	NOT(as);
+
+	if ((as->value > 0 ? as->value : -as->value) > as->deadZone) {
+		switch (as->type) {
+		case axisStateInDeadZone: {
+			as->type = axisStateExitDeadZone;
+			as->time = 0.0f;
+			break;
+		}
+		case axisStateExitDeadZone: {
+			as->type = axisStateOutDeadZone;
+			as->time = 0.0f;
+			break;
+		}
+		case axisStateOutDeadZone: {
+			as->type = axisStateOutDeadZone;
+			as->time += SPF;
+			break;
+		}
+		case axisStateEnterDeadZone: {
+			as->type = axisStateExitDeadZone;
+			as->time = 0.0f;
+			break;
+		}
+		default: break;
+		}
+	} else {
+		switch (as->type) {
+		case axisStateInDeadZone: {
+			as->type = axisStateInDeadZone;
+			as->time += SPF;
+			break;
+		}
+		case axisStateExitDeadZone: {
+			as->type = axisStateEnterDeadZone;
+			as->time = 0.0f;
+			break;
+		}
+		case axisStateOutDeadZone: {
+			as->type = axisStateEnterDeadZone;
+			as->time = 0.0f;
+			break;
+		}
+		case axisStateEnterDeadZone: {
+			as->type = axisStateInDeadZone;
+			as->time = 0.0f;
+			break;
+		}
+		default: break;
+		}
+	}
+}
+
 void keyStateUpdate(KeyState *ks, bool touched)
 {
 	NOT(ks);
@@ -23,7 +78,7 @@ void keyStateUpdate(KeyState *ks, bool touched)
 			break;
 		}
 		case keyStateHeld: {
-			ks->time += 1.0f / 60.0f;
+			ks->time += SPF;
 			break;
 		}
 		case keyStateReleased: {
@@ -36,7 +91,7 @@ void keyStateUpdate(KeyState *ks, bool touched)
 	} else {
 		switch(ks->type) {
 		case keyStateUntouched: {
-			ks->time += 1.0f / 60.0f;
+			ks->time += SPF;
 			break;
 		}
 		case keyStatePressed: {
@@ -61,25 +116,73 @@ void keyStateUpdate(KeyState *ks, bool touched)
 
 bool isPressed(Controls *c, GameKeyType gkt)
 {
+	bool axis;
+
 	NOT(c);
+	
+	if (!(gkt >= 0 && gkt < gameKeyCount)) {
+		return false;
+	}
+	
 	assert(gkt >= 0);
 	assert(gkt < gameKeyCount);
 
-	return c->hardware.key[c->game.key[gkt]].type == keyStatePressed;
+	axis = false;
+
+	if (gkt == gameKeyUp) {
+		axis = c->hardware.axisY.type == axisStateExitDeadZone && c->hardware.axisY.value > 0;
+	}
+	if (gkt == gameKeyDown) {
+		axis = c->hardware.axisY.type == axisStateExitDeadZone && c->hardware.axisY.value < 0;
+	}
+	if (gkt == gameKeyRight) {
+		axis = c->hardware.axisX.type == axisStateExitDeadZone && c->hardware.axisX.value > 0;
+	}
+	if (gkt == gameKeyLeft) {
+		axis = c->hardware.axisX.type == axisStateExitDeadZone && c->hardware.axisX.value < 0;
+	}
+
+	return c->hardware.key[c->game.key[gkt]].type == keyStatePressed || axis;
 }
 
 bool isPressedHeld(Controls *c, GameKeyType gkt)
 {
+	bool axis;
 	const float delayTime = 0.33f; /* secs */
 	KeyState *ks;
+	AxisState *as;
 
 	NOT(c);
+	
+	if (!(gkt >= 0 && gkt < gameKeyCount)) {
+		return false;
+	}
+	
 	assert(gkt >= 0);
 	assert(gkt < gameKeyCount);
 
+	axis = false;
+	
+	if (gkt == gameKeyUp) {
+		as = &c->hardware.axisY;
+		axis = as->type == axisStateOutDeadZone && as->value > 0 && as->time >= delayTime;
+	}
+	if (gkt == gameKeyDown) {
+		as = &c->hardware.axisY;
+		axis = as->type == axisStateOutDeadZone && as->value < 0 && as->time >= delayTime;
+	}
+	if (gkt == gameKeyRight) {
+		as = &c->hardware.axisX;
+		axis = as->type == axisStateOutDeadZone && as->value > 0 && as->time >= delayTime;
+	}
+	if (gkt == gameKeyLeft) {
+		as = &c->hardware.axisX;
+		axis = as->type == axisStateOutDeadZone && as->value < 0 && as->time >= delayTime;
+	}
+
 	ks = &c->hardware.key[c->game.key[gkt]];
 
-	return isPressed(c, gkt) || (ks->type == keyStateHeld && ks->time >= delayTime);
+	return isPressed(c, gkt) || (ks->type == keyStateHeld && ks->time >= delayTime) || axis;
 }
 
 void clrMoveModePlace(MoveModePlace *mmp, Board *b) 
@@ -654,6 +757,8 @@ bool goBack(Controls *c)
 
 void updateMenuWidget(MenuWidget *m, Controls *c)
 {
+	float delayTime = 0.33f;
+
 	NOT(m);
 	NOT(c);
 
@@ -661,13 +766,16 @@ void updateMenuWidget(MenuWidget *m, Controls *c)
 		m->focus = m->init;
 	}
 
-	if (c->hardware.key[hardwareKeyUp].type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyUp].type == keyStatePressed ||
+			(c->hardware.key[hardwareKeyUp].type == keyStateHeld && c->hardware.key[hardwareKeyUp].time >= delayTime) ||
+			(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value > 0)) {
 		m->focus += m->max;
 		m->focus--;
 		m->focus %= m->max;
 		return;
 	}
-	if (c->hardware.key[hardwareKeyDown].type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyDown].type == keyStatePressed ||
+			(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value < 0)) {
 		m->focus++;
 		m->focus %= m->max;
 	}
@@ -754,8 +862,61 @@ void updateSettings(GUI *g, Controls *c)
 
 }
 
+bool changableGameKey(GameKeyType gkt)
+{
+	return !(gkt == gameKeyUp || gkt == gameKeyDown || gkt == gameKeyLeft || gkt == gameKeyRight || gkt == gameKeyShuffle);
+}
+
+bool changableHardwareKey(HardwareKeyType hkt)
+{
+	return !(hkt == hardwareKeyUp || hkt == hardwareKeyDown || hkt == hardwareKeyLeft || hkt == hardwareKeyRight || hkt == hardwareKeyStart);
+}
+
+void clrDups(ControlsMenu *cm)
+{
+	int i;
+
+	NOT(cm);
+
+	for (i = 0; i < gameKeyCount; i++) {
+		cm->dupKey[i] = false;
+	}
+	cm->dups = false;
+}
+
+bool gameControlsAreDifferent(ControlsMenu *cm, GameControls *gc)
+{
+	int i, j, k;
+
+	NOT(cm);
+	NOT(gc);
+
+	k = 0;
+
+	clrDups(cm);
+	
+
+	for (i = 0; i < gameKeyCount; i++) {
+		for (j = i + 1; j < gameKeyCount; j++) {
+			if (gc->key[i] == gc->key[j]) {
+				cm->dupKey[i] = true;
+				cm->dupKey[j] = true;
+				k++;
+			}
+		}
+	}
+
+	cm->dups = k != 0;
+	if (cm->dups) {
+		cm->time = 1.0f;
+	}
+
+	return k == 0;
+}
+
 void update_guiFocusControls(GUI *g, Controls *c)
 {
+	const float delayTime = 0.33f;
 	ControlsMenu *cm;
 
 	NOT(g);
@@ -765,12 +926,50 @@ void update_guiFocusControls(GUI *g, Controls *c)
 	
 	updateMenuWidget(&cm->menu, c);
 
-	if (goBack(c)) {
+	if (g->controlsMenu.time > 0) {
+		g->controlsMenu.time -= SPF;
+		if (g->controlsMenu.time <= 0) {
+			clrDups(&g->controlsMenu);
+			g->controlsMenu.time = 0;
+		}
+	}
+
+	if (goBack(c) && gameControlsAreDifferent(&g->controlsMenu, &c->game)) {
 		g->next = guiFocusSettings;
 		return;
 	}
 
 	switch (cm->menu.focus) {
+	case gameKeyPlay:
+	case gameKeyRecall:
+	case gameKeyMode:
+	case gameKeySelect:
+	case gameKeyCancel:
+	case gameKeyPrevTile:
+	case gameKeyNextTile: {
+		if (c->hardware.key[hardwareKeyLeft].type == keyStatePressed ||
+	   	(c->hardware.key[hardwareKeyLeft].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime)) {
+			do {
+				c->game.key[cm->menu.focus] += gameKeyCount;
+				c->game.key[cm->menu.focus] --;
+				c->game.key[cm->menu.focus] %= gameKeyCount; 
+			} while (!changableHardwareKey(c->game.key[cm->menu.focus]));
+		}
+		if (c->hardware.key[hardwareKeyRight].type == keyStatePressed ||
+	   	(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyRight].time >= delayTime)) {
+			do {
+				c->game.key[cm->menu.focus] ++;
+				c->game.key[cm->menu.focus] %= gameKeyCount; 
+			} while (!changableHardwareKey(c->game.key[cm->menu.focus]));
+		}
+		break;
+	}
+
+	case gameKeyShuffle:
+	case gameKeyUp:
+	case gameKeyDown:
+	case gameKeyLeft:
+	case gameKeyRight:
 	default: break;
 	}
 }

@@ -192,6 +192,7 @@ typedef struct IO
 	float time;
 	SDL_Surface *screen;
 	SDL_Surface *back;
+	SDL_Surface *gmBack;
 	SDL_Surface *fader;
 	SDL_Surface *menuBg;
 	SDL_Surface *tile[tileCount][letterCount][tileLookCount];
@@ -216,11 +217,12 @@ typedef struct IO
 	SDL_Surface *sq[sqCount];
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *titleScreen;
-	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
 
 	SDL_Joystick *joystick;
+	SDL_Joystick *accel;
+	bool accelExists;
 	
 	MenuView menuMV;
 	MenuView gameMenuMV;
@@ -245,6 +247,7 @@ typedef struct IO
 
 	Mix_Chunk *incorrectSnd;
 	Mix_Chunk *correctSnd;
+	Mix_Chunk *scoreSnd;
 } IO;
 
 typedef enum
@@ -264,11 +267,14 @@ typedef enum
 	hardwareKeyCount
 } HardwareKeyType;
 
+
 typedef struct
 {
 	KeyState key[hardwareKeyCount];
-	float axisX;
-	float axisY;
+	AxisState axisX;
+	AxisState axisY;
+	AxisState accelX;
+	AxisState accelY;
 } HardwareControls;
 
 typedef enum
@@ -288,33 +294,17 @@ typedef enum
 	gameKeyCount
 } GameKeyType;
 
+
 typedef struct
 {
 	HardwareKeyType key[gameKeyCount];
-	float axisX;
-	float axisY;
 } GameControls;
 
 typedef struct
 {
 	HardwareControls hardware;
 	GameControls game;
-/*
-	KeyState start;
-	KeyState select;
-	KeyState up;
-	KeyState down;
-	KeyState left;
-	KeyState right;
-	KeyState a;
-	KeyState b;
-	KeyState x;
-	KeyState y;
-	KeyState l;
-	KeyState r;
-	float axisX;
-	float axisY;
-*/
+	bool accelExists;
 } Controls;
 
 typedef struct Cmd
@@ -389,6 +379,9 @@ typedef struct Settings
 typedef struct ControlsMenu
 {
 	MenuWidget menu;
+	bool dupKey[gameKeyCount];
+	bool dups;
+	float time;
 } ControlsMenu;
 
 typedef struct MoveModePlace
@@ -450,8 +443,15 @@ void keyStateUpdate(KeyState *ks, bool);
 bool isPressed(Controls *c, GameKeyType gkt);
 bool isPressedHeld(Controls *c, GameKeyType gkt);
 
-#define TILE_WIDTH 14
-#define TILE_HEIGHT 14
+bool changableGameKey(GameKeyType gkt);
+bool changableHardwareKey(HardwareKeyType hkt);
+
+bool interval(float lapsed, float interval);
+
+void clrDups(ControlsMenu *cm);
+
+#define TILE_WIDTH 12
+#define TILE_HEIGHT 12
 
 #endif
 

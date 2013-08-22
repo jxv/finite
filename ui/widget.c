@@ -483,7 +483,7 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 
 	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * 14 + 106, idx.y * 14 + 6);
+			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + 106, idx.y * dim.y + 6);
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != tileNone) {
 				ts = io->tile[t->type][t->letter][tileLookNormal];

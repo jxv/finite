@@ -60,7 +60,7 @@ void boardInit(Board *b)
 	b->sq[6][6] = sqDblLet;
 	b->sq[6][8] = sqDblLet;
 	b->sq[8][6] = sqDblLet;
-	b->sq[8][6] = sqMystery;
+	b->sq[8][6] = sqDblLet;
 }
 
 
@@ -304,7 +304,9 @@ bool dictInit(Dict *d, const char *name)
 void dictQuit(Dict *dict)
 {
 	NOT(dict);
-	memFree(dict->words);
+	if (dict->words) {
+		memFree(dict->words);
+	}
 }
 
 

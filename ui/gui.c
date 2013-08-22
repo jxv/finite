@@ -38,6 +38,18 @@ void initKeyState(KeyState *ks)
 	ks->time = 0.0f;
 }
 
+void initAxisState(AxisState *as)
+{
+	const float deadZone = 0.33f;
+
+	NOT(as);
+	
+	as->type = axisStateInDeadZone;
+	as->deadZone = deadZone;
+	as->time = 0.f;
+	as->value = 0.f;
+}
+
 void initGameControls(GameControls *gc)
 {
 	NOT(gc);
@@ -69,8 +81,10 @@ void controlsInit(Controls *c)
 		initKeyState(&hc->key[i]);
 	}
 
-	hc->axisX = 0.f;
-	hc->axisY = 0.f;
+	initAxisState(&hc->axisX);
+	initAxisState(&hc->axisY);
+	initAxisState(&hc->accelX);
+	initAxisState(&hc->accelY);
 
 	initGameControls(&c->game);
 }
@@ -176,6 +190,9 @@ void initGUI(GUI *g)
 	initMenuWidget(&g->controlsMenu.menu, gameKeyPlay,gameKeyCount);
 	g->focus = guiFocusTitle;
 	g->next = guiFocusTitle;
+
+	clrDups(&g->controlsMenu);
+	g->controlsMenu.time = 0.f;
 }
 
 SDL_Surface *createText(Font *f, char *str)
@@ -255,6 +272,14 @@ void freeHighTexts(HighText *ht, int count)
 	}
 }
 
+void recenterMenuView(MenuView *mv, Font *n)
+{
+	NOT(mv);
+
+	mv->pos.x = (SCREEN_WIDTH - mv->len * (n->width + n->spacing)) / 2;
+	mv->pos.y = (SCREEN_HEIGHT - mv->menu->max * mv->spacing.y) / 2;
+}
+
 bool initMenuView(MenuView *mv, MenuWidget *mm, char *str[], Font *n, Font *h)
 {
 	NOT(mv);
@@ -266,18 +291,20 @@ bool initMenuView(MenuView *mv, MenuWidget *mm, char *str[], Font *n, Font *h)
 	mv->menu = mm;
 	mv->text = memAlloc(sizeof(HighText) * mm->max);
 	mv->len = mkHighTexts(mv->text, n, h, str, mm->max);
-	mv->pos.x = (SCREEN_WIDTH - mv->len * (n->width + n->spacing)) / 2;
-	mv->pos.y = (SCREEN_HEIGHT - mm->max * n->height * 2) / 2; 
+	recenterMenuView(mv, n);
 	return areHighTextsLoaded(mv->text, mm->max);
 }
 
 void freeMenuView(MenuView *mv)
 {
 	NOT(mv);
-	NOT(mv->menu);
 
-	freeHighTexts(mv->text, mv->menu->max);
-	memFree(mv->text);
+	if (mv->menu) {
+		freeHighTexts(mv->text, mv->menu->max);
+	}
+	if (mv->text) {
+		memFree(mv->text);
+	}
 }
 
 void freeMenuViews(IO *io)
@@ -298,6 +325,7 @@ bool initIO(IO *io)
 	return false;
 }
 
+
 bool initMenuViews(IO *io, GUI *g)
 {
 	Font *n, *h;
@@ -307,7 +335,7 @@ bool initMenuViews(IO *io, GUI *g)
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
 	char *yesNoText[yesNoCount] = {"Yes", "No"};
-	char *controlsText[gameKeyCount] = {"Play", "Recall", "Shuffle", "Mode", "Select", "Cancel", "Prev Tile","Next Tile", "Up", "Down", "Left", "Right"};
+	char *controlsText[gameKeyCount] = {"Play:", "Recall:", "Shuffle:", "Mode:", "Select:", "Cancel:", "Prev Tile:","Next Tile:", "Up:", "Down:", "Left:", "Right:"};
 
 	NOT(io);
 	NOT(g);
@@ -335,7 +363,9 @@ bool initMenuViews(IO *io, GUI *g)
 	}
 
 	io->controlsMV.spacing.y = n->height + 2;
-	io->controlsMV.pos.y = (SCREEN_HEIGHT - io->controlsMV.menu->max * (n->height + 2)) / 2;
+	recenterMenuView(&io->controlsMV, n);
+	io->controlsMV.pos.x -= 36;
+	io->controlsMV.pos.y += n->height;
 	return true;
 }
 
@@ -350,6 +380,12 @@ bool init(Env *e)
 
 	NOT(e);
 
+	e->game.dict.num = 0;
+	e->game.dict.words = NULL;
+	e->io.joystick = NULL;
+	e->io.accel = NULL;
+	e->io.accelExists = false;
+
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
 	}
@@ -359,16 +395,32 @@ bool init(Env *e)
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("finite", NULL);
 
-	e->io.joystick = NULL;
+
 	if (SDL_NumJoysticks() < 1) {
 		return false;
 	}
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
-	if (SDL_JoystickNumAxes(e->io.joystick) < 1) {
+
+	if (!e->io.joystick) {
 		return false;
 	}
 
+	if (SDL_JoystickNumAxes(e->io.joystick) < 1) {
+		return false;
+	}
+	
+	SDL_JoystickEventState(SDL_ENABLE);
+	e->io.accel = SDL_JoystickOpen(1);
+
+	if (e->io.accel) {
+		e->io.accelExists = true;
+		if (SDL_JoystickNumAxes(e->io.accel) < 1) {
+			return false;
+		}
+	} else {
+		e->io.accelExists = false;
+	}
 
 	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE)) == NULL) {
 		return false;
@@ -382,10 +434,10 @@ bool init(Env *e)
 	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png")) == NULL) {
+	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
 		return false;
 	}
-	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
+	if ((e->io.gmBack = surfaceAlphaLoad(RES_PATH "game_bg.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.back = surfaceAlphaLoad(RES_PATH "back.png")) == NULL) {
@@ -516,6 +568,7 @@ bool init(Env *e)
 
 	e->io.pressStart = createText(&e->io.normalFont, "PRESS START");
 
+	e->gui.scoreBoard.playerNum = e->game.playerNum = 0;
 	initGUI(&e->gui);
 	if (!initMenuViews(&e->io, &e->gui)) {
 		return false;
@@ -536,8 +589,12 @@ bool init(Env *e)
 	if (!(e->io.correctSnd = Mix_LoadWAV(RES_PATH "correct_snd.wav"))) {
 		return false;
 	}
+	if (!(e->io.scoreSnd = Mix_LoadWAV(RES_PATH "score_snd.wav"))) {
+		return false;
+	}
 
 	controlsInit(&e->controls);
+	e->controls.accelExists = e->io.accelExists;
 
 	return true;
 }
@@ -548,16 +605,19 @@ void quit(Env *e)
 
 	NOT(e);
 	
-	dictQuit(&e->game.dict);
-
 	if (e->io.joystick) {
 		SDL_JoystickClose(e->io.joystick);
 	}
+	if (e->io.accel) {
+		SDL_JoystickClose(e->io.accel);
+	}
+
+	dictQuit(&e->game.dict);
 
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
-	surfaceFree(e->io.titleHover);
 	surfaceFree(e->io.menuBg);
+	surfaceFree(e->io.gmBack);
 	surfaceFree(e->io.titleBackground);
 	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
@@ -598,6 +658,10 @@ void quit(Env *e)
 	fontmapQuit(&e->io.blackFont);
 	fontmapQuit(&e->io.yellowFont);
 	fontmapQuit(&e->io.darkRedFont);
+
+	Mix_FreeChunk(e->io.incorrectSnd);
+	Mix_FreeChunk(e->io.correctSnd);
+	Mix_FreeChunk(e->io.scoreSnd);
 	Mix_CloseAudio();
 	SDL_Quit();
 }
@@ -605,7 +669,8 @@ void quit(Env *e)
 
 float normalizeAxis(int v)
 {
-	return (float)v / (float)(v > 0 ? INT_MAX : INT_MIN);
+	const int  max = 32768;
+	return (float)v / (float)max;
 }
 
 
@@ -626,11 +691,21 @@ bool handleEvent(Controls *c)
 		case SDL_KEYDOWN: ks[event.key.keysym.sym] = true; break;
 		case SDL_KEYUP: ks[event.key.keysym.sym] = false; break;
 		case SDL_JOYAXISMOTION: {
-			if (event.jaxis.axis == 0) {
-				hc->axisX = normalizeAxis(event.jaxis.value);
+			if (event.jaxis.which == 0) {
+				if (event.jaxis.axis == 0) {
+					hc->axisX.value = normalizeAxis(event.jaxis.value);
+				}
+				if (event.jaxis.axis == 1) {
+					hc->axisY.value = -normalizeAxis(event.jaxis.value);
+				}
 			}
-			if (event.jaxis.axis == 1) {
-				hc->axisY = -normalizeAxis(event.jaxis.value);
+			if (event.jaxis.which == 1) {
+				if (event.jaxis.axis == 0) {
+					hc->accelX.value = normalizeAxis(event.jaxis.value);
+				}
+				if (event.jaxis.axis == 1) {
+					hc->accelY.value = -normalizeAxis(event.jaxis.value);
+				}
 			}
 		}
 		default: break;
@@ -649,6 +724,16 @@ bool handleEvent(Controls *c)
 	keyStateUpdate(&hc->key[hardwareKeyY], ks[SDLK_SPACE]);
 	keyStateUpdate(&hc->key[hardwareKeyL], ks[SDLK_TAB]);
 	keyStateUpdate(&hc->key[hardwareKeyR], ks[SDLK_BACKSPACE]);
+
+	axisStateUpdate(&hc->axisX);
+	axisStateUpdate(&hc->axisY);
+	
+	if (c->accelExists) {
+		axisStateUpdate(&hc->accelX);
+		axisStateUpdate(&hc->accelY);
+	}
+
+
 	return false;
 }
 
