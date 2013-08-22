@@ -24,6 +24,12 @@ void audi(Env *e)
 		Mix_Volume(audioChanSfx, e->gui.settings.sfxVolume * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 		break;
 	}
+	case guiFocusControls: {
+		if (e->gui.controlsMenu.dups && e->gui.controlsMenu.time == 1.0f) {
+			Mix_PlayChannel(audioChanSfx, e->io.incorrectSnd, 0); 
+		}
+		break;
+	}
 	default: break;
 	}
 }
