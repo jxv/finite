@@ -211,14 +211,17 @@ typedef struct IO
 	SDL_Surface *skip;
 	SDL_Surface *skipDisable;
 	SDL_Surface *play;
+	SDL_Surface *scoreBoard;
 	SDL_Surface *playDisable;
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
 	SDL_Surface *sq[sqCount];
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *titleScreen;
+	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
+	SDL_Surface *boardCover;
 
 	SDL_Joystick *joystick;
 	SDL_Joystick *accel;
@@ -248,6 +251,8 @@ typedef struct IO
 	Mix_Chunk *incorrectSnd;
 	Mix_Chunk *correctSnd;
 	Mix_Chunk *scoreSnd;
+	Mix_Music *song;
+
 } IO;
 
 typedef enum
@@ -266,7 +271,6 @@ typedef enum
 	hardwareKeyR,
 	hardwareKeyCount
 } HardwareKeyType;
-
 
 typedef struct
 {
@@ -323,6 +327,7 @@ typedef struct GridWidget
 	bool **button;
 	int width;
 	int height;
+	Coor pos;
 } GridWidget;
 
 typedef enum

@@ -20,7 +20,7 @@ void audi(Env *e)
 		break;
 	}
 	case guiFocusSettings: {
-		Mix_Volume(audioChanMusic, e->gui.settings.musVolume * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
+		Mix_VolumeMusic(e->gui.settings.musVolume * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 		Mix_Volume(audioChanSfx, e->gui.settings.sfxVolume * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 		break;
 	}

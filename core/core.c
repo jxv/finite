@@ -1061,6 +1061,14 @@ void mkDiscard(Action *a, Game *g, Move *m)
 	NOT(g);
 	NOT(m);
 
+	if (m->data.discard.num == 0) {
+		a->type = actionInvalid;
+		a->data.err = actionErrDiscardEmpty;
+		return;
+	}
+
+	assert(m->data.discard.num > 0);
+
 	a->type = actionDiscard;
 	a->data.discard.num = m->data.discard.num;
 	assert(sizeof(a->data.discard) == sizeof(m->data.discard));

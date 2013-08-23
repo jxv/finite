@@ -112,6 +112,7 @@ typedef enum
 {
 	actionErrNone = 0,
 	actionErrUnknown,
+	actionErrDiscardEmpty,
 	actionErrPlaceOutOfRange,
 	actionErrPlaceSelfOverlap,
 	actionErrPlaceBoardOverlap,

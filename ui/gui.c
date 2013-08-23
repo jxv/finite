@@ -385,6 +385,7 @@ bool init(Env *e)
 	e->io.joystick = NULL;
 	e->io.accel = NULL;
 	e->io.accelExists = false;
+	e->io.song = NULL;
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
@@ -392,6 +393,15 @@ bool init(Env *e)
 	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, audioChanCount, 4096 ) == -1) {
 		return false;
 	}
+
+	e->io.song = Mix_LoadMUS(RES_PATH "George Street Shuffle (filtered).ogg");
+	if (!e->io.song) {
+		return false;
+	}
+	if (Mix_PlayMusic(e->io.song, -1) == -1) {
+		return false;
+	}
+
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("finite", NULL);
 
@@ -431,10 +441,16 @@ bool init(Env *e)
 	if ((e->io.titleScreen = surfaceAlphaLoad(RES_PATH "title_screen.png")) == NULL) {
 		return false;
 	}
+	if (!(e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png"))) {
+		return false;
+	}
 	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
+		return false;
+	}
+	if ((e->io.scoreBoard = surfaceAlphaLoad(RES_PATH "scoreboard.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.gmBack = surfaceAlphaLoad(RES_PATH "game_bg.png")) == NULL) {
@@ -492,6 +508,10 @@ bool init(Env *e)
 		return false;
 	}
 	if ((e->io.shuffleDisable = surfaceAlphaLoad(RES_PATH "shuffle_disable.png")) == NULL) {
+		return false;
+	}
+
+	if (!(e->io.boardCover = surfaceAlphaLoad(RES_PATH "board_cover.png"))) {
 		return false;
 	}
 
@@ -604,6 +624,10 @@ void quit(Env *e)
 	int i, j;
 
 	NOT(e);
+
+	if (e->io.song) {
+		Mix_FreeMusic(e->io.song);
+	}
 	
 	if (e->io.joystick) {
 		SDL_JoystickClose(e->io.joystick);
@@ -616,9 +640,11 @@ void quit(Env *e)
 
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
+	surfaceFree(e->io.titleHover);
 	surfaceFree(e->io.menuBg);
 	surfaceFree(e->io.gmBack);
 	surfaceFree(e->io.titleBackground);
+	surfaceFree(e->io.scoreBoard);
 	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
@@ -637,6 +663,7 @@ void quit(Env *e)
 	surfaceFree(e->io.playDisable);
 	surfaceFree(e->io.shuffle);
 	surfaceFree(e->io.shuffleDisable);
+	surfaceFree(e->io.boardCover);
 	for (i = 0; i < sqCount; i++) {
 		surfaceFree(e->io.sq[i]);
 	}

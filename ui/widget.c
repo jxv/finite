@@ -483,7 +483,7 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 
 	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + 106, idx.y * dim.y + 6);
+			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + pos.x, idx.y * dim.y + pos.y);
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != tileNone) {
 				ts = io->tile[t->type][t->letter][tileLookNormal];
@@ -491,6 +491,8 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 			}
 		}
 	}
+
+	surfaceDraw(io->screen, io->boardCover, pos.x, pos.y);
 
 	switch (tm->type) {
 	case transMovePlace:
@@ -511,11 +513,12 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 	}
 	default: break;
 	}
+
 }
 
 void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, Player *p)
 {
-	int i, offset;
+	int i;
 	Tile *t;
 	TileType tt;
 	SDL_Surface *s;
@@ -523,8 +526,6 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 	NOT(io);
 	NOT(tm);
 	NOT(p);
-
-	offset = 176;
 
 	switch (tm->type) {
 	case transMovePlace:
@@ -546,7 +547,7 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 				s = t->type == tileWild ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 			}
 			if (s) {
-				surfaceDraw(io->screen, s, i * dim.x + offset, 220);
+				surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
 			}
 		}
 		break;
@@ -563,7 +564,7 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 			VALID_TILE(*t);
 			tt = tm->discard.rack[i] ? tileLookDisable : tileLookNormal;
 			s = t->type == tileWild ? io->wild[tt] : io->tile[tileLetter][t->letter][tt];
-			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
+			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
 			
 		}
 		break;
@@ -575,7 +576,7 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, P
 				continue;
 			}
 			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[tileLetter][t->letter][tileLookNormal];
-			surfaceDraw(io->screen, s, i * dim.x + offset, 220);
+			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
 		}
 		break;
 	}
