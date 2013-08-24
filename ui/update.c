@@ -848,8 +848,12 @@ void updateSettings(GUI *g, Controls *c)
 	}
 	
 	switch (s->menu.focus) {
-	case settingsFocusMusic: s->musVolume = updateVolumes(s->musVolume, c); break;
-	case settingsFocusSfx: s->sfxVolume = updateVolumes(s->sfxVolume, c); break;
+	case settingsFocusMusic:
+	case settingsFocusSfx: {
+			int idx = s->menu.focus - volMus;
+			s->vol[idx] = updateVolumes(s->vol[idx], c); 
+			break;
+	}
 	case settingsFocusControls: {
 		if (submitted(c)) {
 			g->next =  guiFocusControls;
@@ -977,7 +981,6 @@ void update_guiFocusControls(GUI *g, Controls *c)
 void updateGameGUIWidgets(GameGUI *gg, TransMove *tm, Board *b)
 {
 	updateBoardWidget(&gg->boardWidget, tm, b); 
-	updateChoiceWidget(&gg->choiceWidget, tm);
 	updateRackWidget(&gg->rackWidget, tm);
 }
 
@@ -1107,7 +1110,6 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	
 	switch (gg->focus) {
 	case gameGUIFocusBoard: boardWidgetControls(&cmd, gg, c); break;
-	/*case gameGUIFocusChoice: choiceWidgetControls(&cmd, gg, c); break;*/
 	case gameGUIFocusRack: rackWidgetControls(&cmd, gg, c); break;
 	default: break;
 	}
@@ -1126,9 +1128,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		if (tm->type == transMovePlaceWild) {
 			break;
 		}
-		gg->focus = gg->bottomLast != gameGUIFocusChoice 
-			? gameGUIFocusRack
-			: gameGUIFocusChoice;
+		gg->focus = gameGUIFocusRack;
 		break;
 	}
 	case cmdBoard: {
@@ -1145,17 +1145,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		gg->rackWidget.index.y = 0;
 		break;
 	}
-	case cmdChoice: {
-		gg->focus = gameGUIFocusChoice;
-		gg->choiceWidget.index.x = cmd.data.choice;
-		gg->choiceWidget.index.y = 0;
-		break;
-	}
 	default: break;
-	}
-
-	if (gg->focus != gameGUIFocusBoard) {
-		gg->bottomLast = gg->focus;
 	}
 
 	/* printCmd(&c); */
@@ -1163,7 +1153,6 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	if (updateTransMove(tm, &cmd, &gm->board, &gm->player[gm->turn])) {
 		/* printTransMove(&e->transMove); */
 		updateBoardWidget(&gg->boardWidget, tm, &gm->board); 
-		updateChoiceWidget(&gg->choiceWidget, tm);
 		updateRackWidget(&gg->rackWidget, tm);
 
 		if (tm->type == transMovePlace || tm->type == transMovePlaceEnd) {
@@ -1209,7 +1198,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
-void updateGameMenu(GUI *g, Controls *c, Game *gm)
+void update_guiFocusGameMenu(GUI *g, Controls *c, Game *gm)
 {
 	MenuWidget *m;
 
@@ -1220,6 +1209,11 @@ void updateGameMenu(GUI *g, Controls *c, Game *gm)
 	m = &g->gameMenu;
 
 	updateMenuWidget(m, c);
+
+	if (goBack(c)) {
+		g->next = guiFocusGameGUI;
+		return;
+	}
 
 	if (submitted(c)) {
 		switch (m->focus) {
@@ -1322,7 +1316,7 @@ void update(Env *e)
 	case guiFocusControls: update_guiFocusControls(&e->gui, &e->controls); break;
 	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
 	case guiFocusGameGUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameMenu: updateGameMenu(&e->gui, &e->controls, &e->game); break;
+	case guiFocusGameMenu: update_guiFocusGameMenu(&e->gui, &e->controls, &e->game); break;
 	case guiFocusGameHotseatPause: updateGameHotseatPause(&e->gui, &e->controls, &e->game); break;
 	case guiFocusGameAIPause: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
 	case guiFocusGameOver: updateGameOver(&e->gui, &e->controls, &e->game); break;

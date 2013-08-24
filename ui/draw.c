@@ -54,16 +54,12 @@ void printCmd(Cmd *c)
 	case cmdRack: printf("[cmd:rack %d]\n", c->data.rack); break;
 	case cmdRackLeft: puts("[cmd:rack-left]"); break;
 	case cmdRackRight: puts("[cmd:rack-right]"); break;
-	case cmdChoice: printf("[cmd:choice %d]\n", c->data.choice); break;
-	case cmdChoiceLeft: puts("[cmd:choice-left]"); break;
-	case cmdChoiceRight: puts("[cmd:choice-right]"); break;
 	case cmdRecall: puts("[cmd:recall]"); break;
 	case cmdMode: puts("[cmd:mode]"); break;
 	case cmdPlay: puts("[cmd:play]"); break;
 	case cmdShuffle: puts("[cmd:shuffle]"); break;
 	case cmdBoardCancel: printf("[cmd:board-cancel (%d,%d)\n]", c->data.board.x, c->data.board.y); break;
 	case cmdRackCancel: printf("[cmd:rack-cancel %d]", c->data.rack); break;
-	case cmdChoiceCancel: puts("[cmd:choice-cancel]"); break;
 	case cmdTilePrev: puts("[cmd:tile-prev]"); break;
 	case cmdTileNext: puts("[cmd:tile-next]"); break;
 	case cmdQuit: puts("[cmd:quit]"); break;
@@ -174,8 +170,8 @@ void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm)
 	pos.x = 130;
 	pos.y = 24;
 
-	bw->pos.x = 130;
-	bw->pos.y = 24;
+	bw->pos.x = 132;
+	bw->pos.y = 29;
 
 	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, pos, dim);
 }
@@ -191,7 +187,7 @@ void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
 
 	dim.x = TILE_WIDTH;
 	dim.y = TILE_HEIGHT;
-	pos.x = 162;
+	pos.x = 192;
 	pos.y = 222;
 
 	rackWidgetDraw(io, tm, rw, pos, dim, &g->player[tm->playerIdx]);
@@ -210,11 +206,20 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 	
 	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm);
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
+	drawScoreBoard(&g->scoreBoard, io);
 	
 	if (gm->turn == tm->playerIdx && interval(io->time, 0.5f)) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
 	}
 	guiDrawLockon(io, &g->gameGui);
+	if (tm->type == transMoveDiscard || tm->type == transMoveDiscardPlay) {
+		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
+	} else {
+		strDraw(io->screen, &io->normalFont, "PLACE", 132 + 12,  8);
+	}
+
+	strDraw(io->screen, &io->blackFont, "Hello World!---", 16, 84);
+	strDraw(io->screen, &io->blackFont, "Hello World!---", 16, 84 + 12 * 11);
 }
 
 int scrollOffset(int dis, int pps, float time)
@@ -298,7 +303,8 @@ void drawScoreBoard(ScoreBoard *sb, IO *io)
 	NOT(sb);
 	NOT(io);
 	
-	surfaceDraw(io->screen, io->scoreBoard, 0, 0);
+	surfaceDraw(io->screen, io->scoreBoard, 8, 8);
+	surfaceDraw(io->screen, io->textLog, 8, 80);
 	for (i = 0; i < sb->playerNum; i++) {
 		f = i == sb->turn || sb->ctr[i].cur < sb->ctr[i].end 
 				? &io->highlightFont 
@@ -384,12 +390,23 @@ void draw_guiFocusMenu(Env *e)
 	NOT(e);
 
 	drawScrollingBackground(e);
-	/*surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);*/
 	strDraw(e->io.screen, &e->io.normalFont, "- Main Menu -", SCREEN_WIDTH / 2 - 39, 18);
 	drawMenuView(e->io.screen, &e->io.menuMV);
 }
 
 void draw_guiFocusGameGUI(Env *e);
+
+int placeValues(int x)
+{
+	int i = 0;
+	int j = 10;
+
+	for (i = 0; x >= j; i ++) {
+		j *= 10;
+	}
+	
+	return i;
+}
 
 void draw_guiFocusSettings(Env *e)
 {
@@ -402,7 +419,6 @@ void draw_guiFocusSettings(Env *e)
 		drawScrollingBackground(e);
 	} else {
 		draw_guiFocusGameGUI(e);
-		drawFader(&e->io, 196);
 		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	}
 	strDraw(e->io.screen, &e->io.normalFont, "- Settings -", SCREEN_WIDTH / 2 - 36, 18);
@@ -413,12 +429,16 @@ void draw_guiFocusSettings(Env *e)
 		if (i == settingsFocusMusic || i == settingsFocusSfx) {
 			int v;
 			int ii = interval(e->io.time, 0.2f);
-			v = i == settingsFocusMusic ? e->gui.settings.musVolume : e->gui.settings.sfxVolume;
+			v = e->gui.settings.vol[i - settingsFocusMusic];
 			drawNum(e->io.screen, 183, i * e->io.normalFont.height * 2 + 78, v, f);
 			
 			if (i == e->gui.settings.menu.focus) {
-				strDraw(e->io.screen, f, "<", 168 - ii, i * e->io.normalFont.height * 2 + 78);
-				strDraw(e->io.screen, f, ">", 189 + ii, i * e->io.normalFont.height * 2 + 78);
+				if (v > 0) {
+					strDraw(e->io.screen, f, "<", 174 - ii - 6 * placeValues(v), i * e->io.normalFont.height * 2 + 78);
+				}
+				if (v < MAX_GUI_VOLUME) {
+					strDraw(e->io.screen, f, ">", 190 + ii, i * e->io.normalFont.height * 2 + 78);
+				}
 			}
 		}
 	}
@@ -451,8 +471,6 @@ void draw_guiFocusControls(Env *e)
 
 	NOT(e);
 	
-	drawScrollingBackground(e);
-
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 
 	strDraw(e->io.screen, &e->io.normalFont, "- Controls -", SCREEN_WIDTH / 2 - 36, 18);
@@ -502,17 +520,11 @@ void draw_guiFocusControls(Env *e)
 
 void draw_guiFocusGameGUI(Env *e)
 {
-	int off1;
 	NOT(e);
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
 
-	off1 = scrollOffset(e->io.titleHover->h, -30, e->io.time);
-	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1);
-	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1 + e->io.titleHover->h);
-
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-	drawScoreBoard(&e->gui.scoreBoard, &e->io);
 }
 
 void draw_guiFocusGameMenu(Env *e)
@@ -520,7 +532,6 @@ void draw_guiFocusGameMenu(Env *e)
 	NOT(e);
 
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
-	drawFader(&e->io, 196);
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0); 
 	drawMenuView(e->io.screen, &e->io.gameMenuMV);
 	strDraw(e->io.screen, &e->io.normalFont, "- Pause -", SCREEN_WIDTH / 2 - 24, 18);
@@ -554,7 +565,6 @@ void draw_guiFocusGameHotseatPause(Env *e)
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove);
-	drawScoreBoard(&e->gui.scoreBoard, &e->io);
 	drawFader(&e->io, 196);
 
 	sprintf(text, "PLAYER %d", e->game.turn+1);
@@ -568,9 +578,9 @@ void draw_guiFocusGameOver(Env *e)
 
 	drawScrollingBackground(e);
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove);
 	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
 	/*surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);*/
-	drawScoreBoard(&e->gui.scoreBoard, &e->io);
 	drawFader(&e->io, 196);
 	strDraw(e->io.screen, &e->io.normalFont, "- Game Over -", SCREEN_WIDTH / 2 - 36, 18);
 }
@@ -582,8 +592,6 @@ void draw_guiFocusGameAreYouSureQuit(Env *e)
 
 	NOT(e);
 
-	drawScrollingBackground(e);
-	
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	
 	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX, orgY - e->io.whiteFont.height);

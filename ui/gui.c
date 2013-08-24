@@ -159,10 +159,22 @@ void initMenuWidget(MenuWidget *m, int focus, int max)
 
 void initSettings(Settings *s)
 {
+	int i;
+
 	NOT(s);
 
-	s->sfxVolume = MAX_GUI_VOLUME;
-	s->musVolume = MAX_GUI_VOLUME;
+	for (i = 0; i < volCount; i++) {
+		s->vol[i] = 0; /*MAX_GUI_VOLUME;*/
+		
+	}
+
+	/* v pre-mute v */
+	for (i = 0; i < audioChanCount; i++) {
+		Mix_Volume(i, s->vol[volSfx] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
+	}
+	Mix_VolumeMusic(s->vol[volMus] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
+	/* ^ pre-mute ^ */
+
 	s->previous = guiFocusMenu; 
 	initMenuWidget(&s->menu, settingsFocusMusic, settingsFocusCount);
 }
@@ -172,11 +184,9 @@ void initGameGUI(GameGUI *gg)
 	NOT(gg);
 	
 	mkRackWidget(&gg->rackWidget);
-	mkChoiceWidget(&gg->choiceWidget);
 	mkBoardWidget(&gg->boardWidget);
 	gg->focus = gameGUIFocusBoard;
-	gg->bottomLast = gameGUIFocusChoice;
-	gg->choiceWidget.index.x = 1;
+	gg->bottomLast = gameGUIFocusRack;
 }
 
 void initGUI(GUI *g)
@@ -384,6 +394,7 @@ bool init(Env *e)
 	e->game.dict.words = NULL;
 	e->io.joystick = NULL;
 	e->io.accel = NULL;
+	e->io.joyExists = false;
 	e->io.accelExists = false;
 	e->io.song = NULL;
 
@@ -406,19 +417,19 @@ bool init(Env *e)
 	SDL_WM_SetCaption("finite", NULL);
 
 
-	if (SDL_NumJoysticks() < 1) {
-		return false;
-	}
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
 
-	if (!e->io.joystick) {
-		return false;
+	if (e->io.joystick) {
+		e->io.joyExists = true;
+		if (SDL_JoystickNumAxes(e->io.joystick) < 1) {
+			return false;
+		}
+	} else {
+		e->io.joyExists = false;
 	}
 
-	if (SDL_JoystickNumAxes(e->io.joystick) < 1) {
-		return false;
-	}
+
 	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.accel = SDL_JoystickOpen(1);
@@ -451,6 +462,9 @@ bool init(Env *e)
 		return false;
 	}
 	if ((e->io.scoreBoard = surfaceAlphaLoad(RES_PATH "scoreboard.png")) == NULL) {
+		return false;
+	}
+	if ((e->io.textLog = surfaceAlphaLoad(RES_PATH "text_log.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.gmBack = surfaceAlphaLoad(RES_PATH "game_bg.png")) == NULL) {
@@ -615,6 +629,7 @@ bool init(Env *e)
 
 	controlsInit(&e->controls);
 	e->controls.accelExists = e->io.accelExists;
+	e->controls.joyExists = e->io.joyExists;
 
 	return true;
 }
@@ -645,6 +660,7 @@ void quit(Env *e)
 	surfaceFree(e->io.gmBack);
 	surfaceFree(e->io.titleBackground);
 	surfaceFree(e->io.scoreBoard);
+	surfaceFree(e->io.textLog);
 	surfaceFree(e->io.pressStart);
 	surfaceFree(e->io.back);
 	surfaceFree(e->io.lockon);
@@ -752,8 +768,10 @@ bool handleEvent(Controls *c)
 	keyStateUpdate(&hc->key[hardwareKeyL], ks[SDLK_TAB]);
 	keyStateUpdate(&hc->key[hardwareKeyR], ks[SDLK_BACKSPACE]);
 
-	axisStateUpdate(&hc->axisX);
-	axisStateUpdate(&hc->axisY);
+	if (c->joyExists) {
+		axisStateUpdate(&hc->axisX);
+		axisStateUpdate(&hc->axisY);
+	}
 	
 	if (c->accelExists) {
 		axisStateUpdate(&hc->accelX);

@@ -15,8 +15,7 @@
 
 typedef enum
 {
-	audioChanMusic = 0,
-	audioChanSfx,
+	audioChanSfx = 0,
 	audioChanCount
 } AudioChanType;
 
@@ -27,16 +26,6 @@ typedef enum
 	no = 1,
 	yesNoCount
 } YesNoType;
-
-typedef enum
-{
-	choiceInvalid = -1,
-	choiceRecall = 0,
-	choiceMode,
-	choicePlay,
-	choiceShuffle,
-	choiceCount
-} ChoiceType;
 
 typedef enum
 {
@@ -62,16 +51,12 @@ typedef enum
 	cmdRack,
 	cmdRackLeft,
 	cmdRackRight,
-	cmdChoice,
-	cmdChoiceLeft,
-	cmdChoiceRight,
 	cmdRecall,
 	cmdMode,
 	cmdPlay,
 	cmdShuffle,
 	cmdBoardCancel,
 	cmdRackCancel,
-	cmdChoiceCancel,
 	cmdTilePrev,
 	cmdTileNext,
 	cmdQuit,
@@ -211,7 +196,6 @@ typedef struct IO
 	SDL_Surface *skip;
 	SDL_Surface *skipDisable;
 	SDL_Surface *play;
-	SDL_Surface *scoreBoard;
 	SDL_Surface *playDisable;
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
@@ -221,10 +205,14 @@ typedef struct IO
 	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
+	
+	SDL_Surface *scoreBoard;
+	SDL_Surface *textLog;
 	SDL_Surface *boardCover;
 
 	SDL_Joystick *joystick;
 	SDL_Joystick *accel;
+	bool joyExists;
 	bool accelExists;
 	
 	MenuView menuMV;
@@ -309,6 +297,7 @@ typedef struct
 	HardwareControls hardware;
 	GameControls game;
 	bool accelExists;
+	bool joyExists;
 } Controls;
 
 typedef struct Cmd
@@ -335,7 +324,6 @@ typedef enum
 	gameGUIFocusInvalid = -1,
 	gameGUIFocusBoard = 0,
 	gameGUIFocusRack,
-	gameGUIFocusChoice,
 	gameGUIFocusCount
 } GameGUIFocusType;
 
@@ -356,6 +344,13 @@ typedef enum
 	guiFocusCount
 } GUIFocusType;
 
+typedef enum
+{
+	volMus = 0,
+	volSfx,
+	volCount
+} VolType;
+
 typedef struct MenuWidget
 {
 	int focus;
@@ -369,15 +364,13 @@ typedef struct GameGUI
 	GameGUIFocusType bottomLast;
 	GridWidget rackWidget;
 	GridWidget boardWidget;
-	GridWidget choiceWidget;
 	YesNoType validPlay;
 } GameGUI;
 
 typedef struct Settings 
 {
 	MenuWidget menu;
-	int sfxVolume;
-	int musVolume;
+	int vol[volCount];
 	GUIFocusType previous;
 } Settings;
 

@@ -5,17 +5,13 @@
 
 void mkRackWidget(GridWidget *);
 void mkBoardWidget(GridWidget *);
-void mkChoiceWidget(GridWidget *);
 void boardWidgetControls(Cmd *, GameGUI *, Controls *);
-void choiceWidgetControls(Cmd *, GameGUI *, Controls *);
 void rackWidgetControls(Cmd *, GameGUI *, Controls *);
 void updateBoardWidget(GridWidget *, TransMove *, Board *);
 void updateRackWidget(GridWidget *, TransMove *);
-void updateChoiceWidget(GridWidget *, TransMove *);
 void boardWidgetDraw(IO *, GridWidget *, Player *, Board *, TransMove *, Coor, Coor);
 void updateGameGUIViaCmd(GameGUI *, Cmd *, TransMoveType);
 void rackWidgetDraw(IO *, TransMove *, GridWidget *, Coor, Coor, Player *);
-void choiceWidgetDraw(IO *, TransMove *, GridWidget *, Coor, Coor);
 void gridWidgetDraw(SDL_Surface *, GridWidget *, Coor, Coor);
 
 #endif
