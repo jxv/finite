@@ -192,7 +192,7 @@ void moveInit(Move *m)
 	
 	NOT(m);
 
-	m->type = MOVE_PLACE;
+	m->type = movePlace;
 	m->data.place.num = 4;
 	for (i = 0; i < RACK_SIZE; i++) {
 		m->data.place.rackIdx[i] = i;

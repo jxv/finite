@@ -358,6 +358,15 @@ typedef struct MenuWidget
 	int init;
 } MenuWidget;
 
+typedef struct TextLog
+{
+	int maxLen;
+	int maxSize;
+	int size;
+	int head;
+	char line[12][16];
+} TextLog;
+
 typedef struct GameGUI
 {
 	GameGUIFocusType focus;
@@ -365,6 +374,7 @@ typedef struct GameGUI
 	GridWidget rackWidget;
 	GridWidget boardWidget;
 	YesNoType validPlay;
+	TextLog textLog;
 } GameGUI;
 
 typedef struct Settings 

@@ -4,6 +4,8 @@
 #include "draw.h"
 #include "widget.h"
 
+void drawScoreBoard(ScoreBoard *sb, IO *io);
+
 void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 {
 	int i;
@@ -200,6 +202,8 @@ bool interval(float lapsed, float interval)
 
 void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 {
+	int i, j;
+
 	NOT(io);
 	NOT(g);
 	NOT(tm);
@@ -218,8 +222,9 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 		strDraw(io->screen, &io->normalFont, "PLACE", 132 + 12,  8);
 	}
 
-	strDraw(io->screen, &io->blackFont, "Hello World!---", 16, 84);
-	strDraw(io->screen, &io->blackFont, "Hello World!---", 16, 84 + 12 * 11);
+	for (i = 0, j = g->gameGui.textLog.head; i < g->gameGui.textLog.size; i++, j++, j %= g->gameGui.textLog.size) {
+		strDraw(io->screen, &io->blackFont, g->gameGui.textLog.line[j], 16, 84 + 12 * i);
+	}
 }
 
 int scrollOffset(int dis, int pps, float time)

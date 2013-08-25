@@ -450,11 +450,11 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 
 	if (combo.rackCount == 0) {
 		m->playerIdx = pIdx;
-		m->type = MOVE_SKIP;
+		m->type = moveSkip;
 		return;
 	}
 	
-	move.type = MOVE_PLACE;
+	move.type = movePlace;
 	move.playerIdx = pIdx; 
 	m->playerIdx = pIdx;
 
@@ -497,6 +497,6 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	}
 
 	m->playerIdx = pIdx;
-	m->type = maxScore > 0 ? MOVE_PLACE : MOVE_SKIP;
+	m->type = maxScore > 0 ? movePlace : moveSkip;
 }
 

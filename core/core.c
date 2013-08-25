@@ -1056,6 +1056,7 @@ void mkPlace(Action *a, Game *g, Move *m)
 
 void mkDiscard(Action *a, Game *g, Move *m)
 {
+	int i;
 
 	NOT(a);
 	NOT(g);
@@ -1070,9 +1071,15 @@ void mkDiscard(Action *a, Game *g, Move *m)
 	assert(m->data.discard.num > 0);
 
 	a->type = actionDiscard;
+	a->data.discard.score = -m->data.discard.num;
+	if (a->data.discard.score + g->player[a->playerIdx].score < 0) {
+		a->data.discard.score += g->player[a->playerIdx].score - a->data.discard.score;
+	}
 	a->data.discard.num = m->data.discard.num;
-	assert(sizeof(a->data.discard) == sizeof(m->data.discard));
-	memCpy(&a->data.discard, &m->data.discard, sizeof(m->data.discard));
+
+	for (i = 0; i < a->data.discard.num; i++) {
+		a->data.discard.rackIdx[i] = m->data.discard.rackIdx[i];
+	}
 }
 
 void mkSkip(Action *a, Game *g)
@@ -1109,11 +1116,11 @@ void mkAction(Action *a, Game *g, Move *m)
 
 	a->playerIdx = m->playerIdx;
 	switch (m->type) {
-	case MOVE_PLACE: mkPlace(a, g, m); break;
-	case MOVE_DISCARD: mkDiscard(a, g, m); break;
-	case MOVE_SKIP: mkSkip(a, g); break;
-	case MOVE_QUIT: mkQuit(a, g); break;
-	case MOVE_INVALID: /* fall through */
+	case movePlace: mkPlace(a, g, m); break;
+	case moveDiscard: mkDiscard(a, g, m); break;
+	case moveSkip: mkSkip(a, g); break;
+	case moveQuit: mkQuit(a, g); break;
+	case moveInvalid: /* fall through */
 	default: a->type = actionInvalid; break;
 	}
 }
@@ -1189,10 +1196,7 @@ bool applyAction(Game *g, Action *a)
 		}
 		rackRefill(&g->player[id], &g->bag);
 		rackShift(&g->player[id]);
-		g->player[id].score -= a->data.discard.num;
-		if (g->player[id].score < 0) {
-			g->player[id].score = 0;
-		}
+		g->player[id].score += a->data.discard.score;
 		break;
 	}
 	case actionSkip: {
@@ -1235,7 +1239,7 @@ void moveClr(Move *m)
 	NOT(m);
 
 	memSet(m, 0, sizeof(Move));
-	m->type = MOVE_INVALID;
+	m->type = moveInvalid;
 }
 
 void actionClr(Action *a)

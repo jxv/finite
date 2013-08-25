@@ -133,21 +133,21 @@ void termGetMoveType(struct Move *m)
 	NOT(m);
 
 	moveClr(m);
-	printf("\n0: MOVE_PLACE\n1: MOVE_SKIP\n2: MOVE_DISCARD\n3: MOVE_QUIT\n");
+	printf("\n0: MOVE_PLACE\n1: moveSkip\n2: moveDiscard\n3: moveQuit\n");
 	do {
 		int i;
-		m->type = MOVE_INVALID;
+		m->type = moveInvalid;
 		getLine(line, sizeof(line));
 		if (sscanf(line, "%d", &i) == 1) {
 			switch (i) {
-			case  0: m->type = MOVE_PLACE; break;
-			case  1: m->type = MOVE_SKIP; break;
-			case  2: m->type = MOVE_DISCARD; break;
-			case  3: m->type = MOVE_QUIT; break;
-			default: m->type = MOVE_INVALID; break;
+			case  0: m->type = movePlace; break;
+			case  1: m->type = moveSkip; break;
+			case  2: m->type = moveDiscard; break;
+			case  3: m->type = moveQuit; break;
+			default: m->type = moveInvalid; break;
 			}
 		}
-	} while (m->type == MOVE_INVALID);
+	} while (m->type == moveInvalid);
 }
 
 
@@ -158,28 +158,28 @@ void termMove(struct Move *m)
 	NOT(m);
 
 	switch (m->type) {
-	case MOVE_PLACE: {
+	case movePlace: {
 		printf("Enter the rack index of tiles to place (x,y,rack-index):\n");
 		getLine(line, sizeof(line));
 		if (!parseToPlace(&m->data.place, line, strlen(line))) {
 			printf("[err: bad input format]\n");
-			m->type = MOVE_INVALID;
+			m->type = moveInvalid;
 		} 
 		break;
 	}
-	case MOVE_SKIP: {
+	case moveSkip: {
 		break;
 	}
-	case MOVE_DISCARD: {
+	case moveDiscard: {
 		printf("Enter the rack index of tiles to place (rack-index) ... (rack-index):\n");
 		getLine(line, sizeof(line));
 		if (!parseToDiscard(&m->data.discard, line, strlen(line))) {
 			printf("[err: bad input format]\n");
-			m->type = MOVE_INVALID;
+			m->type = moveInvalid;
 		}
 		break;
 	}
-	case MOVE_QUIT: {
+	case moveQuit: {
 		break;
 	}
 	default: break;
@@ -212,7 +212,7 @@ int term()
 				termGetMoveType(&m);
 				termMove(&m);
 				m.playerIdx = g.turn;
-			} while (m.type == MOVE_INVALID);
+			} while (m.type == moveInvalid);
 			actionClr(&a);
 			mkAction(&a, &g, &m);
 			if (a.type == actionInvalid) {

@@ -718,18 +718,18 @@ bool transMoveToMove(Move *m, TransMove *tm)
 	m->playerIdx = tm->playerIdx;
 	switch (tm->type) {
 	case transMovePlacePlay: {
-		m->type = MOVE_PLACE;
+		m->type = movePlace;
 		moveModePlaceToMovePlace(&m->data.place, &tm->place, &tm->adjust);
 		return true;
 	}
 	case transMoveDiscardPlay: {
-		m->type = MOVE_DISCARD;
+		m->type = moveDiscard;
 		moveModeDiscardToMoveDiscard(&m->data.discard, &tm->discard, &tm->adjust);
 		return true;
 	}
-	case transMoveSkipPlay: m->type = MOVE_SKIP; return true;
-	case transMoveQuit: m->type = MOVE_QUIT; return true;
-	default: m->type = MOVE_INVALID; break;
+	case transMoveSkipPlay: m->type = moveSkip; return true;
+	case transMoveQuit: m->type = moveQuit; return true;
+	default: m->type = moveInvalid; break;
 	}
 	return false;
 }
@@ -1083,6 +1083,131 @@ void updateScoreBoard(ScoreBoard *sb, Game *gm, float timeStep)
 	}
 }
 
+bool isAlphaChar(char c)
+{
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+bool isNumChar(char c)
+{
+	return c >= '0' && c <= '9';
+}
+
+bool isAlphaNumChar(char c)
+{
+	return isAlphaChar(c) || isNumChar(c);
+}
+
+void addStrToTextLog(TextLog *tl, char *str)
+{
+	int i, j, k, p;
+
+	NOT(tl);
+	NOT(str);
+
+	k = strlen(str);
+	i = 0;
+	p = tl->head + tl->size;
+	p %= tl->maxSize;
+
+	while (i < k) {
+		j = 0;
+		while (j < tl->maxLen && i < k) {
+			if (str[i] == '\n') {
+				tl->line[p][j] = '\0';
+				i++;
+				break;
+			}
+			if (j + 1 == tl->maxLen && i + 1 < k) {
+				if (isAlphaNumChar(str[i]) && isAlphaNumChar(str[i + 1])) {
+					tl->line[p][j] = '-';
+					tl->line[p][j + 1] = '\0';
+					break;
+				}
+			}
+			tl->line[p][j] = str[i];
+			tl->line[p][j + 1] = '\0';
+			i++;
+			j++;
+		}
+		p++;
+		p %= tl->maxSize;
+
+		if (tl->size < tl->maxSize) {
+			tl->size++;
+		} else {
+			tl->head++;
+			tl->head %= tl->maxSize;
+		}
+	}
+}
+
+void addMoveToTextLog(TextLog *tl, Move *m, Player *p)
+{
+	char str[64];
+
+	NOT(tl);
+	NOT(m);
+
+	str[0] = '\0';
+
+	switch (m->type) {
+	case movePlace: {
+		char *numSmall = "PLAYER %d placed tile.";
+		char *numBig = "PLAYER %d placed tiles.";
+		sprintf(str, m->data.place.num > 1 ? numBig : numSmall, m->playerIdx + 1);
+		break;
+	}
+	case moveDiscard: {
+		char *numSmall = "PLAYER %d discarded tile.";
+		char *numBig = "PLAYER %d discarded tiles.";
+		sprintf(str, m->data.place.num > 1 ? numBig : numSmall, m->playerIdx + 1);
+		break;
+	}
+	case moveSkip: sprintf(str, "PLAYER %d skipped turn.", m->playerIdx + 1); break;
+	case moveQuit: sprintf(str, "PLAYER %d quit.", m->playerIdx + 1); break;
+	default: break;
+	}
+	
+	addStrToTextLog(tl, str);
+}
+
+void addActionToTextLog(TextLog *tl, Action *a)
+{
+	char str[64];
+
+	NOT(tl);
+	NOT(a);
+
+	str[0] = '\0';
+
+	switch (a->type) {
+	case actionPlace: {
+		char *singluar = "PLAYER %d scored %d points.";
+		char *plural = "PLAYER %d scored %d points.";
+		sprintf(str, a->data.place.num == 1 ? singluar : plural, a->playerIdx + 1, a->data.place.score);
+		break;
+	}
+	case actionDiscard: {
+		char *singluar = "PLAYER %d lost %d points.";
+		char *plural = "PLAYER %d lost %d points.";
+		sprintf(str, a->data.place.num == 1 ? singluar : plural, a->playerIdx + 1, -a->data.discard.score);
+		break;
+	}
+	case actionSkip: {
+		sprintf(str, "PLAYER %d skipped a move.", a->playerIdx + 1);
+		break;
+	}
+	case actionQuit: {
+		sprintf(str, "PLAYER %d quit.", a->playerIdx + 1);
+		break;
+	}
+	default: break;
+	}
+
+	addStrToTextLog(tl, str);
+}
+
 void updateGameGUI(GUI *g, Controls *c, Game *gm)
 {
 	Cmd cmd;
@@ -1174,9 +1299,12 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	}
 
 	if (a.type != actionInvalid) {
+		addActionToTextLog(&gg->textLog, &a);
 		applyAdjust(&gm->player[a.playerIdx], &tm->adjust);
+		/* log action */
 		if (endGame(gm)) {
 			g->next = guiFocusGameOver;
+			/* log game over */
 		} else {
 			nextTurn(gm);
 			clrTransMove(tm, gm->turn, &gm->player[gm->turn], &gm->board);
@@ -1184,7 +1312,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		}
 		tm->type = transMoveInvalid;
 	} else {
-		if (m.type != MOVE_INVALID) {
+		if (m.type != moveInvalid) {
 			/* printActionErr(a.type); */
 		}
 	} 

@@ -179,6 +179,17 @@ void initSettings(Settings *s)
 	initMenuWidget(&s->menu, settingsFocusMusic, settingsFocusCount);
 }
 
+void initTextLog(TextLog *tl)
+{
+	NOT(tl);
+
+	tl->head = 0;
+	tl->maxLen = 15;
+	tl->maxSize = 12;
+	tl->size = 0;
+	tl->head = 0;
+}
+
 void initGameGUI(GameGUI *gg)
 {
 	NOT(gg);
@@ -187,6 +198,7 @@ void initGameGUI(GameGUI *gg)
 	mkBoardWidget(&gg->boardWidget);
 	gg->focus = gameGUIFocusBoard;
 	gg->bottomLast = gameGUIFocusRack;
+	initTextLog(&gg->textLog);
 }
 
 void initGUI(GUI *g)
@@ -203,6 +215,7 @@ void initGUI(GUI *g)
 
 	clrDups(&g->controlsMenu);
 	g->controlsMenu.time = 0.f;
+
 }
 
 SDL_Surface *createText(Font *f, char *str)

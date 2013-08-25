@@ -100,12 +100,12 @@ typedef enum
 
 typedef enum
 {
-	MOVE_INVALID = -1,
-	MOVE_PLACE = 0,
-	MOVE_DISCARD,
-	MOVE_SKIP,
-	MOVE_QUIT,
-	MOVE_COUNT
+	moveInvalid = -1,
+	movePlace = 0,
+	moveDiscard,
+	moveSkip,
+	moveQuit,
+	moveCount
 } MoveType;
 
 typedef enum
@@ -305,18 +305,28 @@ typedef struct Path
 	} data;
 } Path;
 
+typedef struct ActionPlace
+{
+	int score;
+ 	int num;
+	int rackIdx[RACK_SIZE];
+ 	struct Path path;
+} ActionPlace;
+
+typedef struct ActionDiscard
+{
+	int score;
+	int num;
+	int rackIdx[RACK_SIZE];
+} ActionDiscard;
+
 typedef struct Action
 {
 	ActionType	type;
 	int playerIdx;
 	union {
-	struct {
- 		int score;
-	 	int num;
- 		int rackIdx[RACK_SIZE];
- 		struct Path path;
-	} place;
-	struct MoveDiscard discard;
+	ActionPlace place;
+	ActionDiscard discard;
 	ActionErrType err;
 	} data;
 } Action;
