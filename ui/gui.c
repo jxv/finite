@@ -202,6 +202,62 @@ void initGameGUI(GameGUI *gg)
 	gg->lastMove.type = lastMoveNone;
 }
 
+void actionToLastMove(LastMove *lm, Action *a)
+{
+		Coor idx;
+		Path *p;
+
+		NOT(lm);
+		NOT(a);
+		
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+				lm->data.place[idx.y][idx.x] = false;
+			}
+		}
+
+		if (a->type != actionPlace) {
+			return;
+		}
+
+		p = &a->data.place.path;
+
+		switch (p->type) {
+		case pathDot: {
+			if (p->data.dot.right.type == dirRight) {
+				lm->data.place[p->data.dot.right.y][p->data.dot.right.x] = true;
+			}
+			if (p->data.dot.down.type == dirDown) {
+				lm->data.place[p->data.dot.down.y][p->data.dot.down.x] = true;
+			}
+			break;
+		}
+		case pathHorz: {
+			if (p->data.horz.right.type != dirRight) {
+				break;
+			}
+			idx.y = p->data.horz.right.y;
+			for (idx.x = p->data.horz.right.x; idx.x < p->data.horz.right.x + p->data.horz.right.len; idx.x++) {
+				lm->data.place[idx.y][idx.x] = p->data.horz.right.pos[idx.x];
+			}
+				
+			break;
+		}
+		case pathVert: {
+			if (p->data.vert.down.type == dirDown) {
+				break;
+			}
+			idx.x = p->data.vert.down.x;
+			for (idx.y = p->data.vert.down.y; idx.y < p->data.vert.down.y + p->data.vert.down.len; idx.y++) {
+				lm->data.place[idx.y][idx.x] = p->data.vert.down.pos[idx.y];
+			}
+				
+			break;
+		}
+		default: break;
+		}
+}
+
 void initGUI(GUI *g)
 {
 	initMenuWidget(&g->menu, menuFocusPlay, menuFocusCount);

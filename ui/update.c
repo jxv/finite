@@ -1299,6 +1299,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 
 	if (a.type != actionInvalid) {
 		addActionToTextLog(&gg->textLog, &a);
+		actionToLastMove(&gg->lastMove, &a);
 		applyAdjust(&gm->player[a.playerIdx], &tm->adjust);
 		/* log action */
 		if (endGame(gm)) {
@@ -1391,6 +1392,8 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 	
 	aiFindMove(&m, gm->turn, gm, NULL);
 	mkAction(&a, gm, &m);
+	addActionToTextLog(&g->gameGui.textLog, &a);
+	actionToLastMove(&g->gameGui.lastMove, &a);
 	applyAction(gm, &a);
 	nextTurn(gm);
 	g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
