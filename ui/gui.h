@@ -85,6 +85,7 @@ typedef enum
 	tileLookNormal,
 	tileLookHold,
 	tileLookGhost,
+	tileLookLast,
 	tileLookCount
 } TileLookType;
 

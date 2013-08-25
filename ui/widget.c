@@ -28,6 +28,9 @@ void mkRackWidget(GridWidget *gw)
 	gw->width = RACK_SIZE;
 	gw->height = 1;
 	mkGridWidgetByDim(gw);
+
+	gw->pos.x = 180;
+	gw->pos.y = 219;
 }
 
 void mkBoardWidget(GridWidget *gw)
@@ -37,6 +40,9 @@ void mkBoardWidget(GridWidget *gw)
 	gw->width  = BOARD_X;
 	gw->height = BOARD_Y;
 	mkGridWidgetByDim(gw);
+
+	gw->pos.x = 132;
+	gw->pos.y = 29;
 }
 
 void boardWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
@@ -319,11 +325,12 @@ void updateGameGUIViaCmd(GameGUI *gg, Cmd *c, TransMoveType tmt)
 	}
 }
 
-void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm, Coor pos, Coor dim)
+void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm, LastMove *lm, Coor dim)
 {
 	Tile *t;
 	SDL_Surface *ts;
 	Coor idx;
+	TileLoookType tlt;
 	int i;
 
 	NOT(io);
@@ -337,13 +344,12 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != tileNone) {
-				ts = io->tile[t->type][t->letter][tileLookNormal];
+				tlt = lm->type == lastMovePlace && lm->data.place[idx.y][idx.x] ? tileLookLast : tileLookNormal;
+				ts = io->tile[t->type][t->letter][tlt];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			}
 		}
 	}
-
-	/*surfaceDraw(io->screen, io->boardCover, bw->pos.x, bw->pos.y);*/
 
 	switch (tm->type) {
 	case transMovePlace:
@@ -367,7 +373,7 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 
 }
 
-void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor pos, Coor dim, Player *p)
+void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 {
 	int i;
 	Tile *t;

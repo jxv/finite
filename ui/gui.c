@@ -585,6 +585,7 @@ bool init(Env *e)
 	tile[tileLookNormal] = surfaceAlphaLoad(RES_PATH "tile_normal.png");
 	tile[tileLookHold] = surfaceAlphaLoad(RES_PATH "tile_hold.png");
 	tile[tileLookGhost] = surfaceAlphaLoad(RES_PATH "tile_ghost.png");
+	tile[tileLookLast] = surfaceAlphaLoad(RES_PATH "tile_last.png");
 
 	for (i = 0; i < tileLookCount; i++) {
 		e->io.wild[i] = tile[i];

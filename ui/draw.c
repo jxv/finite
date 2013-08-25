@@ -106,17 +106,13 @@ void guiDrawLockon(IO *io, GameGUI *gg)
 	}
 	case gameGUIFocusRack: {
 		idx = gg->rackWidget.index;
-		if (interval(io->time, 0.5f)) {
+		if (interval(io->time, 0.2f)) {
 			surfaceDraw(io->screen, io->lockon, gg->rackWidget.pos.x - 2 + idx.x * w, gg->rackWidget.pos.y - 2);
 		}
 		break;
 	}
 	default: break;
 	}
-
-	/* hack */
-	gg->rackWidget.pos.x = 176;
-	gg->rackWidget.pos.y = 215;
 }
 
 void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, GridWidget *bw)
@@ -160,7 +156,7 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, Gri
 
 void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm)
 {
-	Coor pos, dim;
+	Coor dim;
 	
 	NOT(io);
 	NOT(bw);
@@ -169,18 +165,13 @@ void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm)
 
 	dim.x = TILE_WIDTH;
 	dim.y = TILE_HEIGHT;
-	pos.x = 130;
-	pos.y = 24;
 
-	bw->pos.x = 132;
-	bw->pos.y = 29;
-
-	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, pos, dim);
+	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, dim);
 }
 
 void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
 {
-	Coor pos, dim;
+	Coor dim;
 	
 	NOT(io);
 	NOT(rw);
@@ -189,10 +180,8 @@ void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
 
 	dim.x = TILE_WIDTH;
 	dim.y = TILE_HEIGHT;
-	pos.x = 192;
-	pos.y = 222;
 
-	rackWidgetDraw(io, tm, rw, pos, dim, &g->player[tm->playerIdx]);
+	rackWidgetDraw(io, tm, rw, dim, &g->player[tm->playerIdx]);
 }
 
 bool interval(float lapsed, float interval)
@@ -212,7 +201,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
 	drawScoreBoard(&g->scoreBoard, io);
 	
-	if (gm->turn == tm->playerIdx && interval(io->time, 0.5f)) {
+	if (gm->turn == tm->playerIdx && interval(io->time, 0.2f)) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
 	}
 	guiDrawLockon(io, &g->gameGui);
@@ -308,15 +297,15 @@ void drawScoreBoard(ScoreBoard *sb, IO *io)
 	NOT(sb);
 	NOT(io);
 	
-	surfaceDraw(io->screen, io->scoreBoard, 8, 8);
+	surfaceDraw(io->screen, io->scoreBoard, 8, 6);
 	surfaceDraw(io->screen, io->textLog, 8, 80);
 	for (i = 0; i < sb->playerNum; i++) {
 		f = i == sb->turn || sb->ctr[i].cur < sb->ctr[i].end 
 				? &io->highlightFont 
 				: &io->normalFont;
-		drawNum(io->screen, 100, (f->height + 1) * i + 12, sb->ctr[i].cur, f);
+		drawNum(io->screen, 100, (f->height + 1) * i + 11, sb->ctr[i].cur, f);
 		sprintf(text, "PLAYER %d", i+1);
-		strDraw(io->screen, f, text, 15, (f->height + 1) * i + 12);
+		strDraw(io->screen, f, text, 15, (f->height + 1) * i + 11);
 	}
 }
 
@@ -423,7 +412,6 @@ void draw_guiFocusSettings(Env *e)
 	if (e->gui.settings.previous == guiFocusMenu) {
 		drawScrollingBackground(e);
 	} else {
-		draw_guiFocusGameGUI(e);
 		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	}
 	strDraw(e->io.screen, &e->io.normalFont, "- Settings -", SCREEN_WIDTH / 2 - 36, 18);
