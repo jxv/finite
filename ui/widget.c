@@ -330,7 +330,7 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 	Tile *t;
 	SDL_Surface *ts;
 	Coor idx;
-	TileLoookType tlt;
+	TileLookType tlt;
 	int i;
 
 	NOT(io);

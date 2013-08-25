@@ -1,5 +1,4 @@
 #include <math.h>
-#include <dosk.h>
 #include "gui.h"
 #include "update.h"
 #include "init.h"

@@ -3,21 +3,6 @@
 
 #include "gui.h"
 
-typedef enum
-{
-	lastMoveNone = 0,
-	lastMovePlace,
-	lastMoveCount
-} LastMoveType;
-
-typedef struct 
-{
-	LastMoveType type;
-	union {
-	bool place[BOARD_Y][BOARD_X];	
-	} data;
-} LastMove;
-
 void mkRackWidget(GridWidget *);
 void mkBoardWidget(GridWidget *);
 void boardWidgetControls(Cmd *, GameGUI *, Controls *);

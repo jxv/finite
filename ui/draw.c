@@ -154,7 +154,7 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, Gri
 	}
 }
 
-void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm)
+void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm, LastMove *lm)
 {
 	Coor dim;
 	
@@ -166,7 +166,7 @@ void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm)
 	dim.x = TILE_WIDTH;
 	dim.y = TILE_HEIGHT;
 
-	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, dim);
+	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, lm, dim);
 }
 
 void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
@@ -197,7 +197,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 	NOT(g);
 	NOT(tm);
 	
-	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm);
+	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm, &g->gameGui.lastMove);
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
 	drawScoreBoard(&g->scoreBoard, io);
 	
@@ -207,6 +207,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 	guiDrawLockon(io, &g->gameGui);
 	if (tm->type == transMoveDiscard || tm->type == transMoveDiscardPlay) {
 		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
+		surfaceDraw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
 	} else {
 		strDraw(io->screen, &io->normalFont, "PLACE", 132 + 12,  8);
 	}
@@ -572,7 +573,7 @@ void draw_guiFocusGameOver(Env *e)
 	drawScrollingBackground(e);
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove);
-	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove);
+	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove, &e->gui.gameGui.lastMove);
 	/*surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);*/
 	drawFader(&e->io, 196);
 	strDraw(e->io.screen, &e->io.normalFont, "- Game Over -", SCREEN_WIDTH / 2 - 36, 18);

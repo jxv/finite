@@ -199,6 +199,7 @@ void initGameGUI(GameGUI *gg)
 	gg->focus = gameGUIFocusBoard;
 	gg->bottomLast = gameGUIFocusRack;
 	initTextLog(&gg->textLog);
+	gg->lastMove.type = lastMoveNone;
 }
 
 void initGUI(GUI *g)

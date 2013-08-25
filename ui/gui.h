@@ -1,8 +1,6 @@
 #ifndef FINITE_GUI_H
 #define FINITE_GUI_H
 
-#include <dosk.h>
-
 #include "sdl.h"
 #include "common.h"
 
@@ -368,6 +366,21 @@ typedef struct TextLog
 	char line[12][16];
 } TextLog;
 
+typedef enum
+{
+	lastMoveNone = 0,
+	lastMovePlace,
+	lastMoveCount
+} LastMoveType;
+
+typedef struct 
+{
+	LastMoveType type;
+	union {
+	bool place[BOARD_Y][BOARD_X];	
+	} data;
+} LastMove;
+
 typedef struct GameGUI
 {
 	GameGUIFocusType focus;
@@ -376,6 +389,7 @@ typedef struct GameGUI
 	GridWidget boardWidget;
 	YesNoType validPlay;
 	TextLog textLog;
+	LastMove lastMove;
 } GameGUI;
 
 typedef struct Settings 
