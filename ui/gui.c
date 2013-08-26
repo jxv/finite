@@ -599,6 +599,25 @@ bool init(Env *e)
 		return false;
 	}
 
+	for (i = 0; i < hardwareKeyCount; i++) {
+		char *str = "\0";
+
+		switch (i) {
+		default: 
+		case hardwareKeyX: str = RES_PATH "x.png"; break;
+		case hardwareKeyY: str = RES_PATH "y.png"; break;
+		case hardwareKeyA: str = RES_PATH "a.png"; break;
+		case hardwareKeyB: str = RES_PATH "b.png"; break;
+		case hardwareKeyL: str = RES_PATH "l.png"; break;
+		case hardwareKeyR: str = RES_PATH "r.png"; break;
+		case hardwareKeySelect: str = RES_PATH "select.png"; break;
+		}
+
+		if ((e->io.btn[i] = surfaceAlphaLoad(str)) == NULL) {
+			return false;
+		}
+	}
+
 	if (!fontmapInit(&e->io.whiteFont, 6, 12, RES_PATH "white_font.png")) {
 		return false;
 	}
@@ -763,6 +782,11 @@ void quit(Env *e)
 			surfaceFree(e->io.tile[tileLetter][i][j]);
 		}
 	}
+
+	for (i = 0; i < hardwareKeyCount; i++) {
+		surfaceFree(e->io.btn[i]);
+	}
+
 	freeMenuViews(&e->io);
 	freeHighTexts(e->io.menuFocus, menuFocusCount);
 	freeHighTexts(e->io.gameMenuFocus, gameMenuFocusCount);

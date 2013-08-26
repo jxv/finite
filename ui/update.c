@@ -5,6 +5,8 @@
 #include "widget.h"
 #include "print.h"
 
+void actionToLastMove(LastMove *lm, Action *a);
+
 void axisStateUpdate(AxisState *as)
 {
 	NOT(as);

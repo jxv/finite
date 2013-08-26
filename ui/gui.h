@@ -1,6 +1,8 @@
 #ifndef FINITE_GUI_H
 #define FINITE_GUI_H
 
+#include <dosk.h>
+
 #include "sdl.h"
 #include "common.h"
 
@@ -171,6 +173,23 @@ typedef struct ScoreBoard
 	bool stable;
 } ScoreBoard;
 
+typedef enum
+{
+	hardwareKeyStart = 0,
+	hardwareKeySelect,
+	hardwareKeyUp,
+	hardwareKeyDown,
+	hardwareKeyLeft,
+	hardwareKeyRight,
+	hardwareKeyA,
+	hardwareKeyB,
+	hardwareKeyX,
+	hardwareKeyY,
+	hardwareKeyL,
+	hardwareKeyR,
+	hardwareKeyCount
+} HardwareKeyType;
+
 typedef struct IO
 {
 	float time;
@@ -209,6 +228,8 @@ typedef struct IO
 	SDL_Surface *textLog;
 	SDL_Surface *boardCover;
 
+	SDL_Surface *btn[hardwareKeyCount];
+
 	SDL_Joystick *joystick;
 	SDL_Joystick *accel;
 	bool joyExists;
@@ -241,23 +262,6 @@ typedef struct IO
 	Mix_Music *song;
 
 } IO;
-
-typedef enum
-{
-	hardwareKeyStart = 0,
-	hardwareKeySelect,
-	hardwareKeyUp,
-	hardwareKeyDown,
-	hardwareKeyLeft,
-	hardwareKeyRight,
-	hardwareKeyA,
-	hardwareKeyB,
-	hardwareKeyX,
-	hardwareKeyY,
-	hardwareKeyL,
-	hardwareKeyR,
-	hardwareKeyCount
-} HardwareKeyType;
 
 typedef struct
 {

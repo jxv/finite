@@ -378,5 +378,7 @@ int adjustTileCount(Adjust *);
 bool wordValid(Word *, Dict *);
 bool boardEmpty(Board *b);
 
+int tileScore(Tile *t);
+
 #endif
 

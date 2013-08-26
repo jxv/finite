@@ -136,6 +136,9 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, Gri
 		i = tm->adjust.data.tile[tm->place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
+		if (t->type == tileNone) {
+			break;
+		}
 		s = t->type == tileWild ? io->wild[tileLookGhost] : io->tile[t->type][t->letter][tileLookGhost];
 		surfaceDraw(io->screen, s, idx.x * TILE_WIDTH + bw->pos.x, idx.y * TILE_HEIGHT + bw->pos.y);
 		break;
@@ -189,17 +192,19 @@ bool interval(float lapsed, float interval)
 	return ((int)floorf(lapsed / interval)) % 2 == 0;
 }
 
-void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
+void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 {
 	int i, j;
 
 	NOT(io);
 	NOT(g);
 	NOT(tm);
+	NOT(gc);
 	
 	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm, &g->gameGui.lastMove);
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
 	drawScoreBoard(&g->scoreBoard, io);
+
 	
 	if (gm->turn == tm->playerIdx && interval(io->time, 0.2f)) {
 		guiDrawGhostTile(io, g->gameGui.focus, tm, &gm->player[tm->playerIdx], &g->gameGui.boardWidget);
@@ -209,12 +214,56 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm)
 		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
 		surfaceDraw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
 	} else {
+		Coor *idx;
+		char *str = "\0";
+		Tile *t;
+
+		idx = &g->gameGui.boardWidget.index;
+
 		strDraw(io->screen, &io->normalFont, "PLACE", 132 + 12,  8);
+		if (g->gameGui.focus == gameGUIFocusBoard) {
+			SqType sq;
+			sq = gm->board.sq[idx->y][idx->x];
+
+			surfaceDraw(io->screen, io->sq[sq], 190, 9);
+
+			str = "\0";
+			switch (sq) {
+			case sqNormal: str = "NO BONUS"; break;
+			case sqDblLet: str = "x2 LETTER"; break;
+			case sqTrpLet: str = "x3 LETTER"; break;
+			case sqDblWrd: str = "x2 WORD"; break;
+			case sqTrpWrd: str = "x3 WORD"; break;
+			case sqFree:   str = "FREE SQ."; break;
+			case sqMystery: str = "MYSTERY"; break;
+			default: break;
+			}
+			strDraw(io->screen, &io->normalFont, str, 204, 8);
+
+		}
+
+		i = tm->adjust.data.tile[tm->place.idx].idx;
+		t = &gm->player[tm->playerIdx].tile[i];
+		if (t->type != tileNone) {
+			char str0[32];
+			SDL_Surface *s;
+			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
+			surfaceDraw(io->screen, s, 269, 9);
+			sprintf(str0,": %d", tileScore(t));
+			strDraw(io->screen, &io->normalFont, str0, 281, 8);
+		}
 	}
 
 	for (i = 0, j = g->gameGui.textLog.head; i < g->gameGui.textLog.size; i++, j++, j %= g->gameGui.textLog.size) {
 		strDraw(io->screen, &io->blackFont, g->gameGui.textLog.line[j], 16, 84 + 12 * i);
 	}
+
+
+
+	surfaceDraw(io->screen, io->btn[gc->key[gameKeyPrevTile]], 157, 218);
+	surfaceDraw(io->screen, io->btn[gc->key[gameKeyNextTile]], 274, 218);
+
+
 }
 
 int scrollOffset(int dis, int pps, float time)
@@ -518,14 +567,14 @@ void draw_guiFocusGameGUI(Env *e)
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
 
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
 }
 
 void draw_guiFocusGameMenu(Env *e)
 {
 	NOT(e);
 
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove); 
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0); 
 	drawMenuView(e->io.screen, &e->io.gameMenuMV);
 	strDraw(e->io.screen, &e->io.normalFont, "- Pause -", SCREEN_WIDTH / 2 - 24, 18);
@@ -558,7 +607,7 @@ void draw_guiFocusGameHotseatPause(Env *e)
 
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove);
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
 	drawFader(&e->io, 196);
 
 	sprintf(text, "PLAYER %d", e->game.turn+1);
@@ -572,7 +621,8 @@ void draw_guiFocusGameOver(Env *e)
 
 	drawScrollingBackground(e);
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove);
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
+	drawFader(&e->io, 196);
 	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove, &e->gui.gameGui.lastMove);
 	/*surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);*/
 	drawFader(&e->io, 196);
