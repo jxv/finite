@@ -11,7 +11,7 @@ SRC+=$(wildcard core/*.c)
 SRC+=$(wildcard ui/*.c)
 SRC+=$(wildcard util/*.c)
 
-CFLAGS=-ansi
+CFLAGS:=-ansi
 #CFLAGS+=-Werror
 CFLAGS+=-Wall
 CFLAGS+=-pedantic
@@ -19,10 +19,10 @@ CFLAGS+=-O3
 CFLAGS+=-DDEBUG
 CFLAGS+=$(shell sdl-config --cflags)
 
-LIB=-lc
-LIB=-lm
-LIB=-ldosk
-LIB=-lpthread
+LIB:=-lc
+LIB+=-lm
+LIB+=-ldosk
+LIB+=-lpthread
 LIB+=$(shell sdl-config --libs)
 LIB+=-lSDL_image
 LIB+=-lSDL_mixer

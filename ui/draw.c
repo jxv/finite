@@ -211,8 +211,21 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 	}
 	guiDrawLockon(io, &g->gameGui);
 	if (tm->type == transMoveDiscard || tm->type == transMoveDiscardPlay) {
+		Tile *t;
+
 		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
 		surfaceDraw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
+		
+		i = tm->adjust.data.tile[tm->place.idx].idx;
+		t = &gm->player[tm->playerIdx].tile[i];
+		if (t->type != tileNone) {
+			char str0[32];
+			SDL_Surface *s;
+			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
+			surfaceDraw(io->screen, s, 269, 9);
+			sprintf(str0,": %d", tileScore(t));
+			strDraw(io->screen, &io->normalFont, str0, 281, 8);
+		}
 	} else {
 		Coor *idx;
 		char *str = "\0";
