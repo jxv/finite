@@ -403,15 +403,20 @@ void freeMenuViews(IO *io)
 
 bool initIO(Env *e)
 {
-	
+	int count;
+	float COUNT;
 	int i, j;
 	char str[32];
 	SDL_Surface *tile[tileLookCount];
 
 	NOT(e);
 	
+	count = 0;
+	COUNT = 328;
+	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
+	count++; e->io.loading += 1.f / COUNT;
 
 	if (e->io.joystick) {
 		e->io.joyExists = true;
@@ -421,11 +426,13 @@ bool initIO(Env *e)
 	} else {
 		e->io.joyExists = false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 
 
 	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.accel = SDL_JoystickOpen(1);
+	count++; e->io.loading += 1.f / COUNT;
 
 	if (e->io.accel) {
 		e->io.accelExists = true;
@@ -435,79 +442,104 @@ bool initIO(Env *e)
 	} else {
 		e->io.accelExists = false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!dictInit(&e->game.dict, RES_PATH "dict.txt")) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.scoreBoard = surfaceAlphaLoad(RES_PATH "scoreboard.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.textLog = surfaceAlphaLoad(RES_PATH "text_log.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.gmBack = surfaceAlphaLoad(RES_PATH "game_bg.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.back = surfaceAlphaLoad(RES_PATH "back.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.wildUp = surfaceAlphaLoad(RES_PATH "wild_up.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.wildDown = surfaceAlphaLoad(RES_PATH "wild_down.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.lockon = surfaceAlphaLoad(RES_PATH "lockon.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.recall = surfaceAlphaLoad(RES_PATH "recall.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.recallDisable = surfaceAlphaLoad(RES_PATH "recall_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.mode = surfaceAlphaLoad(RES_PATH "mode.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.modeDisable = surfaceAlphaLoad(RES_PATH "mode_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.place = surfaceAlphaLoad(RES_PATH "place.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.placeDisable = surfaceAlphaLoad(RES_PATH "place_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.discard = surfaceAlphaLoad(RES_PATH "discard.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.discardDisable = surfaceAlphaLoad(RES_PATH "discard_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.skip = surfaceAlphaLoad(RES_PATH "skip.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.skipDisable = surfaceAlphaLoad(RES_PATH "skip_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.play = surfaceAlphaLoad(RES_PATH "play.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.playDisable = surfaceAlphaLoad(RES_PATH "play_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.shuffle = surfaceAlphaLoad(RES_PATH "shuffle.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.shuffleDisable = surfaceAlphaLoad(RES_PATH "shuffle_disable.png")) == NULL) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 
 	if (!(e->io.boardCover = surfaceAlphaLoad(RES_PATH "board_cover.png"))) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 
 	for (i = 0; i < hardwareKeyCount; i++) {
 		char *str = "\0";
@@ -526,40 +558,55 @@ bool initIO(Env *e)
 		if ((e->io.btn[i] = surfaceAlphaLoad(str)) == NULL) {
 			return false;
 		}
+		count++; e->io.loading += 1.f / COUNT;
 	}
 
 	if (!fontmapInit(&e->io.whiteFont, 6, 12, RES_PATH "white_font.png")) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!fontmapInit(&e->io.blackFont, 6, 12, RES_PATH "black_font.png")) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!fontmapInit(&e->io.yellowFont, 6, 12, RES_PATH "yellow_font.png")) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!fontmapInit(&e->io.darkRedFont, 6, 12, RES_PATH "darkred_font.png")) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!fontmapInit(&e->io.darkRedFont, 6, 12, RES_PATH "darkred_font.png")) {
 		return false;
 	}
-	
+	count++; e->io.loading += 1.f / COUNT;
 	if (!fontmapInit(&e->io.normalFont, 8, 14, RES_PATH "normal_font.png")) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
+
 	e->io.normalFont.spacing = -2;
 	if (!fontmapInit(&e->io.highlightFont, 8, 14, RES_PATH "highlight_font.png")) {
 		return false;
 	}
 	e->io.highlightFont.spacing = -2;
+	count++; e->io.loading += 1.f / COUNT;
 
 	e->io.sq[sqNormal] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqDblLet] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqDblWrd] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqTrpLet] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqTrpWrd] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqFree] = surfaceAlphaLoad(RES_PATH "sq_free.png");
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqMystery] = surfaceAlphaLoad(RES_PATH "sq_mystery.png");
+	count++; e->io.loading += 1.f / COUNT;
 
 	for (i = 0; i < sqCount; i++) {
 		if (e->io.sq[i] == NULL) { 
@@ -568,10 +615,15 @@ bool initIO(Env *e)
 	}
 
 	tile[tileLookDisable] = surfaceAlphaLoad(RES_PATH "tile_disable.png");
+	count++; e->io.loading += 1.f / COUNT;
 	tile[tileLookNormal] = surfaceAlphaLoad(RES_PATH "tile_normal.png");
+	count++; e->io.loading += 1.f / COUNT;
 	tile[tileLookHold] = surfaceAlphaLoad(RES_PATH "tile_hold.png");
+	count++; e->io.loading += 1.f / COUNT;
 	tile[tileLookGhost] = surfaceAlphaLoad(RES_PATH "tile_ghost.png");
+	count++; e->io.loading += 1.f / COUNT;
 	tile[tileLookLast] = surfaceAlphaLoad(RES_PATH "tile_last.png");
+	count++; e->io.loading += 1.f / COUNT;
 
 	for (i = 0; i < tileLookCount; i++) {
 		e->io.wild[i] = tile[i];
@@ -594,6 +646,8 @@ bool initIO(Env *e)
 			strDraw(e->io.tile[tileWild][i][j], &e->io.blackFont, str, 3, 0);
 			sprintf(str,"%c", i + 'A');
 			strDraw(e->io.tile[tileLetter][i][j], &e->io.blackFont, str, 3, 0);
+			count++; e->io.loading += 1.f / COUNT;
+			count++; e->io.loading += 1.f / COUNT;
 		}
 	}
 
@@ -601,35 +655,47 @@ bool initIO(Env *e)
 	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 0));
 
 	e->io.pressStart = createText(&e->io.normalFont, "PRESS START");
+	count++; e->io.loading += 1.f / COUNT;
 
 	e->gui.scoreBoard.playerNum = e->game.playerNum = 0;
 	initGUI(&e->gui);
+	count++; e->io.loading += 1.f / COUNT;
 	if (!initMenuViews(&e->io, &e->gui)) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 
 	e->io.areYouSureQuit = createText(&e->io.normalFont, "Are you sure?");
 	{
 		char *text[gameMenuFocusCount] = {"Yes", "No"};
 		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, yesNoCount);
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!areHighTextsLoaded(e->io.yesNo, yesNoCount)) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 
 	if (!(e->io.incorrectSnd = Mix_LoadWAV(RES_PATH "incorrect_snd.wav"))) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!(e->io.correctSnd = Mix_LoadWAV(RES_PATH "correct_snd.wav"))) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 	if (!(e->io.scoreSnd = Mix_LoadWAV(RES_PATH "score_snd.wav"))) {
 		return false;
 	}
+	count++; e->io.loading += 1.f / COUNT;
 
 	controlsInit(&e->io.controls);
+	count++; e->io.loading += 1.f / COUNT;
 	e->io.controls.accelExists = e->io.accelExists;
 	e->io.controls.joyExists = e->io.joyExists;
+
+	e->io.loading = 1.f;
+	/*printf("[count:%d]\n", count);*/
 
 	return true;
 }
