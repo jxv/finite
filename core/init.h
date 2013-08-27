@@ -12,6 +12,7 @@ void initPlayerHuman(Player *, Bag *);
 void initPlayerAI(Player *, Bag *);
 void moveInit(Move *);
 bool dictInit(Dict *, const char *);
+bool dictInitCount7(Dict *, float *count, float increase, const char *);
 void dictQuit(Dict *);
 
 #endif

@@ -245,7 +245,6 @@ int cmpWordWrapper(const void *p0, const void *p1)
 	return cmpWord((Word*)p0, (Word*)p1);
 }
 
-
 bool dictInit(Dict *d, const char *name)
 {
 	long i;
@@ -297,6 +296,67 @@ bool dictInit(Dict *d, const char *name)
 	fclose(f);
 	/* sort */
 	qsort(d->words, d->num, sizeof(Word), cmpWordWrapper);
+	return true;
+}
+
+bool dictInitCount7(Dict *d, float *count, float increase, const char *name)
+{
+	long i;
+	FILE *f = NULL;
+	Word w;
+	char buf[BOARD_SIZE + 1];
+	
+	NOT(d);
+	NOT(name);
+	
+	f = fopen(name, "r");
+	if (f == NULL) {
+		return false;
+	}
+	*count += increase;
+	/* count */
+	d->num = 0;
+	while (fgets(buf, BOARD_SIZE + 1, f)) {
+		wordCons(&w, buf);
+		if (w.len > 1) {
+			d->num++;
+		}
+	}
+	*count += increase;
+	/* error check */
+	if (ferror(f)) {
+		fclose(f);
+		return false;
+	}
+	rewind(f);
+	*count += increase;
+	assert(d->num > 0);
+	/* alloc */
+	d->words = memAlloc(sizeof(Word) * d->num);
+	*count += increase;
+
+	NOT(d->words);
+
+	i = 0;
+	for (i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
+		wordCons(&w, buf);
+		if (w.len > 1) {
+			d->words[i] = w;
+		} else {
+			i--;
+		}
+	}
+	*count += increase;
+	/* error check */
+	if (ferror(f)) {
+		fclose(f);
+		return false;
+	}
+	fclose(f);
+	/* sort */
+	*count += increase;
+	qsort(d->words, d->num, sizeof(Word), cmpWordWrapper);
+	*count += increase;
 	return true;
 }
 

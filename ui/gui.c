@@ -171,7 +171,7 @@ void initSettings(Settings *s)
 		
 	}
 
-	/* v pre-mute v */
+	/* v pre-mute v 
 	for (i = 0; i < audioChanCount; i++) {
 		Mix_Volume(i, s->vol[volSfx] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 	}
@@ -412,7 +412,7 @@ bool initIO(Env *e)
 	NOT(e);
 	
 	count = 0;
-	COUNT = 328;
+	COUNT = 328 + 7 * 50.f;
 	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
@@ -442,10 +442,7 @@ bool initIO(Env *e)
 	} else {
 		e->io.accelExists = false;
 	}
-	count++; e->io.loading += 1.f / COUNT;
-	if (!dictInit(&e->game.dict, RES_PATH "dict.txt")) {
-		return false;
-	}
+
 	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
 		return false;
@@ -613,6 +610,7 @@ bool initIO(Env *e)
 			return false;
 		}
 	}
+	
 
 	tile[tileLookDisable] = surfaceAlphaLoad(RES_PATH "tile_disable.png");
 	count++; e->io.loading += 1.f / COUNT;
@@ -650,6 +648,12 @@ bool initIO(Env *e)
 			count++; e->io.loading += 1.f / COUNT;
 		}
 	}
+	
+	count++; e->io.loading += 1.f / COUNT;
+	if (!dictInitCount7(&e->game.dict, &e->io.loading, 50.f / COUNT, RES_PATH "dict.txt")) {
+		return false;
+	}
+
 
 	e->io.fader = surfaceCpy(e->io.screen);
 	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 0));
@@ -767,7 +771,7 @@ void loadingScreen(Env *e)
 {
 	IO *io;
 	pthread_t thread;
-	float pause = 1.f;
+	float pause = 0.2f;
 
 	io = &e->io;
 
