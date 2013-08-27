@@ -1,5 +1,6 @@
 #include <math.h>
 #include <limits.h>
+#include <pthread.h>
 
 #include "gui.h"
 #include "update.h"
@@ -8,6 +9,8 @@
 #include "init.h"
 #include "widget.h"
 #include "print.h"
+
+bool initMenuViews(IO *io, GUI *g);
 
 bool fontmapInit(Font *f, int w, int h, const char *filename)
 {
@@ -398,95 +401,15 @@ void freeMenuViews(IO *io)
 	freeMenuView(&io->yesNoMV);
 }
 
-bool initIO(IO *io)
+bool initIO(Env *e)
 {
-	NOT(io);
-
-	return false;
-}
-
-
-bool initMenuViews(IO *io, GUI *g)
-{
-	Font *n, *h;
-
-	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
-	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Netplay (N/A)"};
-	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
-	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
-	char *yesNoText[yesNoCount] = {"Yes", "No"};
-	char *controlsText[gameKeyCount] = {"Play:", "Recall:", "Shuffle:", "Mode:", "Select:", "Cancel:", "Prev Tile:","Next Tile:", "Up:", "Down:", "Left:", "Right:"};
-
-	NOT(io);
-	NOT(g);
-
-	n = &io->normalFont;
-	h = &io->highlightFont;
-
-	if (!initMenuView(&io->menuMV, &g->menu, menuText, n, h)) {
-		return false;
-	}
-	if (!initMenuView(&io->playMenuMV, &g->playMenu, playMenuText, n, h)) {
-		return false;
-	}
-	if (!initMenuView(&io->gameMenuMV, &g->gameMenu, gameMenuText, n, h)) {
-		return false;
-	}
-	if (!initMenuView(&io->settingsMV, &g->settings.menu, settingsText, n, h)) {
-		return false;
-	}
-	if (!initMenuView(&io->yesNoMV, &g->gameAreYouSureQuit, yesNoText, n, h)) {
-		return false;
-	}
-	if (!initMenuView(&io->controlsMV, &g->controlsMenu.menu, controlsText, n, h)) {
-		return false;
-	}
-
-	io->controlsMV.spacing.y = n->height + 2;
-	recenterMenuView(&io->controlsMV, n);
-	io->controlsMV.pos.x -= 36;
-	io->controlsMV.pos.y += n->height;
-	return true;
-}
-
-bool init(Env *e)
-{
+	
 	int i, j;
 	char str[32];
 	SDL_Surface *tile[tileLookCount];
 
-	e->io.time = 0;
-	e->quit = false;
-
 	NOT(e);
-
-	e->game.dict.num = 0;
-	e->game.dict.words = NULL;
-	e->io.joystick = NULL;
-	e->io.accel = NULL;
-	e->io.joyExists = false;
-	e->io.accelExists = false;
-	e->io.song = NULL;
-
-	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
-		return false;
-	}
-	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, audioChanCount, 4096 ) == -1) {
-		return false;
-	}
-
-	e->io.song = Mix_LoadMUS(RES_PATH "George Street Shuffle (filtered).ogg");
-	if (!e->io.song) {
-		return false;
-	}
-	if (Mix_PlayMusic(e->io.song, -1) == -1) {
-		return false;
-	}
-
-	SDL_ShowCursor(SDL_DISABLE);
-	SDL_WM_SetCaption("finite", NULL);
-
-
+	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
 
@@ -512,20 +435,7 @@ bool init(Env *e)
 	} else {
 		e->io.accelExists = false;
 	}
-
-	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE)) == NULL) {
-		return false;
-	}
 	if (!dictInit(&e->game.dict, RES_PATH "dict.txt")) {
-		return false;
-	}
-	if ((e->io.titleScreen = surfaceAlphaLoad(RES_PATH "title_screen.png")) == NULL) {
-		return false;
-	}
-	if (!(e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png"))) {
-		return false;
-	}
-	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
 		return false;
 	}
 	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
@@ -717,11 +627,160 @@ bool init(Env *e)
 		return false;
 	}
 
-	controlsInit(&e->controls);
-	e->controls.accelExists = e->io.accelExists;
-	e->controls.joyExists = e->io.joyExists;
+	controlsInit(&e->io.controls);
+	e->io.controls.accelExists = e->io.accelExists;
+	e->io.controls.joyExists = e->io.joyExists;
 
 	return true;
+}
+
+void* cbInitIO(void *data)
+{
+	Env *e;
+
+	NOT(data);
+
+	e = data;
+
+	e->io.loadAttempted = false;
+	e->io.loaded = initIO(e);
+	e->io.loadAttempted = true;
+
+	return NULL;
+}
+
+bool initMenuViews(IO *io, GUI *g)
+{
+	Font *n, *h;
+
+	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
+	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Netplay (N/A)"};
+	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
+	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
+	char *yesNoText[yesNoCount] = {"Yes", "No"};
+	char *controlsText[gameKeyCount] = {"Play:", "Recall:", "Shuffle:", "Mode:", "Select:", "Cancel:", "Prev Tile:","Next Tile:", "Up:", "Down:", "Left:", "Right:"};
+
+	NOT(io);
+	NOT(g);
+
+	n = &io->normalFont;
+	h = &io->highlightFont;
+
+	if (!initMenuView(&io->menuMV, &g->menu, menuText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->playMenuMV, &g->playMenu, playMenuText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->gameMenuMV, &g->gameMenu, gameMenuText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->settingsMV, &g->settings.menu, settingsText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->yesNoMV, &g->gameAreYouSureQuit, yesNoText, n, h)) {
+		return false;
+	}
+	if (!initMenuView(&io->controlsMV, &g->controlsMenu.menu, controlsText, n, h)) {
+		return false;
+	}
+
+	io->controlsMV.spacing.y = n->height + 2;
+	recenterMenuView(&io->controlsMV, n);
+	io->controlsMV.pos.x -= 36;
+	io->controlsMV.pos.y += n->height;
+
+	io->loading = 1.f;
+
+	return true;
+}
+
+void drawScrollingBackground(IO *io);
+
+void loadingScreen(Env *e)
+{
+	IO *io;
+	pthread_t thread;
+	float pause = 1.f;
+
+	io = &e->io;
+
+	io->loadAttempted = false;
+
+	if (pthread_create(&thread, NULL, cbInitIO, e) != 0) {
+		io->loaded = false;
+		return;	
+	}
+	
+	while (!io->loadAttempted || (io->loadAttempted && pause > 0)) {
+
+		int st = SDL_GetTicks();
+
+		if (io->loading >= 1.0) {
+			pause -= SPF;
+		}
+
+		SDL_FillRect(io->screen, NULL, 0);
+		drawScrollingBackground(io);
+		surfaceDraw(io->screen, io->titleScreen, 0, 0);
+		drawProgressBar(e->io.screen, io->loading, 60, 180, 200, 10, 1);
+		SDL_Flip(io->screen);
+
+		delay(st, SDL_GetTicks(), FPS);
+
+		io->time += SPF;
+	}
+}
+
+bool init(Env *e)
+{
+	NOT(e);
+
+	e->io.time = 0;
+	e->quit = false;
+	e->io.loading = 0;
+
+	e->game.dict.num = 0;
+	e->game.dict.words = NULL;
+	e->io.joystick = NULL;
+	e->io.accel = NULL;
+	e->io.joyExists = false;
+	e->io.accelExists = false;
+	e->io.song = NULL;
+
+	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
+		return false;
+	}
+	SDL_ShowCursor(SDL_DISABLE);
+	SDL_WM_SetCaption("finite", NULL);
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, audioChanCount, 4096 ) == -1) {
+		return false;
+	}
+	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE)) == NULL) {
+		return false;
+	}
+	if ((e->io.titleScreen = surfaceAlphaLoad(RES_PATH "title_screen.png")) == NULL) {
+		return false;
+	}
+	if (!(e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png"))) {
+		return false;
+	}
+	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
+		return false;
+	}
+
+
+	e->io.song = Mix_LoadMUS(RES_PATH "George Street Shuffle (filtered).ogg");
+	if (!e->io.song) {
+		return false;
+	}
+	if (Mix_PlayMusic(e->io.song, -1) == -1) {
+		return false;
+	}
+
+	loadingScreen(e);
+
+	return e->io.loaded; 
 }
 
 void quit(Env *e)
@@ -889,7 +948,7 @@ void exec(Env *e)
 
 	do {
 		st = SDL_GetTicks();
-		q = handleEvent(&e->controls);
+		q = handleEvent(&e->io.controls);
 		update(e);
 		draw(e);
 		audi(e);

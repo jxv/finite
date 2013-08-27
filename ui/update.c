@@ -1439,20 +1439,19 @@ void update(Env *e)
 	e->gui.focus = e->gui.next;
 	if (!e->gui.scoreBoard.stable) {
 		updateScoreBoard(&e->gui.scoreBoard, &e->game, SPF);
-		return;
 	}
 	switch (e->gui.focus) {
-	case guiFocusTitle: updateTitle(&e->gui, &e->controls); break;
-	case guiFocusMenu: e->quit = updateMenu(&e->gui, &e->controls); break;
-	case guiFocusSettings: updateSettings(&e->gui, &e->controls); break;
-	case guiFocusControls: update_guiFocusControls(&e->gui, &e->controls); break;
-	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameGUI: updateGameGUI(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameMenu: update_guiFocusGameMenu(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameHotseatPause: updateGameHotseatPause(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameAIPause: updateGameAIPause(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameOver: updateGameOver(&e->gui, &e->controls, &e->game); break;
-	case guiFocusGameAreYouSureQuit: updateGameAreYouSureQuit(&e->gui, &e->controls); break;
+	case guiFocusTitle: updateTitle(&e->gui, &e->io.controls); break;
+	case guiFocusMenu: e->quit = updateMenu(&e->gui, &e->io.controls); break;
+	case guiFocusSettings: updateSettings(&e->gui, &e->io.controls); break;
+	case guiFocusControls: update_guiFocusControls(&e->gui, &e->io.controls); break;
+	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusGameGUI: updateGameGUI(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusGameMenu: update_guiFocusGameMenu(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusGameHotseatPause: updateGameHotseatPause(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusGameAIPause: updateGameAIPause(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusGameOver: updateGameOver(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusGameAreYouSureQuit: updateGameAreYouSureQuit(&e->gui, &e->io.controls); break;
 	default: break;
 	}
 	e->io.time += 1.0f / ((float)(FPS));

@@ -39,6 +39,25 @@ void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 	}
 }
 
+void drawProgressBar(SDL_Surface *s, float progress, int x, int y, int w, int h, int sp)
+{
+	SDL_Rect rect;
+
+	NOT(s);
+
+	rect.x = x - sp;
+	rect.y = y - sp;
+	rect.w = w + sp * 2;
+	rect.h = h + sp * 2;
+	SDL_FillRect(s, &rect, SDL_MapRGB(s->format, 0x00, 0x00, 0x00));
+
+	rect.x = x;
+	rect.y = y;
+	rect.w = w * progress;
+	rect.h = h;
+	SDL_FillRect(s, &rect, SDL_MapRGB(s->format, 0xff, 0xff, 0xff));
+}
+
 void printCmd(Cmd *c)
 {
 	NOT(c);
@@ -286,20 +305,20 @@ int scrollOffset(int dis, int pps, float time)
 	return (int)(dis * time / secsToLoop) % dis;
 }
 
-void drawScrollingBackground(Env *e)
+void drawScrollingBackground(IO *io)
 {
 	int off0, off1;
 	
-	NOT(e);
+	NOT(io);
 
-	off0 = scrollOffset(e->io.titleBackground->h, 20, e->io.time);
-	off1 = scrollOffset(e->io.titleHover->h, -30, e->io.time);
+	off0 = scrollOffset(io->titleBackground->h, 20, io->time);
+	off1 = scrollOffset(io->titleHover->h, -30, io->time);
 
-	surfaceDraw(e->io.screen, e->io.titleBackground, 0, off0);
-	surfaceDraw(e->io.screen, e->io.titleBackground, 0, off0 - e->io.titleBackground->h);
+	surfaceDraw(io->screen, io->titleBackground, 0, off0);
+	surfaceDraw(io->screen, io->titleBackground, 0, off0 - io->titleBackground->h);
 	
-	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1);
-	surfaceDraw(e->io.screen, e->io.titleHover, 0, off1 + e->io.titleHover->h);
+	surfaceDraw(io->screen, io->titleHover, 0, off1);
+	surfaceDraw(io->screen, io->titleHover, 0, off1 + io->titleHover->h);
 }
 
 void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
@@ -434,11 +453,12 @@ void draw_guiFocusTitle(Env *e)
 {
 	NOT(e);
 
-	drawScrollingBackground(e);
+	drawScrollingBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
 	if ((e->io.time - floorf(e->io.time)) > 0.5) {
 		surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
 	}
+	/*drawProgressBar(e->io.screen, 0.5f, 60, 180, 200, 10, 1);*/
 	drawDemoInfo(e);
 }
 
@@ -446,7 +466,7 @@ void draw_guiFocusMenu(Env *e)
 {
 	NOT(e);
 
-	drawScrollingBackground(e);
+	drawScrollingBackground(&e->io);
 	strDraw(e->io.screen, &e->io.normalFont, "- Main Menu -", SCREEN_WIDTH / 2 - 39, 18);
 	drawMenuView(e->io.screen, &e->io.menuMV);
 }
@@ -473,7 +493,7 @@ void draw_guiFocusSettings(Env *e)
 	NOT(e);
 	
 	if (e->gui.settings.previous == guiFocusMenu) {
-		drawScrollingBackground(e);
+		drawScrollingBackground(&e->io);
 	} else {
 		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	}
@@ -537,7 +557,7 @@ void draw_guiFocusControls(Env *e)
 		HardwareKeyType hkt;
 		char *text = uknown;
 
-		hkt =  e->controls.game.key[i];
+		hkt =  e->io.controls.game.key[i];
 
 		if (hkt >= 0 && hkt < hardwareKeyCount) {
 			text = hardwareKeyText[hkt];
@@ -580,14 +600,14 @@ void draw_guiFocusGameGUI(Env *e)
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
 
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->io.controls.game); 
 }
 
 void draw_guiFocusGameMenu(Env *e)
 {
 	NOT(e);
 
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
+	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->io.controls.game); 
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0); 
 	drawMenuView(e->io.screen, &e->io.gameMenuMV);
 	strDraw(e->io.screen, &e->io.normalFont, "- Pause -", SCREEN_WIDTH / 2 - 24, 18);
@@ -597,7 +617,7 @@ void draw_guiFocusPlayMenu(Env *e)
 {
 	NOT(e);
 
-	drawScrollingBackground(e);
+	drawScrollingBackground(&e->io);
 	drawMenuView(e->io.screen, &e->io.playMenuMV);
 	strDraw(e->io.screen, &e->io.normalFont, "- Choose Game -", SCREEN_WIDTH / 2 - 45, 18);
 }
@@ -620,7 +640,7 @@ void draw_guiFocusGameHotseatPause(Env *e)
 
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
+	/*guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game);  */
 	drawFader(&e->io, 196);
 
 	sprintf(text, "PLAYER %d", e->game.turn+1);
@@ -632,9 +652,9 @@ void draw_guiFocusGameOver(Env *e)
 {
 	NOT(e);
 
-	drawScrollingBackground(e);
+	drawScrollingBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game); 
+	/*guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game);  */
 	drawFader(&e->io, 196);
 	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove, &e->gui.gameGui.lastMove);
 	/*surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);*/

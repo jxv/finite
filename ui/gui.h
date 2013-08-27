@@ -190,9 +190,52 @@ typedef enum
 	hardwareKeyCount
 } HardwareKeyType;
 
+typedef struct
+{
+	KeyState key[hardwareKeyCount];
+	AxisState axisX;
+	AxisState axisY;
+	AxisState accelX;
+	AxisState accelY;
+} HardwareControls;
+
+typedef enum
+{
+	gameKeyPlay = 0,
+	gameKeyRecall,
+	gameKeyShuffle,
+	gameKeyMode,
+	gameKeySelect,
+	gameKeyCancel,
+	gameKeyPrevTile,
+	gameKeyNextTile,
+	gameKeyUp,
+	gameKeyDown,
+	gameKeyLeft,
+	gameKeyRight,
+	gameKeyCount
+} GameKeyType;
+
+typedef struct
+{
+	HardwareKeyType key[gameKeyCount];
+} GameControls;
+
+typedef struct
+{
+	HardwareControls hardware;
+	GameControls game;
+	bool accelExists;
+	bool joyExists;
+} Controls;
+
 typedef struct IO
 {
 	float time;
+	float loading;
+	bool loaded;
+	bool loadAttempted;
+
 	SDL_Surface *screen;
 	SDL_Surface *back;
 	SDL_Surface *gmBack;
@@ -261,47 +304,8 @@ typedef struct IO
 	Mix_Chunk *scoreSnd;
 	Mix_Music *song;
 
+	Controls controls;
 } IO;
-
-typedef struct
-{
-	KeyState key[hardwareKeyCount];
-	AxisState axisX;
-	AxisState axisY;
-	AxisState accelX;
-	AxisState accelY;
-} HardwareControls;
-
-typedef enum
-{
-	gameKeyPlay = 0,
-	gameKeyRecall,
-	gameKeyShuffle,
-	gameKeyMode,
-	gameKeySelect,
-	gameKeyCancel,
-	gameKeyPrevTile,
-	gameKeyNextTile,
-	gameKeyUp,
-	gameKeyDown,
-	gameKeyLeft,
-	gameKeyRight,
-	gameKeyCount
-} GameKeyType;
-
-
-typedef struct
-{
-	HardwareKeyType key[gameKeyCount];
-} GameControls;
-
-typedef struct
-{
-	HardwareControls hardware;
-	GameControls game;
-	bool accelExists;
-	bool joyExists;
-} Controls;
 
 typedef struct Cmd
 {
@@ -454,7 +458,6 @@ typedef struct Env
 {
 	IO io;
 	Game game;
-	Controls controls;
 	GUI gui;
 	bool quit;
 } Env;
