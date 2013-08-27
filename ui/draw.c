@@ -467,7 +467,7 @@ void draw_guiFocusMenu(Env *e)
 	NOT(e);
 
 	drawScrollingBackground(&e->io);
-	strDraw(e->io.screen, &e->io.normalFont, "- Main Menu -", SCREEN_WIDTH / 2 - 39, 18);
+	surfaceDraw(e->io.screen, e->io.finiteTitle, 0, 0);
 	drawMenuView(e->io.screen, &e->io.menuMV);
 }
 
@@ -497,7 +497,7 @@ void draw_guiFocusSettings(Env *e)
 	} else {
 		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	}
-	strDraw(e->io.screen, &e->io.normalFont, "- Settings -", SCREEN_WIDTH / 2 - 36, 18);
+	surfaceDraw(e->io.screen, e->io.settingsTitle, 0, 0);
 
 	drawMenuView(e->io.screen, &e->io.settingsMV);
 	for (i = 0; i < settingsFocusCount; i++) {
@@ -547,9 +547,13 @@ void draw_guiFocusControls(Env *e)
 
 	NOT(e);
 	
-	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	if (e->gui.settings.previous == guiFocusMenu) {
+		drawScrollingBackground(&e->io);
+	} else {
+		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+	}
 
-	strDraw(e->io.screen, &e->io.normalFont, "- Controls -", SCREEN_WIDTH / 2 - 36, 18);
+	surfaceDraw(e->io.screen, e->io.controlsTitle, 0, 0);
 
 	drawMenuViewRight(e->io.screen, &e->io.controlsMV);
 	
@@ -580,8 +584,8 @@ void draw_guiFocusControls(Env *e)
 		} else {
 			if (i == e->gui.controlsMenu.menu.focus) {
 				int ii = interval(e->io.time, 0.2f);
-				strDraw(e->io.screen, f, "<", -ii + 157, 39 + i * e->io.controlsMV.spacing.y);
-				strDraw(e->io.screen, f, ">", ii + 168 + strlen(text) * (f->width + f->spacing), 39 + i * e->io.controlsMV.spacing.y);
+				strDraw(e->io.screen, f, "<", -ii + 157, e->io.controlsMV.pos.y + i * e->io.controlsMV.spacing.y);
+				strDraw(e->io.screen, f, ">", ii + 168 + strlen(text) * (f->width + f->spacing), e->io.controlsMV.pos.y + i * e->io.controlsMV.spacing.y);
 			}
 		}
 		
@@ -589,7 +593,7 @@ void draw_guiFocusControls(Env *e)
 			f = &e->io.highlightFont;
 		}
 		
-		strDraw(e->io.screen, f, text, 166, 39 + i * e->io.controlsMV.spacing.y);
+		strDraw(e->io.screen, f, text, 166, e->io.controlsMV.pos.y + i * e->io.controlsMV.spacing.y);
 	}
 	
 }
@@ -610,7 +614,9 @@ void draw_guiFocusGameMenu(Env *e)
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->io.controls.game); 
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0); 
 	drawMenuView(e->io.screen, &e->io.gameMenuMV);
-	strDraw(e->io.screen, &e->io.normalFont, "- Pause -", SCREEN_WIDTH / 2 - 24, 18);
+
+	surfaceDraw(e->io.screen, e->io.pauseTitle, 0, 0);
+	/*strDraw(e->io.screen, &e->io.normalFont, "- Pause -", SCREEN_WIDTH / 2 - 24, 18);*/
 }
 
 void draw_guiFocusPlayMenu(Env *e)
@@ -619,7 +625,7 @@ void draw_guiFocusPlayMenu(Env *e)
 
 	drawScrollingBackground(&e->io);
 	drawMenuView(e->io.screen, &e->io.playMenuMV);
-	strDraw(e->io.screen, &e->io.normalFont, "- Choose Game -", SCREEN_WIDTH / 2 - 45, 18);
+	surfaceDraw(e->io.screen, e->io.chooseGameTitle, 0, 0);
 }
 
 void draw_guiGameAIPause(Env *e)
@@ -664,15 +670,17 @@ void draw_guiFocusGameOver(Env *e)
 
 void draw_guiFocusGameAreYouSureQuit(Env *e)
 {
+/*
 	const int orgX = (SCREEN_WIDTH - e->io.areYouSureQuit->w)/2;
 	const int orgY = 80;
+*/
 
 	NOT(e);
 
 	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	
-	surfaceDraw(e->io.screen, e->io.areYouSureQuit, orgX, orgY - e->io.whiteFont.height);
 	drawMenuView(e->io.screen, &e->io.yesNoMV);
+	surfaceDraw(e->io.screen, e->io.areYouSureTitle, 0, 0);
 }
 
 void draw(Env *e)

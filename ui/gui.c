@@ -167,16 +167,9 @@ void initSettings(Settings *s)
 	NOT(s);
 
 	for (i = 0; i < volCount; i++) {
-		s->vol[i] = 0; /*MAX_GUI_VOLUME;*/
+		s->vol[i] = MAX_GUI_VOLUME;
 		
 	}
-
-	/* v pre-mute v 
-	for (i = 0; i < audioChanCount; i++) {
-		Mix_Volume(i, s->vol[volSfx] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
-	}
-	Mix_VolumeMusic(s->vol[volMus] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
-	/* ^ pre-mute ^ */
 
 	s->previous = guiFocusMenu; 
 	initMenuWidget(&s->menu, settingsFocusMusic, settingsFocusCount);
@@ -270,6 +263,8 @@ void initGUI(GUI *g)
 	initGameGUI(&g->gameGui);
 	initMenuWidget(&g->gameAreYouSureQuit, yes, yesNoCount);
 	initMenuWidget(&g->controlsMenu.menu, gameKeyPlay,gameKeyCount);
+
+
 	g->focus = guiFocusTitle;
 	g->next = guiFocusTitle;
 
@@ -537,6 +532,41 @@ bool initIO(Env *e)
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
+	
+	if (!(e->io.pauseTitle = surfaceAlphaLoad(RES_PATH "pause.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.settingsTitle = surfaceAlphaLoad(RES_PATH "settings.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.finiteTitle = surfaceAlphaLoad(RES_PATH "finite_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.controlsTitle = surfaceAlphaLoad(RES_PATH "controls_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.areYouSureTitle = surfaceAlphaLoad(RES_PATH "are_you_sure_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.chooseGameTitle = surfaceAlphaLoad(RES_PATH "choose_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.rulesTitle = surfaceAlphaLoad(RES_PATH "rules_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.optionsTitle = surfaceAlphaLoad(RES_PATH "options_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+
+
 
 	for (i = 0; i < hardwareKeyCount; i++) {
 		char *str = "\0";
@@ -755,10 +785,10 @@ bool initMenuViews(IO *io, GUI *g)
 		return false;
 	}
 
-	io->controlsMV.spacing.y = n->height + 2;
+	io->controlsMV.spacing.y = n->height + 1;
 	recenterMenuView(&io->controlsMV, n);
 	io->controlsMV.pos.x -= 36;
-	io->controlsMV.pos.y += n->height;
+	io->controlsMV.pos.y += n->height  + n->height / 2;
 
 	io->loading = 1.f;
 
@@ -782,7 +812,7 @@ void loadingScreen(Env *e)
 		return;	
 	}
 	
-	while (!io->loadAttempted || (io->loadAttempted && pause > 0)) {
+	while (!io->loadAttempted || (io->loadAttempted && pause > 0 && io->loaded)) {
 
 		int st = SDL_GetTicks();
 
@@ -875,6 +905,14 @@ void quit(Env *e)
 	surfaceFree(e->io.screen);
 	surfaceFree(e->io.titleScreen);
 	surfaceFree(e->io.titleHover);
+	surfaceFree(e->io.settingsTitle);
+	surfaceFree(e->io.pauseTitle);
+	surfaceFree(e->io.finiteTitle);
+	surfaceFree(e->io.controlsTitle);
+	surfaceFree(e->io.areYouSureTitle);
+	surfaceFree(e->io.chooseGameTitle);
+	surfaceFree(e->io.rulesTitle);
+	surfaceFree(e->io.optionsTitle);
 	surfaceFree(e->io.menuBg);
 	surfaceFree(e->io.gmBack);
 	surfaceFree(e->io.titleBackground);

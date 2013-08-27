@@ -266,7 +266,21 @@ typedef struct IO
 	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
 	SDL_Surface *pressStart;
-	
+
+	SDL_Surface *pauseTitle;
+	SDL_Surface *settingsTitle;
+	SDL_Surface *finiteTitle;
+	SDL_Surface *controlsTitle;
+	SDL_Surface *areYouSureTitle;
+	SDL_Surface *chooseGameTitle;
+	SDL_Surface *rulesTitle;
+	SDL_Surface *optionsTitle;
+
+/*
+	SDL_Surface *p1Wins;
+	SDL_Surface *p2Wins;
+*/
+
 	SDL_Surface *scoreBoard;
 	SDL_Surface *textLog;
 	SDL_Surface *boardCover;
