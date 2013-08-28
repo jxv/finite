@@ -670,8 +670,6 @@ void draw_guiFocusGameGUI(Env *e)
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->io.controls.game); 
 
 	
-	printf("%f\n", e->gui.gameGui.lastInput);
-
 	if (e->gui.gameGui.lastInput > 7.0f) {
 		if (e->gui.transMove.type == transMoveDiscard) {
 			int y;
@@ -827,12 +825,14 @@ void draw_guiFocusPlayMenu(Env *e)
 
 void draw_guiGameAIPause(Env *e)
 {
-	const char *text = "Player 2 thinking...";
+	const char *text = "PLAYER 2...";
 	NOT(e);
 		
 	draw_guiFocusGameGUI(e);
 	drawFader(&e->io, 196);
 	strDraw(e->io.screen, &e->io.normalFont, text, (SCREEN_WIDTH - strlen(text) * (e->io.normalFont.width + e->io.normalFont.spacing)) / 2, 80);
+
+	drawProgressBar(e->io.screen, e->game.player[e->game.turn].aiShare.loading, 60, 100, 200, 10, 1);
 }
 
 void draw_guiFocusGameHotseatPause(Env *e)

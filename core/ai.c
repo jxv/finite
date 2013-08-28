@@ -416,10 +416,12 @@ void printPlacement(Placement *p)
 	}
 }
 
-void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
+void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 {
 	int i, j;
-	int maxScore;
+	int hiScore;
+	int midScore;
+	int lowScore;
 	int dir[2];
 	int bd[2];
 	bool firstMove;
@@ -430,10 +432,12 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	Action action;
 	Board *b;
 	Player *p;
+	bool first = true;
 
 	NOT(m);
 	assert(pIdx >= 0 && pIdx < MAX_PLAYER);
 	NOT(g);
+	NOT(loading);
 
 	b = &g->board;
 	p = &g->player[pIdx];
@@ -444,7 +448,9 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 	dir[0] = dirDown;
 	dir[1] = dirRight;
 
-	maxScore = 0;
+	hiScore = 0;
+	lowScore = 0;
+	midScore = 0;
 	
 	combo.rackCount = rackCount(p);
 
@@ -486,17 +492,37 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r)
 					}
 					mkAction(&action, g, &move);
 					if (action.type == actionPlace) {
-						if (action.data.place.score > maxScore) {
-							maxScore = action.data.place.score;
+						int diff = abs(hiScore - lowScore) * 5 / 10;
+						if (first || action.data.place.score > hiScore) {
+							hiScore = action.data.place.score;
+						}
+						if (first || action.data.place.score < lowScore) {
+							lowScore = action.data.place.score;
+						}
+						if (first || abs(midScore - diff) > abs(action.data.place.score - diff)) {
+							midScore = action.data.place.score;
 							memCpy(&m->data.place, &move.data.place, sizeof(move.data.place));
 						}
+						first = false;
 					}
 				} while (stepCombo(&combo));
 			} while (nextCont(&cont));
+			*loading += 1.f / (float)(bd[j] * 2);
 		}
 	}
 
 	m->playerIdx = pIdx;
-	m->type = maxScore > 0 ? movePlace : moveSkip;
+
+	if (midScore > 0) {
+		m->type = movePlace;
+	} else {
+		if (rackCount(&g->player[pIdx]) > 0) {
+			m->type = moveDiscard;
+			m->data.discard.num = 1;
+			m->data.discard.rackIdx[0] = 0;
+		} else {
+			m->type = moveSkip;
+		}
+	}
 }
 

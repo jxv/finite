@@ -149,7 +149,8 @@ void bagInit(Bag *b)
 		b->tile[i].type = tileWild;
 	}
 
-	b->tail = 20; bagShake(b, 0);
+	/* short for testing */
+	/*b->tail = 20; bagShake(b, 0);*/
 }
 
 
@@ -184,6 +185,10 @@ void initPlayerAI(Player *p, Bag *b)
 
 	playerInit(p, b);
 	p->type = playerAI;
+	p->aiShare.shareStart = false;
+	p->aiShare.shareEnd = false;
+	p->aiShare.loading = 0;
+	p->aiShare.action.type = actionInvalid;
 }
 
 void moveInit(Move *m)

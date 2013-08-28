@@ -1,4 +1,6 @@
 #include <math.h>
+#include <pthread.h>
+
 #include "gui.h"
 #include "update.h"
 #include "init.h"
@@ -1423,22 +1425,58 @@ void updateGameHotseatPause(GUI *g, Controls *c, Game *gm)
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
-void updateGameAIPause(GUI *g, Controls *c, Game *gm)
+void *cbUpdateAi(void *data)
 {
 	Move m;
-	Action a;
+	AiShare *as; 
+	Game *gm;
 
+	NOT(data);
+
+	as = data;
+	gm = as->game;
+
+	aiFindMove(&m, gm->turn, gm, NULL, &as->loading);
+	mkAction(&as->action, gm, &m);
+
+	as->loading = 1.f;
+
+	as->shareEnd = true;
+
+	return NULL;
+}
+
+void updateGameAIPause(GUI *g, Controls *c, Game *gm)
+{
 	NOT(g);
 	NOT(c);
 	NOT(gm);
-	
-	aiFindMove(&m, gm->turn, gm, NULL);
-	mkAction(&a, gm, &m);
-	addActionToTextLog(&g->gameGui.textLog, &a);
-	actionToLastMove(&g->gameGui.lastMove, &a);
-	applyAction(gm, &a);
-	nextTurn(gm);
-	g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+
+	if (!gm->player[gm->turn].aiShare.shareStart) {
+		pthread_t thread;
+
+		gm->player[gm->turn].aiShare.shareStart = true;
+		gm->player[gm->turn].aiShare.shareEnd = false;
+		gm->player[gm->turn].aiShare.loading = 0.f;
+		gm->player[gm->turn].aiShare.game = gm;
+
+		if (pthread_create(&thread, NULL, cbUpdateAi, &gm->player[gm->turn].aiShare) != 0) {
+			exit(2);
+		}
+	}
+
+	if (gm->player[gm->turn].aiShare.shareEnd) {
+		gm->player[gm->turn].aiShare.shareStart = false;
+		gm->player[gm->turn].aiShare.shareEnd = false;
+		gm->player[gm->turn].aiShare.loading = 1.f;
+
+		addActionToTextLog(&g->gameGui.textLog, &gm->player[gm->turn].aiShare.action);
+		actionToLastMove(&g->gameGui.lastMove, &gm->player[gm->turn].aiShare.action);
+		applyAction(gm, &gm->player[gm->turn].aiShare.action);
+
+		nextTurn(gm);
+		g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+	}
 
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }

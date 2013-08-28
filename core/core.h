@@ -217,14 +217,6 @@ typedef struct Board
 	/* struct Loc loc[BOARD_Y][BOARD_X]; */
 } Board;
 
-typedef struct Player
-{
-	PlayerType type;
-	bool active;
-	int score;
-	struct Tile tile[RACK_SIZE];
-} Player;
-
 typedef struct Coor
 {
 	int x;
@@ -330,6 +322,26 @@ typedef struct Action
 	ActionErrType err;
 	} data;
 } Action;
+
+struct Game;
+
+typedef struct AiShare
+{
+	struct Game *game;
+	Action action;
+	float loading;
+	bool shareStart;
+	bool shareEnd;
+} AiShare;
+
+typedef struct Player
+{
+	PlayerType type;
+	bool active;
+	int score;
+	struct Tile tile[RACK_SIZE];
+	AiShare aiShare;
+} Player;
 
 typedef struct Dict
 {
