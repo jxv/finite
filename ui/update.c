@@ -800,6 +800,7 @@ bool updateMenu(GUI *g, Controls *c)
 		switch (m->focus) {
 		case menuFocusPlay: g->next = guiFocusPlayMenu; break;
 		case menuFocusSettings: g->next = guiFocusSettings; break;
+		case menuFocusRules: g->next = guiFocusRules; break;
 		case menuFocusExit: return true;
 		default: break;
 		}
@@ -808,6 +809,38 @@ bool updateMenu(GUI *g, Controls *c)
 	if (goBack(c)) {
 		g->next = guiFocusTitle;
 	}
+	return false;
+}
+
+bool update_guiFocusRules(GUI *g, Controls *c)
+{
+	const float delayTime = 0.33f;
+	const float move = 0.0005f / SPF;
+
+	if ((c->hardware.axisY.type == axisStateOutDeadZone && c->hardware.axisY.value > 0) ||
+	c->hardware.key[hardwareKeyUp].type == keyStatePressed ||
+   	(c->hardware.key[hardwareKeyUp].type == keyStateHeld && c->hardware.key[hardwareKeyUp].time >= delayTime)) {
+		g->rules -= move;
+	}
+	
+	if ((c->hardware.axisY.type == axisStateOutDeadZone && c->hardware.axisY.value < 0) ||
+	c->hardware.key[hardwareKeyDown].type == keyStatePressed ||
+   	(c->hardware.key[hardwareKeyDown].type == keyStateHeld && c->hardware.key[hardwareKeyDown].time >= delayTime)) {
+		g->rules += move;
+	}
+
+	if (g->rules < 0.0f) {
+		g->rules = 0.0f;
+	}
+
+	if (g->rules > 1.0f) {
+		g->rules = 1.0f;
+	}
+
+	if (goBack(c)) {
+		g->next = guiFocusMenu;
+	}
+
 	return false;
 }
 
@@ -1450,6 +1483,7 @@ void update(Env *e)
 	switch (e->gui.focus) {
 	case guiFocusTitle: updateTitle(&e->gui, &e->io.controls); break;
 	case guiFocusMenu: e->quit = updateMenu(&e->gui, &e->io.controls); break;
+	case guiFocusRules: e->quit = update_guiFocusRules(&e->gui, &e->io.controls); break;
 	case guiFocusSettings: updateSettings(&e->gui, &e->io.controls); break;
 	case guiFocusControls: update_guiFocusControls(&e->gui, &e->io.controls); break;
 	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->io.controls, &e->game); break;

@@ -11,7 +11,7 @@ void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 {
 	int i;
 	char c;
-	SDL_Rect offset, clip;
+	SDL_Rect offset, clip, prev;
 
 	NOT(s);
 	NOT(f);
@@ -33,10 +33,11 @@ void strDraw(SDL_Surface *s, Font *f, const char *str, int x, int y)
 		/* [32..126] are drawable ASCII chars */
 		if (c >= 32 && c <= 126) {
 			clip.x = f->width * (c - 32);
+			prev = offset;
 			SDL_BlitSurface(f->map, &clip, s, &offset);
+			offset = prev;
 		}
 		offset.x += f->width + f->spacing;
-
 	}
 }
 
@@ -494,6 +495,47 @@ void draw_guiFocusMenu(Env *e)
 	drawMenuView(e->io.screen, &e->io.menuMV);
 }
 
+void draw_guiFocusRules(Env *e)
+{
+	SDL_Rect rect;
+	float scroll;
+
+	NOT(e);
+
+	drawScrollingBackground(&e->io);
+
+	scroll = -e->gui.rules * 320;
+
+	rect.x = 49;
+	rect.y = 0;
+	rect.w = SCREEN_WIDTH - rect.x * 2;
+	rect.h = SCREEN_HEIGHT;
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x50, 0x50, 0xa0, 0xff));
+
+	rect.x = 50;
+	rect.y = 0;
+	rect.w = SCREEN_WIDTH - rect.x * 2;
+	rect.h = SCREEN_HEIGHT;
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x40, 0xff));
+	
+
+	rect.x += rect.w - 6;
+	rect.w = 3;
+	rect.h = 45;
+	rect.y = e->gui.rules * (SCREEN_HEIGHT - rect.h - 4) + 2 - 1;
+	rect.h = 47;
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 0xff));
+	
+	rect.x += 1;
+	rect.w = 3;
+	rect.h = 45;
+	rect.y = e->gui.rules * (SCREEN_HEIGHT - rect.h - 4) + 2;
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xff, 0xff, 0xff, 0xff));
+	
+	surfaceDraw(e->io.screen, e->io.rulesTitle, 0 , scroll);
+	strDraw(e->io.screen, &e->io.normalFont, "Test", 60, scroll + 60);
+}
+
 void draw_guiFocusGameGUI(Env *e);
 
 int placeValues(int x)
@@ -846,6 +888,7 @@ void draw(Env *e)
 	switch (e->gui.focus) {
 	case guiFocusTitle: draw_guiFocusTitle(e); break;
 	case guiFocusMenu: draw_guiFocusMenu(e); break;
+	case guiFocusRules: draw_guiFocusRules(e); break;
 	case guiFocusSettings: draw_guiFocusSettings(e); break;
 	case guiFocusControls: draw_guiFocusControls(e); break;
 	case guiFocusGameGUI: draw_guiFocusGameGUI(e); break;

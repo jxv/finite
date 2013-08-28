@@ -353,6 +353,7 @@ typedef enum
 	guiFocusInvalid = -1,
 	guiFocusTitle,
 	guiFocusMenu,
+	guiFocusRules,
 	guiFocusSettings,
 	guiFocusControls,
 	guiFocusPlayMenu,
@@ -467,6 +468,7 @@ typedef struct GUI
 	MenuWidget gameAreYouSureQuit;
 	TransMove transMove;
 	ScoreBoard scoreBoard;
+	float rules;
 } GUI;
 
 typedef struct Env
