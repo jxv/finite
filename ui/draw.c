@@ -313,8 +313,10 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 		strDraw(io->screen, &io->blackFont, g->gameGui.textLog.line[j], 16, 84 + 24 + 12 * i);
 	}
 
-	surfaceDraw(io->screen, io->btn[gc->key[gameKeyPrevTile]], 157, 218);
-	surfaceDraw(io->screen, io->btn[gc->key[gameKeyNextTile]], 274, 218);
+	if (tm->type == transMovePlace || tm->type == transMovePlacePlay || tm->type == transMovePlaceEnd) {
+		surfaceDraw(io->screen, io->btn[gc->key[gameKeyPrevTile]], 157, 218);
+		surfaceDraw(io->screen, io->btn[gc->key[gameKeyNextTile]], 274, 218);
+	}
 
 
 }
@@ -629,10 +631,68 @@ void draw_guiFocusGameGUI(Env *e)
 	printf("%f\n", e->gui.gameGui.lastInput);
 
 	if (e->gui.gameGui.lastInput > 7.0f) {
-
 		if (e->gui.transMove.type == transMoveDiscard) {
+			int y;
+			SDL_Rect rect;
+			Coor *pos;
+			
+			pos = &e->gui.gameGui.boardWidget.pos;
+
+			rect.w = (e->io.normalFont.width + e->io.normalFont.spacing) * 16 + 6;
+			rect.h = e->io.normalFont.height * 5 + 6;
+
+			rect.x = pos->x;
+			rect.x += (BOARD_X * TILE_WIDTH - rect.w) / 2;
+
+			rect.y = pos->y;
+			rect.y += BOARD_Y * TILE_HEIGHT;
+			rect.y -= rect.h;
+
+			rect.x -= 2;
+			rect.y -= 2;
+			rect.w += 4;
+			rect.h += 4;
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0x00, 255));
+
+			rect.x += 1;
+			rect.y += 1;
+			rect.w -= 2;
+			rect.h -= 2;
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x80, 0x00, 255));
+
+			rect.x += 1;
+			rect.y += 1;
+			rect.w -= 2;
+			rect.h -= 2;
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 255));
+			
+
+			y = e->io.normalFont.height + 1;
+			rect.x += 5;
+
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeySelect]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyPlay]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyRecall]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyMode]], rect.x, rect.y);
+
+			rect.y -= 4 * y;
+			rect.x += 18;
+
+			strDraw(e->io.screen, &e->io.normalFont, "Move with D-Pad", rect.x - 18, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Toggle tile", rect.x, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Play move", rect.x, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Recall tiles", rect.x, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Place mode", rect.x, rect.y);
 		} else {
-			/* current is transMovePlace_ */
+			/* current is transMovePlace[*] */
 			int y;
 			SDL_Rect rect;
 			Coor *idx, *pos;
