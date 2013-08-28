@@ -181,7 +181,7 @@ void initTextLog(TextLog *tl)
 
 	tl->head = 0;
 	tl->maxLen = 15;
-	tl->maxSize = 12;
+	tl->maxSize = 10;
 	tl->size = 0;
 	tl->head = 0;
 }

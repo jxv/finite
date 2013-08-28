@@ -378,6 +378,10 @@ int adjustTileCount(Adjust *);
 bool wordValid(Word *, Dict *);
 bool boardEmpty(Board *b);
 
+bool bagEmpty(Bag *b);
+int bagCount(Bag *b);
+int bagSize(Bag *b);
+
 int tileScore(Tile *t);
 
 #endif

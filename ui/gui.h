@@ -405,6 +405,7 @@ typedef struct
 
 typedef struct GameGUI
 {
+	float lastInput;
 	GameGUIFocusType focus;
 	GameGUIFocusType bottomLast;
 	GridWidget rackWidget;

@@ -997,6 +997,7 @@ void resetNewGameGui(GUI *g, Game *gm)
 	c.type = cmdInvalid;
 	updateTransMove(&g->transMove, &c, &gm->board, &gm->player[gm->turn]);
 	updateGameGUIWidgets(&g->gameGui, &g->transMove, &gm->board);
+	g->gameGui.lastInput = 0;
 }
 
 void updatePlayMenu(GUI *g, Controls *c, Game *gm)
@@ -1272,6 +1273,12 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		break;
 	}
 	default: break;
+	}
+
+	if (cmd.type == cmdInvalid) {
+		gg->lastInput += SPF;
+	} else {
+		gg->lastInput = 0;
 	}
 
 	/* printCmd(&c); */

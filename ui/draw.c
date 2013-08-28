@@ -1,3 +1,4 @@
+#include <string.h>
 #include <math.h>
 
 #include "gui.h"
@@ -220,6 +221,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 	NOT(tm);
 	NOT(gc);
 	
+	surfaceDraw(io->screen, io->gmBack, 0, 0);
 	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm, &g->gameGui.lastMove);
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
 	drawScoreBoard(&g->scoreBoard, io);
@@ -286,11 +288,30 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 		}
 	}
 
-	for (i = 0, j = g->gameGui.textLog.head; i < g->gameGui.textLog.size; i++, j++, j %= g->gameGui.textLog.size) {
-		strDraw(io->screen, &io->blackFont, g->gameGui.textLog.line[j], 16, 84 + 12 * i);
+/* hack for printing bag count */
+	{
+		int len;
+		char tilesLeft[32] = "\0";
+		if (!bagEmpty(&gm->bag)) {
+			sprintf(tilesLeft, "BAG: %d", bagCount(&gm->bag));
+		} else {
+			int idx;
+			assert(gm->turn == 0 || gm->turn == 1);
+			idx = gm->turn == 0 ? 1 : 0;
+			sprintf(tilesLeft, "PLAYER %d: %d", idx + 1, rackCount(&gm->player[idx]));
+		}
+		strDraw(io->screen, &io->normalFont, tilesLeft, 13, 82);
+		len = strlen(tilesLeft) * (io->normalFont.width + io->normalFont.spacing) + 13;
+		len += 6;
+		surfaceDraw(io->screen, io->wild[tileLookNormal], len, 83);
+		len += 12;
+		strDraw(io->screen, &io->normalFont, "'s", len, 82);
 	}
+/* hack above */
 
-
+	for (i = 0, j = g->gameGui.textLog.head; i < g->gameGui.textLog.size; i++, j++, j %= g->gameGui.textLog.size) {
+		strDraw(io->screen, &io->blackFont, g->gameGui.textLog.line[j], 16, 84 + 24 + 12 * i);
+	}
 
 	surfaceDraw(io->screen, io->btn[gc->key[gameKeyPrevTile]], 157, 218);
 	surfaceDraw(io->screen, io->btn[gc->key[gameKeyNextTile]], 274, 218);
@@ -380,7 +401,7 @@ void drawScoreBoard(ScoreBoard *sb, IO *io)
 	NOT(io);
 	
 	surfaceDraw(io->screen, io->scoreBoard, 8, 6);
-	surfaceDraw(io->screen, io->textLog, 8, 80);
+	surfaceDraw(io->screen, io->textLog, 8, 104);
 	for (i = 0; i < sb->playerNum; i++) {
 		f = i == sb->turn || sb->ctr[i].cur < sb->ctr[i].end 
 				? &io->highlightFont 
@@ -602,9 +623,83 @@ void draw_guiFocusGameGUI(Env *e)
 {
 	NOT(e);
 
-	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->io.controls.game); 
+
+	
+	printf("%f\n", e->gui.gameGui.lastInput);
+
+	if (e->gui.gameGui.lastInput > 7.0f) {
+
+		if (e->gui.transMove.type == transMoveDiscard) {
+		} else {
+			/* current is transMovePlace_ */
+			int y;
+			SDL_Rect rect;
+			Coor *idx, *pos;
+			
+			idx  = &e->gui.gameGui.boardWidget.index;
+			pos = &e->gui.gameGui.boardWidget.pos;
+
+			rect.w = (e->io.normalFont.width + e->io.normalFont.spacing) * 16 + 6;
+			rect.h = e->io.normalFont.height * 5 + 6;
+
+			rect.x = pos->x;
+			if (idx->x < BOARD_X / 2) {
+				rect.x += BOARD_X * TILE_WIDTH;
+				rect.x -= rect.w; 
+			}
+
+			rect.y = pos->y;
+			if (idx->y < BOARD_Y / 2) {
+				rect.y += BOARD_Y * TILE_HEIGHT;
+				rect.y -= rect.h;
+			} 
+
+			rect.x -= 2;
+			rect.y -= 2;
+			rect.w += 4;
+			rect.h += 4;
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0x00, 255));
+
+			rect.x += 1;
+			rect.y += 1;
+			rect.w -= 2;
+			rect.h -= 2;
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x80, 0x00, 255));
+
+			rect.x += 1;
+			rect.y += 1;
+			rect.w -= 2;
+			rect.h -= 2;
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 255));
+
+			y = e->io.normalFont.height + 1;
+			rect.x += 5;
+
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyPlay]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeySelect]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyRecall]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyCancel]], rect.x, rect.y);
+			rect.y += y;
+			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyMode]], rect.x, rect.y);
+
+			rect.y -= 4 * y;
+			rect.x += 18;
+
+			strDraw(e->io.screen, &e->io.normalFont, "Play move", rect.x, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Place tile", rect.x, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Recall tiles", rect.x, rect.y);
+			rect.y += y; 
+			strDraw(e->io.screen, &e->io.normalFont, "Cancel tile", rect.x, rect.y);
+			rect.y += y;
+			strDraw(e->io.screen, &e->io.normalFont, "Discard mode", rect.x, rect.y);
+		}
+	}	
 }
 
 void draw_guiFocusGameMenu(Env *e)

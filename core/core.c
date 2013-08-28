@@ -1375,3 +1375,8 @@ bool boardEmpty(Board *b)
 	return true;
 }
 
+int bagCount(Bag *b)
+{
+	NOT(b);
+	return b->tail > b->head ? b->tail - b->head : b->head - b-> tail;
+}
