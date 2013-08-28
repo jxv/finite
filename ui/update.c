@@ -1056,12 +1056,14 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 		switch (m->focus) {
 		case playMenuFocusHumanVsHuman: {
 			initGame1vs1Human(gm);
+			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
 			break;
 		}
 		case playMenuFocusHumanVsAI: {
 			initGame1vs1HumanAI(gm);
+			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
 			break;
@@ -1478,7 +1480,6 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 		g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 	}
 
-	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
 void updateGameAreYouSureQuit(GUI *g, Controls *c)

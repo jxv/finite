@@ -492,7 +492,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 					}
 					mkAction(&action, g, &move);
 					if (action.type == actionPlace) {
-						int diff = abs(hiScore - lowScore) * 5 / 10;
+						int diff = abs(hiScore - lowScore) * 4 / 10;
 						if (first || action.data.place.score > hiScore) {
 							hiScore = action.data.place.score;
 						}

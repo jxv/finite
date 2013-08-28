@@ -28,6 +28,7 @@ void boardInit(Board *b)
 			
 		}
 	}
+
 	b->sq[1][1] = sqDblWrd;
 	b->sq[13][1] = sqDblWrd;
 	b->sq[1][13] = sqDblWrd;
@@ -151,6 +152,7 @@ void bagInit(Bag *b)
 
 	/* short for testing */
 	/*b->tail = 20; bagShake(b, 0);*/
+	bagShake(b, time(NULL));
 }
 
 
