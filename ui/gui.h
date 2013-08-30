@@ -275,11 +275,7 @@ typedef struct IO
 	SDL_Surface *chooseGameTitle;
 	SDL_Surface *rulesTitle;
 	SDL_Surface *optionsTitle;
-
-/*
-	SDL_Surface *p1Wins;
-	SDL_Surface *p2Wins;
-*/
+	SDL_Surface *gameOverTitle;
 
 	SDL_Surface *scoreBoard;
 	SDL_Surface *textLog;

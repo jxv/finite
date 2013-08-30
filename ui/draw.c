@@ -193,6 +193,19 @@ void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm, LastMove *lm)
 	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, lm, dim);
 }
 
+void guiDrawBoardWithoutTransMove(IO *io, GridWidget *bw, Game *g, LastMove *lm)
+{
+	Coor dim;
+	
+	NOT(io);
+	NOT(bw);
+	NOT(g);
+
+	dim.x = TILE_WIDTH;
+	dim.y = TILE_HEIGHT;
+
+	boardWidgetDrawWithoutTransMove(io, bw, &g->board, lm, dim);
+}
 void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
 {
 	Coor dim;
@@ -825,44 +838,93 @@ void draw_guiFocusPlayMenu(Env *e)
 
 void draw_guiGameAIPause(Env *e)
 {
+	int i, j;
 	const char *text = "PLAYER 2...";
 	NOT(e);
 		
-	draw_guiFocusGameGUI(e);
+	/*draw_guiFocusGameGUI(e);*/
+	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
+	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	
 	drawFader(&e->io, 196);
 	strDraw(e->io.screen, &e->io.normalFont, text, (SCREEN_WIDTH - strlen(text) * (e->io.normalFont.width + e->io.normalFont.spacing)) / 2, 80);
+	
+	for (i = 0, j = e->gui.gameGui.textLog.head; i < e->gui.gameGui.textLog.size; i++, j++, j %= e->gui.gameGui.textLog.size) {
+		strDraw(e->io.screen, &e->io.blackFont, e->gui.gameGui.textLog.line[j], 16, 84 + 24 + 12 * i);
+	}
 
 	drawProgressBar(e->io.screen, e->game.player[e->game.turn].aiShare.loading, 60, 100, 200, 10, 1);
 }
 
 void draw_guiFocusGameHotseatPause(Env *e)
 {
+	int i, j;
 	char text[32];
 
 	NOT(e);
 
 
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-	/*guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game);  */
+
+	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	
+	for (i = 0, j = e->gui.gameGui.textLog.head; i < e->gui.gameGui.textLog.size; i++, j++, j %= e->gui.gameGui.textLog.size) {
+		strDraw(e->io.screen, &e->io.blackFont, e->gui.gameGui.textLog.line[j], 16, 84 + 24 + 12 * i);
+	}
+
 	drawFader(&e->io, 196);
 
-	sprintf(text, "PLAYER %d", e->game.turn+1);
-	strDraw(e->io.screen, &e->io.normalFont, text, (SCREEN_WIDTH - 7 * e->io.normalFont.width) / 2, 100);
-	surfaceDraw(e->io.screen, e->io.pressStart, (320 - e->io.pressStart->w) / 2, 120);
+	sprintf(text, "PLAYER %d's turn", e->game.turn+1);
+	strDraw(e->io.screen, &e->io.normalFont, text, (SCREEN_WIDTH - (strlen(text) * (e->io.normalFont.width + e->io.normalFont.spacing))) / 2, 80);
+	strDraw(e->io.screen, &e->io.normalFont, "Press Start", (SCREEN_WIDTH - (strlen("Press Start") * (e->io.normalFont.width + e->io.normalFont.spacing))) / 2, 100);
+	
+
 }
 
 void draw_guiFocusGameOver(Env *e)
 {
+	int i, j;
+
 	NOT(e);
 
 	drawScrollingBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
-	/*guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->controls.game);  */
+	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
+	drawScoreBoard(&e->gui.scoreBoard, &e->io);
+	
+	for (i = 0, j = e->gui.gameGui.textLog.head; i < e->gui.gameGui.textLog.size; i++, j++, j %= e->gui.gameGui.textLog.size) {
+		strDraw(e->io.screen, &e->io.blackFont, e->gui.gameGui.textLog.line[j], 16, 84 + 24 + 12 * i);
+	}
+
 	drawFader(&e->io, 196);
-	guiDrawBoard(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.transMove, &e->gui.gameGui.lastMove);
-	/*surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);*/
-	drawFader(&e->io, 196);
-	strDraw(e->io.screen, &e->io.normalFont, "- Game Over -", SCREEN_WIDTH / 2 - 36, 18);
+	
+	{
+		SDL_Rect rect;
+		rect.x = 80;
+		rect.y = 68;
+		rect.w = SCREEN_WIDTH - rect.x * 2;
+		rect.h = 122;
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 0xff));
+	}
+
+	surfaceDraw(e->io.screen, e->io.gameOverTitle, 0, 0);
+
+	{
+		char text[64];
+		sprintf(text, "PLAYER %d WON!", fdWinner(&e->game) + 1);
+		strDraw(e->io.screen, &e->io.highlightFont, text, (SCREEN_WIDTH - (strlen(text) * (e->io.normalFont.width + e->io.normalFont.spacing))) / 2, 80);
+	}
+
+	for (i = 0; i < e->game.playerNum; i++) {
+		char text[64];
+		Font *f = (fdWinner(&e->game) == i) ? &e->io.highlightFont : &e->io.normalFont;
+		sprintf(text, "PLAYER %d:     %d", i + 1, e->game.player[i].score);
+		strDraw(e->io.screen, f, text,
+			(SCREEN_WIDTH - (15 * (f->width + f->spacing))) / 2 - 12/2, 
+			14 * i + 120);
+	}
 }
 
 void draw_guiFocusGameAreYouSureQuit(Env *e)

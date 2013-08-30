@@ -373,6 +373,31 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 
 }
 
+void boardWidgetDrawWithoutTransMove(IO *io, GridWidget *bw, Board *b, LastMove *lm, Coor dim)
+{
+	Tile *t;
+	SDL_Surface *ts;
+	Coor idx;
+	TileLookType tlt;
+
+	NOT(io);
+	NOT(bw);
+	NOT(b);
+
+	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
+		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+			t = &b->tile[idx.y][idx.x];
+			if (t->type != tileNone) {
+				tlt = lm->type == lastMovePlace && lm->data.place[idx.y][idx.x] ? tileLookLast : tileLookNormal;
+				ts = io->tile[t->type][t->letter][tlt];
+				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+			}
+		}
+	}
+
+}
+
 void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 {
 	int i;

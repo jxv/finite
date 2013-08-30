@@ -10,6 +10,7 @@ void rackWidgetControls(Cmd *, GameGUI *, Controls *);
 void updateBoardWidget(GridWidget *, TransMove *, Board *);
 void updateRackWidget(GridWidget *, TransMove *);
 void boardWidgetDraw(IO *, GridWidget *, Player *, Board *, TransMove *, LastMove *, Coor);
+void boardWidgetDrawWithoutTransMove(IO *, GridWidget *, Board *, LastMove *, Coor);
 void updateGameGUIViaCmd(GameGUI *, Cmd *, TransMoveType);
 void rackWidgetDraw(IO *, TransMove *, GridWidget *, Coor, Player *);
 void gridWidgetDraw(SDL_Surface *, GridWidget *, Coor, Coor);

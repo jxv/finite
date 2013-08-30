@@ -1140,7 +1140,7 @@ void rackShift(Player *p)
 		if (i == RACK_SIZE) {
 			break;
 		}
-		memCpy(&p->tile[j], &p->tile[i], sizeof(Tile));
+		p->tile[j] = p->tile[i];
 		i++;
 		j++;
 	}
@@ -1173,20 +1173,24 @@ bool applyAction(Game *g, Action *a)
 	NOT(a);
 
 	id = a->playerIdx;
+	VALID_TILES(g->player[id]);
 	if (id != g->turn) {
 		return false;
 	}
 	switch (a->type) {
 	case actionPlace: {
-		memCpy(&g->board, &a->data.place.path.board,
-				sizeof(Board));
-		g->player[id].score += a->data.place.score;
+		VALID_TILES(g->player[id]);
+		memCpy(&g->board, &a->data.place.path.board, sizeof(a->data.place.path.board));
 		for (i = 0; i < a->data.place.num; i++) {
 			r = a->data.place.rackIdx[i];
 			g->player[id].tile[r].type = tileNone;
 		}
+		VALID_TILES(g->player[id]);
 		rackRefill(&g->player[id], &g->bag);
+		VALID_TILES(g->player[id]);
 		rackShift(&g->player[id]);
+		g->player[id].score += a->data.place.score;
+		VALID_TILES(g->player[id]);
 		break;
 	}
 	case actionDiscard: {
@@ -1209,6 +1213,7 @@ bool applyAction(Game *g, Action *a)
 	case actionInvalid: /* fall through */
 	default: return false;
 	}
+
 	return true;
 }
 
@@ -1334,7 +1339,6 @@ int rackCount(Player *p)
 	
 	count = 0;
 	for (i = 0; i < RACK_SIZE; i++) {
-		assert(p->tile[i].type == tileNone || p->tile[i].type == tileWild || p->tile[i].type == tileLetter);
 		if (p->tile[i].type != tileNone) {
 			count++;
 		}

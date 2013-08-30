@@ -407,7 +407,7 @@ bool initIO(Env *e)
 	NOT(e);
 	
 	count = 0;
-	COUNT = 328 + 7 * 50.f;
+	COUNT = 328 + 8 * 50.f;
 	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
@@ -562,6 +562,10 @@ bool initIO(Env *e)
 	}
 	count++; e->io.loading += 1.f / COUNT;
 	if (!(e->io.optionsTitle = surfaceAlphaLoad(RES_PATH "options_title.png"))) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if (!(e->io.gameOverTitle = surfaceAlphaLoad(RES_PATH "gameover_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
@@ -913,6 +917,7 @@ void quit(Env *e)
 	surfaceFree(e->io.chooseGameTitle);
 	surfaceFree(e->io.rulesTitle);
 	surfaceFree(e->io.optionsTitle);
+	surfaceFree(e->io.gameOverTitle);
 	surfaceFree(e->io.menuBg);
 	surfaceFree(e->io.gmBack);
 	surfaceFree(e->io.titleBackground);

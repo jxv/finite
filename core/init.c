@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
+#include <time.h>
 
 #include "common.h"
 
@@ -135,19 +136,22 @@ void bagInit(Bag *b)
 
 	static const int tileWildNum = 2;
 
-
 	NOT(b);
 
 	b->head = 0;
 	b->tail = BAG_SIZE - 1;
-	for (k = 0, i = 0; k < letterCount; k++) {
+	for (i = 0; i < tileWildNum; i++) {
+		b->tile[i].type = tileWild;
+		b->tile[i].letter = letterA;
+	}
+	for (k = 0, i = 2; k < letterCount; k++) {
 		for (j = 0; j < tileLetterNum[k]; j++, i++) {
 			b->tile[i].type = tileLetter;
 			b->tile[i].letter = letterA + k;
 		}
 	}
-	for (i = 0; i < tileWildNum; i++) {
-		b->tile[i].type = tileWild;
+	for (; i < BAG_SIZE; i++) {
+		b->tile[i].type = tileNone;
 	}
 
 	/* short for testing */
@@ -164,6 +168,7 @@ void playerInit(Player *p, Bag *b)
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		p->tile[i].type = tileNone;
+		p->tile[i].letter = letterA;
 	}
 	rackRefill(p, b);
 

@@ -1035,6 +1035,8 @@ void resetNewGameGui(GUI *g, Game *gm)
 	g->gameGui.lastInput = 0;
 }
 
+void initTextLog(TextLog *tl);
+
 void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 {
 	MenuWidget *m;
@@ -1439,6 +1441,7 @@ void *cbUpdateAi(void *data)
 	gm = as->game;
 
 	aiFindMove(&m, gm->turn, gm, NULL, &as->loading);
+
 	mkAction(&as->action, gm, &m);
 
 	as->loading = 1.f;

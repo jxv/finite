@@ -195,14 +195,31 @@ typedef struct Tile
 	LetterType letter;
 } Tile;
 
-#define VALID_TILE_TYPE(tt) (RANGE(tt, 0, tileCount - 1))
-#define VALID_letterTYPE(lt) (RANGE(lt, 0, letterCount - 1))
+#define VALID_TILE_TYPE(tt) (RANGE(tt, (-1), tileCount - 1))
+#define VALID_LETTER_TYPE(lt) (RANGE(lt, 0, letterCount - 1))
+
+#ifdef DEBUG
 #define VALID_TILE(t) do { \
 			VALID_TILE_TYPE((t).type); \
-			if ((t).type != tileNone) { \
-				VALID_letterTYPE((t).letter); \
+			if ((t).type != tileLetter) { \
+				VALID_LETTER_TYPE((t).letter); \
 			} \
 		} while(0)
+#else
+#define VALID_TILE(t) NULL
+#endif
+
+#ifdef DEBUG
+#define VALID_TILES(p) do {	\
+			int i;	\
+			for (i = 0; i < RACK_SIZE; i++) {	\
+				printf("[%d]\n", i);	\
+				VALID_TILE((p).tile[i]);	\
+			}	\
+		} while (0)
+#else
+#define VALID_TILES(t) NULL
+#endif
 
 typedef struct Loc
 {

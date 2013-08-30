@@ -516,13 +516,10 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 	if (midScore > 0) {
 		m->type = movePlace;
 	} else {
-		if (rackCount(&g->player[pIdx]) > 0) {
-			m->type = moveDiscard;
-			m->data.discard.num = 1;
-			m->data.discard.rackIdx[0] = 0;
-		} else {
-			m->type = moveSkip;
-		}
+		assert(rackCount(p) > 0);
+		m->type = moveDiscard;
+		m->data.discard.num = 1;
+		m->data.discard.rackIdx[0] = 0;
 	}
 }
 
