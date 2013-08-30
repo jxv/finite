@@ -1089,6 +1089,8 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 		g->next = guiFocusPlayMenu;
 		return;
 	}
+
+
 }
 
 GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)

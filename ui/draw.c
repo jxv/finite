@@ -846,6 +846,7 @@ void draw_guiFocusOptions(Env *e)
 
 	drawScrollingBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.optionsTitle, 0, 0);
+	drawMenuViewRight(e->io.screen, &e->io.optionsMV);
 }
 
 void draw_guiGameAIPause(Env *e)
@@ -918,6 +919,19 @@ void draw_guiFocusGameOver(Env *e)
 		rect.y = 68;
 		rect.w = SCREEN_WIDTH - rect.x * 2;
 		rect.h = 122;
+
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 0xff));
+
+		rect.x++;
+		rect.y++;
+		rect.w-=2;
+		rect.h-=2;
+		SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x50, 0x50, 0xa0, 0xff));
+
+		rect.w-= 2;
+		rect.h-= 2;
+		rect.x++;
+		rect.y++;
 		SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 0xff));
 	}
 

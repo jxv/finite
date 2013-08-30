@@ -175,6 +175,15 @@ void initSettings(Settings *s)
 	initMenuWidget(&s->menu, settingsFocusMusic, settingsFocusCount);
 }
 
+void initOptions(Options *o)
+{
+	o->ai = 5;
+	o->board = 0;
+	o->rack = 7;
+
+	initMenuWidget(&o->menu, optionsFocusAI, optionsFocusCount);
+}
+
 void initTextLog(TextLog *tl)
 {
 	NOT(tl);
@@ -259,11 +268,11 @@ void initGUI(GUI *g)
 	initMenuWidget(&g->menu, menuFocusPlay, menuFocusCount);
 	initMenuWidget(&g->gameMenu, gameMenuFocusResume, gameMenuFocusCount);
 	initMenuWidget(&g->playMenu, playMenuFocusHumanVsAI, playMenuFocusCount);
+	initOptions(&g->options);
 	initSettings(&g->settings);
 	initGameGUI(&g->gameGui);
 	initMenuWidget(&g->gameAreYouSureQuit, yes, yesNoCount);
 	initMenuWidget(&g->controlsMenu.menu, gameKeyPlay,gameKeyCount);
-
 
 	g->focus = guiFocusTitle;
 	g->next = guiFocusTitle;
@@ -758,6 +767,7 @@ bool initMenuViews(IO *io, GUI *g)
 
 	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
 	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Netplay (N/A)", "Options"};
+	char *optionsText[optionsFocusCount] = {"AI Difficulty:", "Board Style:", "Rack Size:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
 	char *yesNoText[yesNoCount] = {"Yes", "No"};
@@ -781,6 +791,9 @@ bool initMenuViews(IO *io, GUI *g)
 	if (!initMenuView(&io->settingsMV, &g->settings.menu, settingsText, n, h)) {
 		return false;
 	}
+	if (!initMenuView(&io->optionsMV, &g->options.menu, optionsText, n, h)) {
+		return false;
+	}
 	if (!initMenuView(&io->yesNoMV, &g->gameAreYouSureQuit, yesNoText, n, h)) {
 		return false;
 	}
@@ -793,6 +806,7 @@ bool initMenuViews(IO *io, GUI *g)
 	io->controlsMV.pos.x -= 36;
 	io->controlsMV.pos.y += n->height  + n->height / 2;
 
+	io->optionsMV.pos.x -= 46;
 	io->loading = 1.f;
 
 	return true;

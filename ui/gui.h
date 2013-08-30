@@ -128,6 +128,14 @@ typedef enum
 	playMenuFocusCount
 } PlayMenuFocusType;
 
+typedef enum
+{
+	optionsFocusInvalid = -1,
+	optionsFocusAI = 0,
+	optionsFocusBoard,
+	optionsFocusRack,
+	optionsFocusCount
+} OptionsFocusType;
 
 struct MenuWidget;
 
@@ -293,6 +301,7 @@ typedef struct IO
 	MenuView gameMenuMV;
 	MenuView playMenuMV;
 	MenuView settingsMV;
+	MenuView optionsMV;
 	MenuView yesNoMV;
 	MenuView controlsMV;
 	
@@ -421,6 +430,14 @@ typedef struct Settings
 	GUIFocusType previous;
 } Settings;
 
+typedef struct Options
+{
+	MenuWidget menu;
+	int ai;
+	int board;
+	int rack;
+} Options;
+
 typedef struct ControlsMenu
 {
 	MenuWidget menu;
@@ -462,6 +479,7 @@ typedef struct GUI
 	MenuWidget gameMenu;
 	MenuWidget playMenu;
 	Settings settings;
+	Options options;
 	ControlsMenu controlsMenu;
 	MenuWidget gameAreYouSureQuit;
 	TransMove transMove;
