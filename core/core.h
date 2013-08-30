@@ -213,7 +213,6 @@ typedef struct Tile
 #define VALID_TILES(p) do {	\
 			int i;	\
 			for (i = 0; i < RACK_SIZE; i++) {	\
-				printf("[%d]\n", i);	\
 				VALID_TILE((p).tile[i]);	\
 			}	\
 		} while (0)

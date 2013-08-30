@@ -733,7 +733,6 @@ bool initIO(Env *e)
 	e->io.controls.joyExists = e->io.joyExists;
 
 	e->io.loading = 1.f;
-	/*printf("[count:%d]\n", count);*/
 
 	return true;
 }

@@ -529,12 +529,12 @@ void draw_guiFocusRules(Env *e)
 	rect.y = 0;
 	rect.w = SCREEN_WIDTH - rect.x * 2;
 	rect.h = SCREEN_HEIGHT;
-	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x40, 0xff));
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 0xff));
 	
 
 	rect.x += rect.w - 6;
-	rect.w = 3;
-	rect.h = 45;
+	rect.w = 3 + 2;
+	rect.h = 45 ;
 	rect.y = e->gui.rules * (SCREEN_HEIGHT - rect.h - 4) + 2 - 1;
 	rect.h = 47;
 	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 0xff));
@@ -543,7 +543,11 @@ void draw_guiFocusRules(Env *e)
 	rect.w = 3;
 	rect.h = 45;
 	rect.y = e->gui.rules * (SCREEN_HEIGHT - rect.h - 4) + 2;
-	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xff, 0xff, 0xff, 0xff));
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xa0, 0x00, 0xff));
+	rect.w = 1;
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xf0, 0xf0, 0xf0, 0xff));
+	rect.x += 2;
+	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x60, 0x00, 0xff));
 	
 	surfaceDraw(e->io.screen, e->io.rulesTitle, 0 , scroll);
 	strDraw(e->io.screen, &e->io.normalFont, "Test", 60, scroll + 60);

@@ -1485,17 +1485,31 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 
 }
 
-void updateGameAreYouSureQuit(GUI *g, Controls *c)
+void updateGameAreYouSureQuit(GUI *g, Game *gm, Controls *c)
 {
 	NOT(g);
 	NOT(c);
+	NOT(gm);
 
 	updateMenuWidget(&g->gameAreYouSureQuit, c);
 	
 	if (submitted(c)) {
-		g->next = g->gameAreYouSureQuit.focus == yes
-				? guiFocusGameOver
-				: guiFocusGameMenu;
+		g->next = guiFocusGameMenu;
+		if (g->gameAreYouSureQuit.focus == yes) {
+			Move m;
+			Action a;
+
+			g->next = guiFocusGameOver;
+
+			m.type = moveQuit;
+			m.playerIdx = gm->turn;
+
+			mkAction(&a, gm, &m);
+
+			assert(a.type == actionQuit);
+
+			applyAction(gm, &a);
+		}
 		return;
 	}
 	if (goBack(c)) {
@@ -1534,7 +1548,7 @@ void update(Env *e)
 	case guiFocusGameHotseatPause: updateGameHotseatPause(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameAIPause: updateGameAIPause(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameOver: updateGameOver(&e->gui, &e->io.controls, &e->game); break;
-	case guiFocusGameAreYouSureQuit: updateGameAreYouSureQuit(&e->gui, &e->io.controls); break;
+	case guiFocusGameAreYouSureQuit: updateGameAreYouSureQuit(&e->gui, &e->game, &e->io.controls); break;
 	default: break;
 	}
 	e->io.time += 1.0f / ((float)(FPS));
