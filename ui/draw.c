@@ -709,19 +709,19 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.y -= 2;
 			rect.w += 4;
 			rect.h += 4;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0x00, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0xe0, 255));
 
 			rect.x += 1;
 			rect.y += 1;
 			rect.w -= 2;
 			rect.h -= 2;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x80, 0x00, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x50, 0x50, 0xa0, 255));
 
 			rect.x += 1;
 			rect.y += 1;
 			rect.w -= 2;
 			rect.h -= 2;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 255));
 			
 
 			y = e->io.normalFont.height + 1;
@@ -776,19 +776,19 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.y -= 2;
 			rect.w += 4;
 			rect.h += 4;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0x00, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0xe0, 255));
 
 			rect.x += 1;
 			rect.y += 1;
 			rect.w -= 2;
 			rect.h -= 2;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x80, 0x00, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x50, 0x50, 0xa0, 255));
 
 			rect.x += 1;
 			rect.y += 1;
 			rect.w -= 2;
 			rect.h -= 2;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 255));
 
 			y = e->io.normalFont.height + 1;
 			rect.x += 5;

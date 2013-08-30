@@ -1070,6 +1070,10 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			initScoreBoard(&g->scoreBoard, gm);
 			break;
 		}
+		case playMenuFocusOptions: {
+			g->next = guiFocusOptions;
+			break;
+		}
 		default: break;
 		}
 	}
@@ -1080,6 +1084,11 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 	NOT(g);
 	NOT(c);
 	NOT(gm);
+
+	if (goBack(c)) {
+		g->next = guiFocusPlayMenu;
+		return;
+	}
 }
 
 GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)

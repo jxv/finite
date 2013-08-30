@@ -124,6 +124,7 @@ typedef enum
 	playMenuFocusHumanVsAI = 0,
 	playMenuFocusHumanVsHuman,
 	playMenuFocusNetplay,
+	playMenuFocusOptions,
 	playMenuFocusCount
 } PlayMenuFocusType;
 
