@@ -840,6 +840,14 @@ void draw_guiFocusPlayMenu(Env *e)
 	surfaceDraw(e->io.screen, e->io.chooseGameTitle, 0, 0);
 }
 
+void draw_guiFocusOptions(Env *e)
+{
+	NOT(e);
+
+	drawScrollingBackground(&e->io);
+	surfaceDraw(e->io.screen, e->io.optionsTitle, 0, 0);
+}
+
 void draw_guiGameAIPause(Env *e)
 {
 	int i, j;
@@ -960,6 +968,7 @@ void draw(Env *e)
 	case guiFocusGameGUI: draw_guiFocusGameGUI(e); break;
 	case guiFocusGameMenu: draw_guiFocusGameMenu(e); break;
 	case guiFocusPlayMenu: draw_guiFocusPlayMenu(e); break;
+	case guiFocusOptions: draw_guiFocusOptions(e); break;
 	case guiFocusGameAIPause: draw_guiGameAIPause(e); break;
 	case guiFocusGameHotseatPause: draw_guiFocusGameHotseatPause(e); break;
 	case guiFocusGameOver: draw_guiFocusGameOver(e); break;

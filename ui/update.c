@@ -1075,6 +1075,13 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	}
 }
 
+void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
+{
+	NOT(g);
+	NOT(c);
+	NOT(gm);
+}
+
 GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)
 {
 	assert(pt >= 0 && pt < playerCount);
@@ -1543,6 +1550,7 @@ void update(Env *e)
 	case guiFocusSettings: updateSettings(&e->gui, &e->io.controls); break;
 	case guiFocusControls: update_guiFocusControls(&e->gui, &e->io.controls); break;
 	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->io.controls, &e->game); break;
+	case guiFocusOptions: update_guiFocusOptions(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameGUI: updateGameGUI(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameMenu: update_guiFocusGameMenu(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameHotseatPause: updateGameHotseatPause(&e->gui, &e->io.controls, &e->game); break;

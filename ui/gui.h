@@ -353,6 +353,7 @@ typedef enum
 	guiFocusSettings,
 	guiFocusControls,
 	guiFocusPlayMenu,
+	guiFocusOptions,
 	guiFocusGameGUI,
 	guiFocusGameMenu,
 	guiFocusGameHotseatPause,
