@@ -114,22 +114,23 @@ void printTransMove(TransMove *tm)
 void guiDrawLockon(IO *io, GameGUI *gg)
 {
 	const int w = TILE_WIDTH, h = TILE_HEIGHT; 
+	SDL_Surface *s;
+
 	Coor idx;
 
 	NOT(io);
 	NOT(gg);
 	
+	s = interval(io->time, 0.2f) ? io->lockon : io->lockon0;
 	switch (gg->focus) {
 	case gameGUIFocusBoard: {
 		idx = gg->boardWidget.index;
-		surfaceDraw(io->screen, io->lockon, gg->boardWidget.pos.x - 2 + idx.x * w, gg->boardWidget.pos.y - 2 + idx.y * h);
+		surfaceDraw(io->screen, s, gg->boardWidget.pos.x - 2 + idx.x * w, gg->boardWidget.pos.y - 2 + idx.y * h);
 		break;
 	}
 	case gameGUIFocusRack: {
 		idx = gg->rackWidget.index;
-		if (interval(io->time, 0.2f)) {
-			surfaceDraw(io->screen, io->lockon, gg->rackWidget.pos.x - 2 + idx.x * w, gg->rackWidget.pos.y - 2);
-		}
+		surfaceDraw(io->screen, s, gg->rackWidget.pos.x - 2 + idx.x * w, gg->rackWidget.pos.y - 2);
 		break;
 	}
 	default: break;
@@ -251,7 +252,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
 		surfaceDraw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
 		
-		i = tm->adjust.data.tile[tm->place.idx].idx;
+		i = g->gameGui.rackWidget.index.x;
 		t = &gm->player[tm->playerIdx].tile[i];
 		if (t->type != tileNone) {
 			char str0[32];
@@ -709,7 +710,7 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.y -= 2;
 			rect.w += 4;
 			rect.h += 4;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0xe0, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 255));
 
 			rect.x += 1;
 			rect.y += 1;
@@ -721,7 +722,7 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.y += 1;
 			rect.w -= 2;
 			rect.h -= 2;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 255));
 			
 
 			y = e->io.normalFont.height + 1;
@@ -776,7 +777,7 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.y -= 2;
 			rect.w += 4;
 			rect.h += 4;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xe0, 0xe0, 0xe0, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 255));
 
 			rect.x += 1;
 			rect.y += 1;
@@ -788,7 +789,7 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.y += 1;
 			rect.w -= 2;
 			rect.h -= 2;
-			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x20, 0x20, 0x70, 255));
+			SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 255));
 
 			y = e->io.normalFont.height + 1;
 			rect.x += 5;

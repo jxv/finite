@@ -256,6 +256,7 @@ typedef struct IO
 	SDL_Surface *wildUp;
 	SDL_Surface *wildDown;
 	SDL_Surface *lockon;
+	SDL_Surface *lockon0;
 	SDL_Surface *recall;
 	SDL_Surface *recallDisable;
 	SDL_Surface *mode;

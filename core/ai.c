@@ -427,7 +427,7 @@ int hueristic(ActionPlace *ap, Player *p)
 	c = 0;
 	for (i = 0; i < ap->num; i++) {
 		int j = ap->rackIdx[i];
-		if (p->tile[j].type == i) {
+		if (p->tile[j].type == tileLetter) {
 			c += constant(p->tile[j].letter);
 		}
 	}

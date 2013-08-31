@@ -222,8 +222,10 @@ void actionToLastMove(LastMove *lm, Action *a)
 		}
 
 		if (a->type != actionPlace) {
+			lm->type = lastMoveNone;
 			return;
 		}
+		lm->type = lastMovePlace;
 
 		p = &a->data.place.path;
 
@@ -239,6 +241,7 @@ void actionToLastMove(LastMove *lm, Action *a)
 		}
 		case pathHorz: {
 			if (p->data.horz.right.type != dirRight) {
+				lm->type = lastMoveNone;
 				break;
 			}
 			idx.y = p->data.horz.right.y;
@@ -249,7 +252,8 @@ void actionToLastMove(LastMove *lm, Action *a)
 			break;
 		}
 		case pathVert: {
-			if (p->data.vert.down.type == dirDown) {
+			if (p->data.vert.down.type != dirDown) {
+				lm->type = lastMoveNone;
 				break;
 			}
 			idx.x = p->data.vert.down.x;
@@ -419,7 +423,7 @@ bool initIO(Env *e)
 	NOT(e);
 	
 	count = 0;
-	COUNT = 328 + 8 * 50.f;
+	COUNT = 329 + 8 * 50.f;
 	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
@@ -480,6 +484,10 @@ bool initIO(Env *e)
 	}
 	count++; e->io.loading += 1.f / COUNT;
 	if ((e->io.lockon = surfaceAlphaLoad(RES_PATH "lockon.png")) == NULL) {
+		return false;
+	}
+	count++; e->io.loading += 1.f / COUNT;
+	if ((e->io.lockon0 = surfaceAlphaLoad(RES_PATH "lockon0.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
