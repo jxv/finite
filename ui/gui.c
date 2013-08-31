@@ -423,7 +423,7 @@ bool initIO(Env *e)
 	NOT(e);
 	
 	count = 0;
-	COUNT = 329 + 8 * 50.f;
+	COUNT = 330 + 8 * 50.f;
 	
 	SDL_JoystickEventState(SDL_ENABLE);
 	e->io.joystick = SDL_JoystickOpen(0);
@@ -655,6 +655,8 @@ bool initIO(Env *e)
 	e->io.sq[sqTrpWrd] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
 	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqFree] = surfaceAlphaLoad(RES_PATH "sq_free.png");
+	count++; e->io.loading += 1.f / COUNT;
+	e->io.sq[sqNoVowel] = surfaceAlphaLoad(RES_PATH "sq_novowel.png");
 	count++; e->io.loading += 1.f / COUNT;
 	e->io.sq[sqMystery] = surfaceAlphaLoad(RES_PATH "sq_mystery.png");
 	count++; e->io.loading += 1.f / COUNT;

@@ -36,7 +36,7 @@ void boardInit(Board *b)
 	b->sq[13][13] = sqDblWrd;
 	b->sq[7][7] = sqFree;
 
-	b->sq[14][3] = sqDblLet;
+	b->sq[14][3] = sqNoVowel;
 	b->sq[3][14] = sqDblLet;
 	b->sq[0][3] = sqDblLet;
 	b->sq[3][0] = sqDblLet;

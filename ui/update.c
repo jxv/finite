@@ -1398,10 +1398,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		/* printTransMove(&e->transMove); */
 		updateBoardWidget(&gg->boardWidget, tm, &gm->board); 
 		updateRackWidget(&gg->rackWidget, tm);
-
-		if (tm->type == transMovePlace || tm->type == transMovePlaceEnd) {
-			gg->focus = gameGUIFocusBoard;
-		}
+		
 		if (tm->type == transMoveDiscard) {
 			gg->focus = gameGUIFocusRack;
 		}

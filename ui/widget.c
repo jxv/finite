@@ -79,11 +79,21 @@ void boardWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 		return;
 	}
 	if (isPressedHeld(c, gameKeyUp)) {
-		cmd->type = cmdBoardUp;
+		if (bw->index.y == 0 && bw->index.x >= 4 && bw->index.x <= 10) {
+			cmd->type = cmdRack;
+			cmd->data.rack = bw->index.x - 4;
+		} else {
+			cmd->type = cmdBoardUp;
+		}
 		return;
 	}
 	if (isPressedHeld(c, gameKeyDown)) {
-		cmd->type = cmdBoardDown;
+		if (bw->index.y == (BOARD_Y - 1) && bw->index.x >= 4 && bw->index.x <= 10) {
+			cmd->type = cmdRack;
+			cmd->data.rack = bw->index.x - 4;
+		} else {
+			cmd->type = cmdBoardDown;
+		}
 		return;
 	}
 	if (isPressedHeld(c, gameKeyLeft)) {
@@ -161,6 +171,18 @@ void rackWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 		} else {
 			cmd->type = cmdRackRight;
 		}
+		return;
+	}
+	if (isPressedHeld(c, gameKeyDown)) {
+		cmd->type = cmdBoard;
+		cmd->data.board.x = rw->index.x + 4;
+		cmd->data.board.y = 0;
+		return;
+	}
+	if (isPressedHeld(c, gameKeyUp)) {
+		cmd->type = cmdBoard;
+		cmd->data.board.x = rw->index.x + 4;
+		cmd->data.board.y = BOARD_Y - 1;
 		return;
 	}
 	if (isPressed(c, gameKeyCancel)) {
