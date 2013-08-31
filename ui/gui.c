@@ -900,15 +900,20 @@ bool init(Env *e)
 	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
 		return false;
 	}
+	if ((e->io.menuBackground = surfaceAlphaLoad(RES_PATH "menu_background.png")) == NULL) {
+		return false;
+	}
 
 
 	e->io.song = Mix_LoadMUS(RES_PATH "George Street Shuffle (filtered).ogg");
 	if (!e->io.song) {
 		return false;
 	}
+/*
 	if (Mix_PlayMusic(e->io.song, -1) == -1) {
 		return false;
 	}
+*/
 
 	loadingScreen(e);
 
@@ -951,6 +956,7 @@ void quit(Env *e)
 	surfaceFree(e->io.menuBg);
 	surfaceFree(e->io.gmBack);
 	surfaceFree(e->io.titleBackground);
+	surfaceFree(e->io.menuBackground);
 	surfaceFree(e->io.scoreBoard);
 	surfaceFree(e->io.textLog);
 	surfaceFree(e->io.pressStart);

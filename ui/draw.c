@@ -361,6 +361,18 @@ void drawScrollingBackground(IO *io)
 	surfaceDraw(io->screen, io->titleHover, 0, off1 + io->titleHover->h);
 }
 
+void drawMenuBackground(IO *io)
+{
+	int off0;
+	
+	NOT(io);
+
+	off0 = scrollOffset(io->titleBackground->h, 20, io->time);
+
+	surfaceDraw(io->screen, io->menuBackground, 0, off0);
+	surfaceDraw(io->screen, io->menuBackground, 0, off0 - io->menuBackground->h);
+}
+
 void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
 {
 	SDL_Rect clip, offset;
@@ -506,7 +518,7 @@ void draw_guiFocusMenu(Env *e)
 {
 	NOT(e);
 
-	drawScrollingBackground(&e->io);
+	drawMenuBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.finiteTitle, 0, 0);
 	drawMenuView(e->io.screen, &e->io.menuMV);
 }
@@ -518,7 +530,7 @@ void draw_guiFocusRules(Env *e)
 
 	NOT(e);
 
-	drawScrollingBackground(&e->io);
+	drawMenuBackground(&e->io);
 
 	scroll = -e->gui.rules * 320;
 
@@ -578,7 +590,7 @@ void draw_guiFocusSettings(Env *e)
 	NOT(e);
 	
 	if (e->gui.settings.previous == guiFocusMenu) {
-		drawScrollingBackground(&e->io);
+		drawMenuBackground(&e->io);
 	} else {
 		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	}
@@ -633,7 +645,7 @@ void draw_guiFocusControls(Env *e)
 	NOT(e);
 	
 	if (e->gui.settings.previous == guiFocusMenu) {
-		drawScrollingBackground(&e->io);
+		drawMenuBackground(&e->io);
 	} else {
 		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
 	}
@@ -838,7 +850,7 @@ void draw_guiFocusPlayMenu(Env *e)
 {
 	NOT(e);
 
-	drawScrollingBackground(&e->io);
+	drawMenuBackground(&e->io);
 	drawMenuView(e->io.screen, &e->io.playMenuMV);
 	surfaceDraw(e->io.screen, e->io.chooseGameTitle, 0, 0);
 }
@@ -858,7 +870,7 @@ void draw_guiFocusOptions(Env *e)
 
 	mv = &e->io.optionsMV;
 
-	drawScrollingBackground(&e->io);
+	drawMenuBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.optionsTitle, 0, 0);
 	drawMenuViewRight(e->io.screen, &e->io.optionsMV);
 
@@ -954,7 +966,7 @@ void draw_guiFocusGameOver(Env *e)
 
 	NOT(e);
 
-	drawScrollingBackground(&e->io);
+	drawMenuBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
 	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
 	drawScoreBoard(&e->gui.scoreBoard, &e->io);
@@ -1020,6 +1032,73 @@ void draw_guiFocusGameAreYouSureQuit(Env *e)
 	surfaceDraw(e->io.screen, e->io.areYouSureTitle, 0, 0);
 }
 
+void draw_nothing(Env *e)
+{
+	NOT(e);
+	/* nothing */
+}
+
+void draw_guiFocusTransScreen(Env *e)
+{
+	void (*func)(Env *e);
+	GUI *g;
+	TransScreen *ts;
+	float percent;
+
+	NOT(e);
+
+	g = &e->gui;
+	ts = &g->transScreen;
+	percent = ts->elapsed / ts->time;
+	percent = percent > 1.f ? 1.f : (percent < 0.f ? 0.f : percent);
+
+	switch (percent < 0.5f ? ts->focus : ts->next) {
+	case guiFocusTitle: func = draw_guiFocusTitle; break;
+	case guiFocusMenu: func = draw_guiFocusMenu; break;
+	case guiFocusRules: func = draw_guiFocusRules; break;
+	case guiFocusSettings: func = draw_guiFocusSettings; break;
+	case guiFocusControls: func = draw_guiFocusControls; break;
+	case guiFocusGameGUI: func = draw_guiFocusGameGUI; break;
+	case guiFocusGameMenu: func = draw_guiFocusGameMenu; break;
+	case guiFocusPlayMenu: func = draw_guiFocusPlayMenu; break;
+	case guiFocusOptions: func = draw_guiFocusOptions; break;
+	case guiFocusGameAIPause: func = draw_guiGameAIPause; break;
+	case guiFocusGameHotseatPause: func = draw_guiFocusGameHotseatPause; break;
+	case guiFocusGameOver: func = draw_guiFocusGameOver; break;
+	case guiFocusGameAreYouSureQuit: func = draw_guiFocusGameAreYouSureQuit; break;
+	default: func = draw_nothing; break;
+	}
+
+	func(e);
+	
+	percent = percent > 1.f ? 1.f : (percent < 0.f ? 0.f : percent);
+	switch (ts->type) {
+	case transScreenFadeBlack: {
+		int val;
+		assert(percent >= 0.f && percent <= 1.f);
+		val = percent < 0.5f ? (percent / 0.5f) * 255 : 255 - ((percent - 0.5f) / 0.5f) * 255;
+		drawFader(&e->io, val);
+		break;
+	}
+	case transScreenFadePause: {
+		int val;
+		assert(percent >= 0.f && percent <= 1.f);
+		val = 255;
+		if (percent < 0.33f) {
+			val = (percent / 0.33)  * 255;
+		}
+		if (percent >= 0.66f) {
+			val = 255 - ((percent - 0.66f) / 0.34)  * 255;
+		}
+		val = val < 0 ? 0 : val;
+		val = val > 255 ? 255 : val;
+		drawFader(&e->io, val);
+		break;
+	}
+	default: break;
+	}
+}
+
 void draw(Env *e)
 {
 	NOT(e);
@@ -1039,6 +1118,7 @@ void draw(Env *e)
 	case guiFocusGameHotseatPause: draw_guiFocusGameHotseatPause(e); break;
 	case guiFocusGameOver: draw_guiFocusGameOver(e); break;
 	case guiFocusGameAreYouSureQuit: draw_guiFocusGameAreYouSureQuit(e); break;
+	case guiFocusTransScreen: draw_guiFocusTransScreen(e); break;
 	default: break;
 	}
 	SDL_Flip(e->io.screen);

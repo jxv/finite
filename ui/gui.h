@@ -276,6 +276,7 @@ typedef struct IO
 	SDL_Surface *titleScreen;
 	SDL_Surface *titleHover;
 	SDL_Surface *titleBackground;
+	SDL_Surface *menuBackground;
 	SDL_Surface *pressStart;
 
 	SDL_Surface *pauseTitle;
@@ -372,6 +373,7 @@ typedef enum
 	guiFocusGameAIPause,
 	guiFocusGameOver,
 	guiFocusGameAreYouSureQuit,
+	guiFocusTransScreen,
 	guiFocusCount
 } GUIFocusType;
 
@@ -472,6 +474,23 @@ typedef struct TransMove
 	MoveModeDiscard discard;
 } TransMove;
 
+typedef enum 
+{
+	transScreeInvalid = -1,
+	transScreenFadeBlack,
+	transScreenFadePause,
+	transScreenCount
+} TransScreenType;
+
+typedef struct TransScreen
+{
+	TransScreenType type;
+	GUIFocusType focus;
+	GUIFocusType next;
+	float time;
+	float elapsed;
+} TransScreen;
+
 typedef struct GUI
 {
 	GUIFocusType focus;
@@ -486,6 +505,7 @@ typedef struct GUI
 	MenuWidget gameAreYouSureQuit;
 	TransMove transMove;
 	ScoreBoard scoreBoard;
+	TransScreen transScreen;
 	float rules;
 } GUI;
 

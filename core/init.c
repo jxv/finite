@@ -17,26 +17,81 @@ void boardInit(Board *b)
 		for (x = 0; x < BOARD_X; x++) {
 			b->tile[y][x].type = tileNone;
 			b->sq[y][x] = sqNormal;
-			if ((x == y) || (BOARD_Y - y - 1 == x)) {
-				b->sq[y][x] = sqDblWrd;
+		}
+	}
+	for (y = 0; y <= 7; y++) {
+		for (x = 0; x <= 7; x++) {
+			b->sq[y][x] = sqNormal;
+			if (x == y && x == 0) {
+				b->sq[y][x] = sqDblLet;
+				continue;
 			}
-			if ((y % 7 == 0) && (x % 7 == 0)) {
+			if (((x == y) && (x == 2 || x == 7)) || (x + y == 5 && x < 4 && y < 4)) {
+				b->sq[y][x] = sqBlock;
+				continue;
+			}
+			if (x > 0 && y > 0 && x + y == 3) {
+				b->sq[y][x] = sqFree;
+				continue;
+			}
+			if ((x == 6 && y == 5 ) || (x == 5 && y == 6)) {
+				b->sq[y][x] = sqNoVowel;
+				continue;
+			}
+			if (((x == 0 || x == 7) && (y == 0 || y == 7)) || (x == 6 && y == 7) || (x == 7 && y == 6)) {
 				b->sq[y][x] = sqTrpWrd;
+				continue;
 			}
-			if ((x % 4 == 1) && (y % 4 == 1)) {
+			if (x < 6 && y < 6 && x + y == 7) {
+				b->sq[y][x] = sqDblWrd;
+				continue;
+			}
+			if ((x == 3 || x == 7)&& (y == 3 || y == 7)) {
 				b->sq[y][x] = sqTrpLet;
+				continue;
+			}
+			if ((x % 3 == 2  && y % 3 == 2) || (x % 5 == 1 && y % 5 == 1)) {
+				b->sq[y][x] = sqDblLet;
+				continue;
 			}
 			
 		}
 	}
 
+	for (y = 0; y <= 7; y++) {
+		for (x = 7; x < 15; x++) {
+			b->sq[y][x] = b->sq[y][14-x];
+		}
+	}
+	for (y = 7; y < 15; y++) {
+		for (x = 15; x >= 7; x--) {
+			b->sq[y][x] = b->sq[14-y][14-x];
+		}
+	}
+	for (y = 7; y < 15; y++) {
+		for (x = 0; x <= 7; x++) {
+			b->sq[y][x] = b->sq[14-y][x];
+		}
+	}
+
+	for (x = 4; x < 7; x++) {
+		b->sq[13][x] = sqBlock;
+		b->sq[1][14-x] = sqBlock;
+	}
+
+	b->sq[7][7] = sqBlock;
+	
+	b->sq[7][3]  = sqNoVowel;
+	b->sq[7][11] = sqNoVowel;
+
+
+/*
 	b->sq[1][1] = sqDblWrd;
 	b->sq[13][1] = sqDblWrd;
 	b->sq[1][13] = sqDblWrd;
 	b->sq[13][13] = sqDblWrd;
 	b->sq[7][7] = sqFree;
 
-	b->sq[7][6] = sqNoVowel;
 	b->sq[7][6] = sqBlock;
 	b->sq[3][14] = sqDblLet;
 	b->sq[0][3] = sqDblLet;
@@ -64,6 +119,7 @@ void boardInit(Board *b)
 	b->sq[6][8] = sqDblLet;
 	b->sq[8][6] = sqDblLet;
 	b->sq[8][6] = sqDblLet;
+*/
 }
 
 

@@ -9,6 +9,26 @@
 
 void actionToLastMove(LastMove *lm, Action *a);
 
+void toTransScreenFadeBlack(GUI *g, GUIFocusType next, float time)
+{
+	g->next = guiFocusTransScreen;
+	g->transScreen.type = transScreenFadeBlack;
+	g->transScreen.elapsed = 0;
+	g->transScreen.time = time;
+	g->transScreen.focus = g->focus;
+	g->transScreen.next = next;
+}
+
+void toTransScreenFadePause(GUI *g, GUIFocusType next, float time)
+{
+	g->next = guiFocusTransScreen;
+	g->transScreen.type = transScreenFadePause;
+	g->transScreen.elapsed = 0;
+	g->transScreen.time = time;
+	g->transScreen.focus = g->focus;
+	g->transScreen.next = next;
+}
+
 void axisStateUpdate(AxisState *as)
 {
 	NOT(as);
@@ -743,7 +763,7 @@ void updateTitle(GUI *g, Controls *c)
 	NOT(c);
 
 	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
-		g->next = guiFocusMenu;
+		toTransScreenFadeBlack(g, guiFocusMenu, 0.25f);
 	}
 }
 
@@ -810,7 +830,7 @@ bool updateMenu(GUI *g, Controls *c)
 
 	}
 	if (goBack(c)) {
-		g->next = guiFocusTitle;
+		toTransScreenFadeBlack(g, guiFocusTitle, 0.25f);
 	}
 	return false;
 }
@@ -1065,6 +1085,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
+			toTransScreenFadePause(g, guiFocusGameGUI, 1.0f);
 			break;
 		}
 		case playMenuFocusHumanVsAI: {
@@ -1073,6 +1094,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
+			toTransScreenFadePause(g, guiFocusGameGUI, 1.0f);
 			break;
 		}
 		case playMenuFocusOptions: {
@@ -1370,6 +1392,9 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		break;
 	}
 	case cmdBoard: {
+		if (tm->type == transMoveDiscard || tm->type == transMoveDiscardPlay) {
+			break;
+		}
 		gg->focus = gameGUIFocusBoard;
 		gg->boardWidget.index = cmd.data.board;
 		break;
@@ -1592,9 +1617,23 @@ void updateGameOver(GUI *g, Controls *c, Game *gm)
 	NOT(c);
 		
 	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
-		g->next = guiFocusTitle;
+		toTransScreenFadePause(g, guiFocusTitle, 1.0f);
 	}
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
+}
+
+void update_guiFocusTransScreen(GUI *g, float timeStep)
+{
+	TransScreen *ts;
+
+	NOT(g);
+
+	ts = &g->transScreen;
+	ts->elapsed += timeStep;
+
+	if (ts->elapsed >= ts->time) {
+		g->next = ts->next;
+	}
 }
 
 void update(Env *e)
@@ -1619,8 +1658,9 @@ void update(Env *e)
 	case guiFocusGameAIPause: updateGameAIPause(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameOver: updateGameOver(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusGameAreYouSureQuit: updateGameAreYouSureQuit(&e->gui, &e->game, &e->io.controls); break;
+	case guiFocusTransScreen: update_guiFocusTransScreen(&e->gui, SPF);
 	default: break;
 	}
-	e->io.time += 1.0f / ((float)(FPS));
+	e->io.time += SPF;
 }
 
