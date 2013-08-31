@@ -652,11 +652,30 @@ bool onVowels(Board *b, MovePlace *mp, Player *p)
 		r = mp->rackIdx[i];
 		y = mp->coor[i].y;
 		x = mp->coor[i].x;
-		if (b->sq[y][x] == sqNoVowel && p->tile[r].type != tileNone && vowel(p->tile[r].letter)) {
+		if (b->sq[y][x] == sqNoVowel && p->tile[r].type != tileNone && constant(p->tile[r].letter)) {
 			return false;
 		}
 	}
 	return true;
+}
+
+bool onBlocks(Board *b, MovePlace *mp, Player *p)
+{
+	int x, y, i, r;
+
+	NOT(b);
+	NOT(mp);
+	NOT(p);
+
+	for (i = 0; i < mp->num; i++) {
+		r = mp->rackIdx[i];
+		y = mp->coor[i].y;
+		x = mp->coor[i].x;
+		if (b->sq[y][x] == sqBlock && p->tile[r].type != tileNone) {
+			return true;
+		}
+	}
+	return false;
 }
 
 bool placeInRange(MovePlace *mp)
@@ -993,7 +1012,7 @@ ActionErrType fdPlaceErr(MovePlace *mp,Player *p, Board *b)
 	if (!placeRackExist(mp, p)) {
 		return actionErrPlaceInvalidRackId;
 	}
-	if ((!tilesAdjacent(b, mp, p) && !onFreeSquares(b, mp, p)) || !onVowels(b, mp, p)) {
+	if ((!tilesAdjacent(b, mp, p) && !onFreeSquares(b, mp, p)) || !onVowels(b, mp, p) || onBlocks(b, mp, p)) {
 		return actionErrPlaceInvalidSq;
 	}
 	return actionErrNone;

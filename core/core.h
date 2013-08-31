@@ -42,6 +42,7 @@ typedef enum
 	sqFree,
 	sqMystery,
 	sqNoVowel,
+	sqBlock,
 	sqCount
 } SqType;
 

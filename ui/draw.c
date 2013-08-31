@@ -286,6 +286,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 			case sqFree:   str = "FREE SQ."; break;
 			case sqMystery: str = "MYSTERY"; break;
 			case sqNoVowel: str = "VOWEL ONLY"; break;
+			case sqBlock: str = "BLOCK"; break;
 			default: break;
 			}
 			strDraw(io->screen, &io->normalFont, str, 203, 8);
