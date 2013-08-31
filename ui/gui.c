@@ -109,8 +109,8 @@ void initGame1vs1Human(Game *g)
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	initPlayerHuman(&g->player[0], &g->bag);
-	initPlayerHuman(&g->player[1], &g->bag);
+	initPlayerHuman(&g->player[0], &g->bag, g->rackSize);
+	initPlayerHuman(&g->player[1], &g->bag, g->rackSize);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
@@ -123,8 +123,8 @@ void initGame1vs1HumanAI(Game *g)
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	initPlayerHuman(&g->player[0], &g->bag);
-	initPlayerAI(&g->player[1], &g->bag);
+	initPlayerHuman(&g->player[0], &g->bag, g->rackSize);
+	initPlayerAI(&g->player[1], &g->bag, g->rackSize);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
@@ -310,7 +310,7 @@ SDL_Surface *createText(Font *f, char *str)
 	return text;
 }
 
-int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int count)
+int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int count, int *distance)
 {
 	int max, i, len;
 
@@ -335,6 +335,9 @@ int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int co
 	for (i = 0; i < count; i++) {
 		len = strlen(text[i]);
 		ht[i].offset = (max - len) * (normal->width + normal->spacing) / 2;
+	}
+	if (distance) {
+		*distance =  max * (normal->width + normal->spacing);
 	}
 	return max;
 }
@@ -377,7 +380,7 @@ bool initMenuView(MenuView *mv, MenuWidget *mm, char *str[], Font *n, Font *h)
 	mv->spacing.y = n->height * 2;
 	mv->menu = mm;
 	mv->text = memAlloc(sizeof(HighText) * mm->max);
-	mv->len = mkHighTexts(mv->text, n, h, str, mm->max);
+	mv->len = mkHighTexts(mv->text, n, h, str, mm->max, &mv->distance);
 	recenterMenuView(mv, n);
 	return areHighTextsLoaded(mv->text, mm->max);
 }
@@ -715,7 +718,7 @@ bool initIO(Env *e)
 	e->io.areYouSureQuit = createText(&e->io.normalFont, "Are you sure?");
 	{
 		char *text[gameMenuFocusCount] = {"Yes", "No"};
-		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, yesNoCount);
+		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, yesNoCount, NULL);
 	}
 	count++; e->io.loading += 1.f / COUNT;
 	if (!areHighTextsLoaded(e->io.yesNo, yesNoCount)) {
@@ -896,6 +899,8 @@ bool init(Env *e)
 	}
 
 	loadingScreen(e);
+
+	e->game.player[1].aiShare.difficulty = e->gui.options.ai;
 
 	return e->io.loaded; 
 }

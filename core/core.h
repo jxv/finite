@@ -348,11 +348,13 @@ typedef struct AiShare
 	float loading;
 	bool shareStart;
 	bool shareEnd;
+	int difficulty;
 } AiShare;
 
 typedef struct Player
 {
 	PlayerType type;
+	int rackSize;
 	bool active;
 	int score;
 	struct Tile tile[RACK_SIZE];
@@ -377,6 +379,7 @@ typedef struct Game
 {
 	int turn;
 	int playerNum;
+	int rackSize;
 	struct Player player[MAX_PLAYER];
 	struct Board board;
 	struct Bag bag;
@@ -411,6 +414,9 @@ int bagCount(Bag *b);
 int bagSize(Bag *b);
 
 int tileScore(Tile *t);
+
+bool vowel(LetterType);
+bool constant(LetterType);
 
 #endif
 

@@ -416,6 +416,25 @@ void printPlacement(Placement *p)
 	}
 }
 
+int hueristic(ActionPlace *ap, Player *p)
+{
+	int i, s, c;
+
+	NOT(ap);
+	NOT(p);
+
+	s = ap->score;
+	c = 0;
+	for (i = 0; i < ap->num; i++) {
+		int j = ap->rackIdx[i];
+		if (p->tile[j].type == i) {
+			c += constant(p->tile[j].letter);
+		}
+	}
+	s += (ap->score * c) / p->rackSize;
+	return s;
+}
+
 void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 {
 	int i, j;
@@ -492,15 +511,17 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 					}
 					mkAction(&action, g, &move);
 					if (action.type == actionPlace) {
-						int diff = abs(hiScore - lowScore) * 4 / 10;
-						if (first || action.data.place.score > hiScore) {
-							hiScore = action.data.place.score;
+						int diff, h;
+						diff = abs(hiScore - lowScore) * p->aiShare.difficulty / 10;
+						h = hueristic(&action.data.place, p);
+						if (first || h > hiScore) {
+							hiScore = h;
 						}
-						if (first || action.data.place.score < lowScore) {
-							lowScore = action.data.place.score;
+						if (first || h < lowScore) {
+							lowScore = h;
 						}
-						if (first || abs(midScore - diff) > abs(action.data.place.score - diff)) {
-							midScore = action.data.place.score;
+						if (first || abs(midScore - diff) > abs(h - diff)) {
+							midScore = h;
 							memCpy(&m->data.place, &move.data.place, sizeof(move.data.place));
 						}
 						first = false;

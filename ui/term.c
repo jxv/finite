@@ -34,8 +34,8 @@ bool termInit(struct Game *g)
 	}
 	boardInit(&g->board);
 	bagInit(&g->bag);
-	playerInit(&g->player[0], &g->bag);
-	playerInit(&g->player[1], &g->bag);
+	playerInit(&g->player[0], &g->bag, g->rackSize);
+	playerInit(&g->player[1], &g->bag, g->rackSize);
 	return true;
 }
 

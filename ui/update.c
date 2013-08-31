@@ -760,7 +760,7 @@ bool goBack(Controls *c)
 
 void updateMenuWidget(MenuWidget *m, Controls *c)
 {
-	float delayTime = 0.33f;
+	float delayTime = 1.f;
 
 	NOT(m);
 	NOT(c);
@@ -770,15 +770,16 @@ void updateMenuWidget(MenuWidget *m, Controls *c)
 	}
 
 	if (c->hardware.key[hardwareKeyUp].type == keyStatePressed ||
-			(c->hardware.key[hardwareKeyUp].type == keyStateHeld && c->hardware.key[hardwareKeyUp].time >= delayTime) ||
-			(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value > 0)) {
+	(c->hardware.key[hardwareKeyUp].type == keyStateHeld && c->hardware.key[hardwareKeyUp].time >= delayTime) ||
+	(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value > 0)) {
 		m->focus += m->max;
 		m->focus--;
 		m->focus %= m->max;
 		return;
 	}
 	if (c->hardware.key[hardwareKeyDown].type == keyStatePressed ||
-			(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value < 0)) {
+	(c->hardware.key[hardwareKeyDown].type == keyStateHeld && c->hardware.key[hardwareKeyDown].time >= delayTime) ||
+	(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value < 0)) {
 		m->focus++;
 		m->focus %= m->max;
 	}
@@ -956,7 +957,7 @@ bool gameControlsAreDifferent(ControlsMenu *cm, GameControls *gc)
 
 void update_guiFocusControls(GUI *g, Controls *c)
 {
-	const float delayTime = 0.33f;
+	const float delayTime = 1.f;
 	ControlsMenu *cm;
 
 	NOT(g);
@@ -988,7 +989,8 @@ void update_guiFocusControls(GUI *g, Controls *c)
 	case gameKeyPrevTile:
 	case gameKeyNextTile: {
 		if (c->hardware.key[hardwareKeyLeft].type == keyStatePressed ||
-	   	(c->hardware.key[hardwareKeyLeft].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime)) {
+	   	(c->hardware.key[hardwareKeyLeft].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
+		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value < 0)) {
 			do {
 				c->game.key[cm->menu.focus] += gameKeyCount;
 				c->game.key[cm->menu.focus] --;
@@ -996,7 +998,8 @@ void update_guiFocusControls(GUI *g, Controls *c)
 			} while (!changableHardwareKey(c->game.key[cm->menu.focus]));
 		}
 		if (c->hardware.key[hardwareKeyRight].type == keyStatePressed ||
-	   	(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyRight].time >= delayTime)) {
+	   	(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyRight].time >= delayTime) ||
+		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value > 0)) {
 			do {
 				c->game.key[cm->menu.focus] ++;
 				c->game.key[cm->menu.focus] %= gameKeyCount; 
@@ -1057,6 +1060,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	if (submitted(c)) {
 		switch (m->focus) {
 		case playMenuFocusHumanVsHuman: {
+			gm->rackSize = g->options.rack;
 			initGame1vs1Human(gm);
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
@@ -1064,6 +1068,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			break;
 		}
 		case playMenuFocusHumanVsAI: {
+			gm->rackSize = g->options.rack;
 			initGame1vs1HumanAI(gm);
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
@@ -1081,16 +1086,65 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 
 void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 {
+	const float delayTime = 1.f;
+	bool left, right;
+
 	NOT(g);
 	NOT(c);
 	NOT(gm);
+
+	left = false;
+	right = false;
+
+	updateMenuWidget(&g->options.menu, c);
 
 	if (goBack(c)) {
 		g->next = guiFocusPlayMenu;
 		return;
 	}
 
+	left = c->hardware.key[hardwareKeyLeft].type == keyStatePressed ||
+		(c->hardware.key[hardwareKeyLeft].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
+		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value < 0);
+	
+	right = c->hardware.key[hardwareKeyRight].type == keyStatePressed ||
+		(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
+		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value > 0);
 
+
+	switch (g->options.menu.focus) {
+	case optionsFocusAI: {
+		if (left && g->options.ai > 1) {
+			g->options.ai--;
+		}
+		if (right && g->options.ai < 10) {
+			g->options.ai++;
+		}
+		break;
+	}
+	case optionsFocusBoard: {
+		if (left && g->options.board > 0) {
+			g->options.board--;
+		}
+		if (right && g->options.board < 0) {
+			g->options.board++;
+		}
+		break;
+	}
+	case optionsFocusRack: {
+		if (left && g->options.rack > 3) {
+			g->options.rack--;
+		}
+		if (right && g->options.rack < RACK_SIZE) {
+			g->options.rack++;
+		}
+		break;
+	}
+	default: break;
+	}
+
+	gm->player[1].aiShare.difficulty = g->options.ai;
+	gm->rackSize = g->options.rack;
 }
 
 GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)

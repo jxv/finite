@@ -160,11 +160,13 @@ void bagInit(Bag *b)
 }
 
 
-void playerInit(Player *p, Bag *b)
+void playerInit(Player *p, Bag *b, int rackSize)
 {
 	int i;
 
 	NOT(p);
+
+	p->rackSize = rackSize;
 
 	for (i = 0; i < RACK_SIZE; i++) {
 		p->tile[i].type = tileNone;
@@ -176,21 +178,21 @@ void playerInit(Player *p, Bag *b)
 	p->active = true;
 }
 
-void initPlayerHuman(Player *p, Bag *b)
+void initPlayerHuman(Player *p, Bag *b, int rackSize)
 {
 	NOT(p);
 	NOT(b);
 
-	playerInit(p, b);
+	playerInit(p, b, rackSize);
 	p->type = playerHuman;
 }
 
-void initPlayerAI(Player *p, Bag *b)
+void initPlayerAI(Player *p, Bag *b, int rackSize)
 {
 	NOT(p);
 	NOT(b);
 
-	playerInit(p, b);
+	playerInit(p, b, rackSize);
 	p->type = playerAI;
 	p->aiShare.shareStart = false;
 	p->aiShare.shareEnd = false;

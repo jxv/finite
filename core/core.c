@@ -1156,8 +1156,11 @@ void rackRefill(Player *p, Bag *b)
 	
 	NOT(p);
 	NOT(b);
+
+	assert(p->rackSize <= RACK_SIZE);
+	assert(p->rackSize >= 1);
 	
-	for (i = 0; i < RACK_SIZE && !bagEmpty(b); i++) {
+	for (i = 0; i < p->rackSize && !bagEmpty(b); i++) {
 		if (p->tile[i].type == tileNone) {
 			p->tile[i] = bagPeek(b);
 			bagDrop(b);
@@ -1186,6 +1189,7 @@ bool applyAction(Game *g, Action *a)
 			g->player[id].tile[r].type = tileNone;
 		}
 		VALID_TILES(g->player[id]);
+		g->player[id].rackSize = g->rackSize;
 		rackRefill(&g->player[id], &g->bag);
 		VALID_TILES(g->player[id]);
 		rackShift(&g->player[id]);
@@ -1198,6 +1202,7 @@ bool applyAction(Game *g, Action *a)
 			r = a->data.discard.rackIdx[i];
 			g->player[id].tile[r].type = tileNone;
 		}
+		g->player[id].rackSize = g->rackSize;
 		rackRefill(&g->player[id], &g->bag);
 		rackShift(&g->player[id]);
 		g->player[id].score += a->data.discard.score;
@@ -1383,4 +1388,22 @@ int bagCount(Bag *b)
 {
 	NOT(b);
 	return b->tail > b->head ? b->tail - b->head : b->head - b-> tail;
+
 }
+
+bool vowel(LetterType lt)
+{
+	return 
+		lt == letterA ||
+		lt == letterE ||
+		lt == letterI ||
+		lt == letterO ||
+		lt == letterU ||
+		lt == letterY;
+}
+
+bool constant(LetterType lt)
+{
+	return !vowel(lt);
+}
+

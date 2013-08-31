@@ -160,6 +160,7 @@ typedef struct MenuView
 	Coor spacing;
 	HighText *text;
 	int len;
+	int distance;
 	struct MenuWidget *menu;
 } MenuView;
 

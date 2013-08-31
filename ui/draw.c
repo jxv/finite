@@ -842,11 +842,60 @@ void draw_guiFocusPlayMenu(Env *e)
 
 void draw_guiFocusOptions(Env *e)
 {
+	char str[64];
+	int i;
+	Font *f;
+	MenuView *mv;
+	bool lower, higher;
+
 	NOT(e);
+
+	lower = false;
+	higher = false;
+
+	mv = &e->io.optionsMV;
 
 	drawScrollingBackground(&e->io);
 	surfaceDraw(e->io.screen, e->io.optionsTitle, 0, 0);
 	drawMenuViewRight(e->io.screen, &e->io.optionsMV);
+
+	for (i = 0; i < optionsFocusCount; i++) {
+		bool focused = i == e->gui.options.menu.focus;
+		f = focused ? &e->io.highlightFont : &e->io.normalFont;
+
+		str[0] = '\0';
+		switch (i) {
+		case optionsFocusAI: {
+			lower = e->gui.options.ai > 1;
+			higher = e->gui.options.ai < 10;
+			sprintf(str, "%d", e->gui.options.ai);
+			break;
+		}
+		case optionsFocusBoard: {
+			lower = false;
+			higher = false;
+			sprintf(str, "Standard");
+			break;
+		}
+		case optionsFocusRack: {
+			lower = e->gui.options.rack > 3;
+			higher = e->gui.options.rack < RACK_SIZE;
+			sprintf(str, "%d", e->gui.options.rack);
+			break;
+		}
+		default: break;
+		}
+		strDraw(e->io.screen, f, str, mv->pos.x + mv->distance + 16, mv->pos.y + i * mv->spacing.y);
+		if (focused) {
+			int ii = interval(e->io.time, 0.2f);
+			if (lower) {
+				strDraw(e->io.screen, f, "<", -ii + mv->pos.x + mv->distance + 8, mv->pos.y + i * mv->spacing.y);
+			}
+			if (higher) {
+				strDraw(e->io.screen, f, ">", ii + mv->pos.x + mv->distance + 18 + strlen(str) * (f->width + f->spacing), mv->pos.y + i * mv->spacing.y);
+			}
+		}
+	}
 }
 
 void draw_guiGameAIPause(Env *e)
