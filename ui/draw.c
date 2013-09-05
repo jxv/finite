@@ -1038,6 +1038,80 @@ void draw_nothing(Env *e)
 	/* nothing */
 }
 
+Uint32 getpixel(SDL_Surface *surface, int x, int y)
+{
+    int bpp = surface->format->BytesPerPixel;
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+    switch(bpp) {
+    case 1:
+        return *p;
+        break;
+
+    case 2:
+        return *(Uint16 *)p;
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+            return p[0] << 16 | p[1] << 8 | p[2];
+        else
+            return p[0] | p[1] << 8 | p[2] << 16;
+        break;
+
+    case 4:
+        return *(Uint32 *)p;
+        break;
+    default:
+        return 0;
+    }
+}
+
+void pixelate(SDL_Surface *s, int size)
+{
+	int i, j, k, x, y, w, h;
+	Uint32 c[4], p, color;
+	SDL_Rect rect;
+
+	NOT(s);
+
+	if (size <= 0) {
+		return;
+	}
+
+	for (x = 0; x < s->w; x += size) {
+		for (y = 0; y < s->h; y += size) {
+			for (k = 0; k < 4; k++) {
+				c[k] = 0;
+			}
+			w = (size + x < s->w) ? size : size + x - s->w;
+			h = (size + y < s->h) ? size : size + y - s->h;
+			
+			if (w == 0 || h == 0 || w < size || h < size) {
+				continue;
+			}
+			for (i = 0; i < w; i++) {
+				for (j = 0; j < h; j++) {
+					p = getpixel(s, i + x, j + y);
+					for (k = 0; k < 4; k++) {
+						c[k] += (p >> k * 8) & 0xff;
+					}
+				}
+			}
+			color = 0;
+			for (k = 0; k < 4; k++) {
+				c[k] /= size * size;
+				c[k] &= 0xff;
+				color |= (c[k] << k * 8);
+			}
+			rect.x = x;
+			rect.y = y;
+			rect.w = w;
+			rect.h = h;
+			SDL_FillRect(s, &rect, color);
+		}
+	}
+}
+
 void draw_guiFocusTransScreen(Env *e)
 {
 	void (*func)(Env *e);
@@ -1093,6 +1167,22 @@ void draw_guiFocusTransScreen(Env *e)
 		val = val < 0 ? 0 : val;
 		val = val > 255 ? 255 : val;
 		drawFader(&e->io, val);
+		break;
+	}
+	case transScreenFadePausePixelate: {
+		int val;
+		assert(percent >= 0.f && percent <= 1.f);
+		val = 255;
+		if (percent < 0.33f) {
+			val = (percent / 0.33)  * 255;
+		}
+		if (percent >= 0.66f) {
+			val = 255 - ((percent - 0.66f) / 0.34)  * 255;
+		}
+		val = val < 0 ? 0 : val;
+		val = val > 255 ? 255 : val;
+		drawFader(&e->io, val);
+		pixelate(e->io.screen, val / 15);
 		break;
 	}
 	default: break;

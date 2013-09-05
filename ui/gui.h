@@ -322,10 +322,18 @@ typedef struct IO
 	Font normalFont;
 	Font highlightFont;
 
+	Mix_Chunk *openSnd;
 	Mix_Chunk *incorrectSnd;
 	Mix_Chunk *correctSnd;
 	Mix_Chunk *scoreSnd;
-	Mix_Music *song;
+	Mix_Chunk *enterSnd;
+	Mix_Chunk *backSnd;
+	Mix_Chunk *scrollSnd;
+	Mix_Chunk *startSnd;
+	Mix_Chunk *pauseSnd;
+
+	Mix_Music *menuSong;
+	Mix_Music *gameSong;
 
 	Controls controls;
 } IO;
@@ -477,8 +485,9 @@ typedef struct TransMove
 typedef enum 
 {
 	transScreeInvalid = -1,
-	transScreenFadeBlack,
+	transScreenFadeBlack = 0,
 	transScreenFadePause,
+	transScreenFadePausePixelate,
 	transScreenCount
 } TransScreenType;
 

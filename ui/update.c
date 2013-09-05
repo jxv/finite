@@ -29,6 +29,16 @@ void toTransScreenFadePause(GUI *g, GUIFocusType next, float time)
 	g->transScreen.next = next;
 }
 
+void toTransScreenFadePausePixelate(GUI *g, GUIFocusType next, float time)
+{
+	g->next = guiFocusTransScreen;
+	g->transScreen.type = transScreenFadePausePixelate;
+	g->transScreen.elapsed = 0;
+	g->transScreen.time = time;
+	g->transScreen.focus = g->focus;
+	g->transScreen.next = next;
+}
+
 void axisStateUpdate(AxisState *as)
 {
 	NOT(as);
@@ -1085,7 +1095,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
-			toTransScreenFadePause(g, guiFocusGameGUI, 1.0f);
+			toTransScreenFadePausePixelate(g, guiFocusGameGUI, 1.0f);
 			break;
 		}
 		case playMenuFocusHumanVsAI: {
@@ -1094,7 +1104,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
 			initScoreBoard(&g->scoreBoard, gm);
-			toTransScreenFadePause(g, guiFocusGameGUI, 1.0f);
+			toTransScreenFadePausePixelate(g, guiFocusGameGUI, 1.0f);
 			break;
 		}
 		case playMenuFocusOptions: {
@@ -1617,7 +1627,7 @@ void updateGameOver(GUI *g, Controls *c, Game *gm)
 	NOT(c);
 		
 	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
-		toTransScreenFadePause(g, guiFocusTitle, 1.0f);
+		toTransScreenFadePausePixelate(g, guiFocusTitle, 1.0f);
 	}
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }

@@ -17,8 +17,52 @@ void boardInit(Board *b)
 		for (x = 0; x < BOARD_X; x++) {
 			b->tile[y][x].type = tileNone;
 			b->sq[y][x] = sqNormal;
+			if ((x == y) || (BOARD_Y - y - 1 == x)) {
+				b->sq[y][x] = sqDblWrd;
+			}
+			if ((y % 7 == 0) && (x % 7 == 0)) {
+				b->sq[y][x] = sqTrpWrd;
+			}
+			if ((x % 4 == 1) && (y % 4 == 1)) {
+				b->sq[y][x] = sqTrpLet;
+			}
+			
 		}
 	}
+	b->sq[1][1] = sqDblWrd;
+	b->sq[13][1] = sqDblWrd;
+	b->sq[1][13] = sqDblWrd;
+	b->sq[13][13] = sqDblWrd;
+	b->sq[7][7] = sqFree;
+
+	b->sq[14][3] = sqDblLet;
+	b->sq[3][14] = sqDblLet;
+	b->sq[0][3] = sqDblLet;
+	b->sq[3][0] = sqDblLet;
+	b->sq[0][11] = sqDblLet;
+	b->sq[11][0] = sqDblLet;
+	b->sq[14][11] = sqDblLet;
+	b->sq[11][14] = sqDblLet;
+	b->sq[2][8] = sqDblLet;
+	b->sq[8][2] = sqDblLet;
+	b->sq[2][6] = sqDblLet;
+	b->sq[6][2] = sqDblLet;
+	b->sq[3][7] = sqDblLet;
+	b->sq[7][3] = sqDblLet;
+	b->sq[8][2] = sqDblLet;
+	b->sq[2][8] = sqDblLet;
+	b->sq[12][6] = sqDblLet;
+	b->sq[6][12] = sqDblLet;
+	b->sq[11][7] = sqDblLet;
+	b->sq[7][11] = sqDblLet;
+	b->sq[12][8] = sqDblLet;
+	b->sq[8][12] = sqDblLet;
+	b->sq[8][8] = sqDblLet;
+	b->sq[6][6] = sqDblLet;
+	b->sq[6][8] = sqDblLet;
+	b->sq[8][6] = sqDblLet;
+
+/*
 	for (y = 0; y <= 7; y++) {
 		for (x = 0; x <= 7; x++) {
 			b->sq[y][x] = sqNormal;
@@ -84,15 +128,14 @@ void boardInit(Board *b)
 	b->sq[7][3]  = sqNoVowel;
 	b->sq[7][11] = sqNoVowel;
 
+*/
 
-/*
 	b->sq[1][1] = sqDblWrd;
 	b->sq[13][1] = sqDblWrd;
 	b->sq[1][13] = sqDblWrd;
 	b->sq[13][13] = sqDblWrd;
 	b->sq[7][7] = sqFree;
 
-	b->sq[7][6] = sqBlock;
 	b->sq[3][14] = sqDblLet;
 	b->sq[0][3] = sqDblLet;
 	b->sq[3][0] = sqDblLet;
@@ -119,7 +162,6 @@ void boardInit(Board *b)
 	b->sq[6][8] = sqDblLet;
 	b->sq[8][6] = sqDblLet;
 	b->sq[8][6] = sqDblLet;
-*/
 }
 
 

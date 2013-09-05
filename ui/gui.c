@@ -738,6 +738,9 @@ bool initIO(Env *e)
 	}
 	count++; e->io.loading += 1.f / COUNT;
 
+	if (!(e->io.openSnd = Mix_LoadWAV(RES_PATH "open_snd.wav"))) {
+		return false;
+	}
 	if (!(e->io.incorrectSnd = Mix_LoadWAV(RES_PATH "incorrect_snd.wav"))) {
 		return false;
 	}
@@ -747,6 +750,21 @@ bool initIO(Env *e)
 	}
 	count++; e->io.loading += 1.f / COUNT;
 	if (!(e->io.scoreSnd = Mix_LoadWAV(RES_PATH "score_snd.wav"))) {
+		return false;
+	}
+	if (!(e->io.enterSnd = Mix_LoadWAV(RES_PATH "enter_snd.wav"))) {
+		return false;
+	}
+	if (!(e->io.backSnd = Mix_LoadWAV(RES_PATH "back_snd.wav"))) {
+		return false;
+	}
+	if (!(e->io.scrollSnd = Mix_LoadWAV(RES_PATH "scroll_snd.wav"))) {
+		return false;
+	}
+	if (!(e->io.startSnd = Mix_LoadWAV(RES_PATH "start_snd.wav"))) {
+		return false;
+	}
+	if (!(e->io.pauseSnd = Mix_LoadWAV(RES_PATH "pause_snd.wav"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
@@ -878,7 +896,17 @@ bool init(Env *e)
 	e->io.accel = NULL;
 	e->io.joyExists = false;
 	e->io.accelExists = false;
-	e->io.song = NULL;
+	e->io.menuSong = NULL;
+	e->io.gameSong = NULL;
+
+	e->io.openSnd = NULL;
+	e->io.incorrectSnd = NULL;
+	e->io.correctSnd = NULL;
+	e->io.scoreSnd = NULL;
+	e->io.enterSnd = NULL;
+	e->io.backSnd = NULL;
+	e->io.scrollSnd = NULL;
+	e->io.pauseSnd = NULL;
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 		return false;
@@ -904,13 +932,16 @@ bool init(Env *e)
 		return false;
 	}
 
-
-	e->io.song = Mix_LoadMUS(RES_PATH "George Street Shuffle (filtered).ogg");
-	if (!e->io.song) {
+	e->io.menuSong = Mix_LoadMUS(RES_PATH "menu_music.ogg");
+	if (!e->io.menuSong) {
+		return false;
+	}
+	e->io.gameSong = Mix_LoadMUS(RES_PATH "game_music.ogg");
+	if (!e->io.gameSong) {
 		return false;
 	}
 /*
-	if (Mix_PlayMusic(e->io.song, -1) == -1) {
+	if (Mix_PlayMusic(e->io.menuSong, -1) == -1) {
 		return false;
 	}
 */
@@ -922,16 +953,24 @@ bool init(Env *e)
 	return e->io.loaded; 
 }
 
+void freeChunk(Mix_Chunk *c)
+{
+	if (c)
+		Mix_FreeChunk(c);
+}
+
+void freeMusic(Mix_Music *m)
+{
+	if (m)
+		Mix_FreeMusic(m);
+}
+
 void quit(Env *e)
 {
 	int i, j;
 
 	NOT(e);
 
-	if (e->io.song) {
-		Mix_FreeMusic(e->io.song);
-	}
-	
 	if (e->io.joystick) {
 		SDL_JoystickClose(e->io.joystick);
 	}
@@ -1005,9 +1044,19 @@ void quit(Env *e)
 	fontmapQuit(&e->io.yellowFont);
 	fontmapQuit(&e->io.darkRedFont);
 
-	Mix_FreeChunk(e->io.incorrectSnd);
-	Mix_FreeChunk(e->io.correctSnd);
-	Mix_FreeChunk(e->io.scoreSnd);
+	freeChunk(e->io.openSnd);
+	freeChunk(e->io.incorrectSnd);
+	freeChunk(e->io.correctSnd);
+	freeChunk(e->io.scoreSnd);
+	freeChunk(e->io.enterSnd);
+	freeChunk(e->io.backSnd);
+	freeChunk(e->io.scrollSnd);
+	freeChunk(e->io.startSnd);
+	freeChunk(e->io.pauseSnd);
+
+	freeMusic(e->io.menuSong);
+	freeMusic(e->io.gameSong);
+
 	Mix_CloseAudio();
 	SDL_Quit();
 }
