@@ -395,6 +395,7 @@ typedef enum
 typedef struct MenuWidget
 {
 	int focus;
+	int next;
 	int max;
 	int init;
 } MenuWidget;

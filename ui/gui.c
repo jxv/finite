@@ -156,6 +156,7 @@ void initScoreBoard(ScoreBoard *sb, Game *g)
 void initMenuWidget(MenuWidget *m, int focus, int max)
 {
 	m->init = focus;
+	m->next = focus;
 	m->focus = focus;
 	m->max = max;
 }

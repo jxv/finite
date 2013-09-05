@@ -795,23 +795,24 @@ void updateMenuWidget(MenuWidget *m, Controls *c)
 	NOT(m);
 	NOT(c);
 
-	if (m->focus < 0 && m->focus >= m->max) {
-		m->focus = m->init;
+	if (m->next < 0 && m->next >= m->max) {
+		m->next = m->init;
 	}
+	m->focus = m->next;
 
 	if (c->hardware.key[hardwareKeyUp].type == keyStatePressed ||
 	(c->hardware.key[hardwareKeyUp].type == keyStateHeld && c->hardware.key[hardwareKeyUp].time >= delayTime) ||
 	(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value > 0)) {
-		m->focus += m->max;
-		m->focus--;
-		m->focus %= m->max;
+		m->next += m->max;
+		m->next --;
+		m->next %= m->max;
 		return;
 	}
 	if (c->hardware.key[hardwareKeyDown].type == keyStatePressed ||
 	(c->hardware.key[hardwareKeyDown].type == keyStateHeld && c->hardware.key[hardwareKeyDown].time >= delayTime) ||
 	(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value < 0)) {
-		m->focus++;
-		m->focus %= m->max;
+		m->next++;
+		m->next %= m->max;
 	}
 }
 
