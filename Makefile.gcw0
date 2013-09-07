@@ -23,7 +23,6 @@ CFLAGS+=$(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 LIB:=-lc
 LIB+=-lm
 LIB+=-lpthread
-LIB+=-ldosk
 LIB+=$(shell $(SYSROOT)/usr/bin/sdl-config --libs)
 LIB+=-lSDL_image
 LIB+=-lSDL_mixer

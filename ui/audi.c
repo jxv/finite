@@ -13,6 +13,13 @@ void audiMenuWidget(MenuWidget *mv, Mix_Chunk *mc)
 	}
 }
 
+void audiScoreBoard(ScoreBoard *sb, Mix_Chunk *mc)
+{
+	if (!sb->stable /*&& Mix_Playing(audioChanSfx) == 0*/) {
+		Mix_PlayChannel(audioChanSfx, mc, 0);
+	}
+}
+
 void audi_guiFocusTitle(Env *e)
 {
 	GUI *g;
@@ -80,6 +87,21 @@ void audi_guiFocusGameGUI(Env *e)
 		Mix_PlayChannel(audioChanSfx, e->io.pauseSnd, 0); 
 		Mix_PauseMusic();
 	}
+	audiScoreBoard(&g->scoreBoard, e->io.scoreSnd);
+}
+	
+void audi_guiFocusGameHotseatPause(Env *e)
+{
+	NOT(e);
+
+	audiScoreBoard(&e->gui.scoreBoard, e->io.scoreSnd);
+}
+
+void audi_guiFocusGameAIPause(Env *e)
+{
+	NOT(e);
+	
+	audiScoreBoard(&e->gui.scoreBoard, e->io.scoreSnd);
 }
 
 void audi_guiFocusGameMenu(Env *e)
@@ -173,6 +195,8 @@ void audi(Env *e)
 	case guiFocusTitle: audi_guiFocusTitle(e); break;
 	case guiFocusMenu: audi_guiFocusMenu(e); break;
 	case guiFocusGameGUI: audi_guiFocusGameGUI(e); break;
+	case guiFocusGameHotseatPause: audi_guiFocusGameHotseatPause(e); break;
+	case guiFocusGameAIPause: audi_guiFocusGameAIPause(e); break;
 	case guiFocusGameMenu: audi_guiFocusGameMenu(e); break;
 	case guiFocusPlayMenu: audi_guiFocusPlayMenu(e); break;
 	case guiFocusSettings: audi_guiFocusSettings(e); break;
