@@ -9,6 +9,15 @@
 
 void actionToLastMove(LastMove *lm, Action *a);
 
+bool intervalTick(float lapsed, float interval)
+{
+	float v;
+	v = (lapsed / interval) - floorf(lapsed / interval);
+	v *= interval;
+	v = v > 0 ? v : -v;
+	return v < SPF;  
+}
+
 void toTransScreenFadeBlack(GUI *g, GUIFocusType next, float time)
 {
 	g->next = guiFocusTransScreen;
@@ -767,7 +776,7 @@ bool transMoveToMove(Move *m, TransMove *tm)
 	return false;
 }
 
-void updateTitle(GUI *g, Controls *c)
+void update_guiFocusTitle(GUI *g, Controls *c)
 {
 	NOT(g);
 	NOT(c);
@@ -790,7 +799,10 @@ bool goBack(Controls *c)
 
 void updateMenuWidget(MenuWidget *m, Controls *c)
 {
-	float delayTime = 1.f;
+	float tickTime = 0.1f;
+	float delayTime = 0.5f;
+	KeyState *ks;
+	AxisState *as;
 
 	NOT(m);
 	NOT(c);
@@ -800,23 +812,29 @@ void updateMenuWidget(MenuWidget *m, Controls *c)
 	}
 	m->focus = m->next;
 
-	if (c->hardware.key[hardwareKeyUp].type == keyStatePressed ||
-	(c->hardware.key[hardwareKeyUp].type == keyStateHeld && c->hardware.key[hardwareKeyUp].time >= delayTime) ||
-	(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value > 0)) {
+	ks = &c->hardware.key[hardwareKeyUp];
+	as = &c->hardware.axisY;
+
+	if (ks->type == keyStatePressed ||
+	(ks->type == keyStateHeld && ks->time >= delayTime && intervalTick(ks->time, tickTime)) ||
+	(as->type == axisStateExitDeadZone &&  as->value > 0)) {
 		m->next += m->max;
 		m->next --;
 		m->next %= m->max;
 		return;
 	}
-	if (c->hardware.key[hardwareKeyDown].type == keyStatePressed ||
-	(c->hardware.key[hardwareKeyDown].type == keyStateHeld && c->hardware.key[hardwareKeyDown].time >= delayTime) ||
-	(c->hardware.axisY.type == axisStateExitDeadZone &&  c->hardware.axisY.value < 0)) {
+
+	ks = &c->hardware.key[hardwareKeyDown];
+
+	if (ks->type == keyStatePressed ||
+	(ks->type == keyStateHeld && ks->time >= delayTime && intervalTick(ks->time, tickTime))  ||
+	(as->type == axisStateExitDeadZone &&  as->value < 0)) {
 		m->next++;
 		m->next %= m->max;
 	}
 }
 
-bool updateMenu(GUI *g, Controls *c)
+bool update_guiFocusMenu(GUI *g, Controls *c)
 {
 
 	MenuWidget *m;
@@ -827,8 +845,6 @@ bool updateMenu(GUI *g, Controls *c)
 	m = &g->menu;
 
 	updateMenuWidget(m, c);
-
-
 
 	if (submitted(c)) {
 		switch (m->focus) {
@@ -880,16 +896,29 @@ bool update_guiFocusRules(GUI *g, Controls *c)
 
 int updateVolumes(int curVol, Controls *c)
 {
+	KeyState *ks;
+	AxisState *as;
 	int newVol;
+	const float tickTime = 0.1f;
+	const float delayTime = 0.5f;
 
 	NOT(c);
 
 	newVol = curVol;
 	
-	if (c->hardware.key[hardwareKeyLeft].type == keyStatePressed) {
+	ks = &c->hardware.key[hardwareKeyLeft];
+	as = &c->hardware.axisX;
+
+	if (ks->type == keyStatePressed ||
+	(ks->type == keyStateHeld && ks->time >= delayTime && intervalTick(ks->time, tickTime)) ||
+	(as->type == axisStateExitDeadZone && as->value < 0)) {
 		newVol --;
-	} 
-	if (c->hardware.key[hardwareKeyRight].type == keyStatePressed) {
+	}
+ 
+	ks = &c->hardware.key[hardwareKeyRight];
+	if (ks->type == keyStatePressed ||
+	(ks->type == keyStateHeld && ks->time >= delayTime && intervalTick(ks->time, tickTime)) ||
+	(as->type == axisStateExitDeadZone && as->value > 0)) {
 		newVol ++;
 	}
 
@@ -899,7 +928,7 @@ int updateVolumes(int curVol, Controls *c)
 	return newVol;
 }
 
-void updateSettings(GUI *g, Controls *c)
+void update_guiFocusSettings(GUI *g, Controls *c)
 {
 	Settings *s;
 
@@ -910,6 +939,7 @@ void updateSettings(GUI *g, Controls *c)
 	
 	updateMenuWidget(&s->menu, c);
 	
+	s->snd = false;
 	if (goBack(c)) {
 		g->next = s->previous;
 		return;
@@ -918,8 +948,13 @@ void updateSettings(GUI *g, Controls *c)
 	switch (s->menu.focus) {
 	case settingsFocusMusic:
 	case settingsFocusSfx: {
+			int pvol;
 			int idx = s->menu.focus - volMus;
+			pvol = s->vol[idx];
 			s->vol[idx] = updateVolumes(s->vol[idx], c); 
+			if (pvol != s->vol[idx]) {
+				s->snd = true;
+			}
 			break;
 	}
 	case settingsFocusControls: {
@@ -988,6 +1023,7 @@ bool gameControlsAreDifferent(ControlsMenu *cm, GameControls *gc)
 
 void update_guiFocusControls(GUI *g, Controls *c)
 {
+	const float tickTime = 0.1f;
 	const float delayTime = 1.f;
 	ControlsMenu *cm;
 
@@ -1011,6 +1047,7 @@ void update_guiFocusControls(GUI *g, Controls *c)
 		return;
 	}
 
+	cm->snd = false;
 	switch (cm->menu.focus) {
 	case gameKeyPlay:
 	case gameKeyRecall:
@@ -1019,22 +1056,29 @@ void update_guiFocusControls(GUI *g, Controls *c)
 	case gameKeyCancel:
 	case gameKeyPrevTile:
 	case gameKeyNextTile: {
-		if (c->hardware.key[hardwareKeyLeft].type == keyStatePressed ||
-	   	(c->hardware.key[hardwareKeyLeft].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
+		KeyState *ks;
+
+		ks = &c->hardware.key[hardwareKeyLeft];
+		if (ks->type == keyStatePressed ||
+	   	(ks->type == keyStateHeld && ks->time >= delayTime && intervalTick(ks->time, tickTime)) ||
 		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value < 0)) {
 			do {
 				c->game.key[cm->menu.focus] += gameKeyCount;
 				c->game.key[cm->menu.focus] --;
 				c->game.key[cm->menu.focus] %= gameKeyCount; 
 			} while (!changableHardwareKey(c->game.key[cm->menu.focus]));
+			cm->snd = true;
 		}
-		if (c->hardware.key[hardwareKeyRight].type == keyStatePressed ||
-	   	(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyRight].time >= delayTime) ||
+
+		ks = &c->hardware.key[hardwareKeyRight];
+		if (ks->type == keyStatePressed ||
+	   	(ks->type == keyStateHeld && ks->time >= delayTime) ||
 		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value > 0)) {
 			do {
 				c->game.key[cm->menu.focus] ++;
 				c->game.key[cm->menu.focus] %= gameKeyCount; 
 			} while (!changableHardwareKey(c->game.key[cm->menu.focus]));
+			cm->snd = true;
 		}
 		break;
 	}
@@ -1144,32 +1188,38 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 		(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
 		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value > 0);
 
-
+	g->options.snd = false;
 	switch (g->options.menu.focus) {
 	case optionsFocusAI: {
 		if (left && g->options.ai > 1) {
 			g->options.ai--;
+			g->options.snd = true;
 		}
 		if (right && g->options.ai < 10) {
 			g->options.ai++;
+			g->options.snd = true;
 		}
 		break;
 	}
 	case optionsFocusBoard: {
 		if (left && g->options.board > 0) {
 			g->options.board--;
+			g->options.snd = true;
 		}
 		if (right && g->options.board < 0) {
 			g->options.board++;
+			g->options.snd = true;
 		}
 		break;
 	}
 	case optionsFocusRack: {
 		if (left && g->options.rack > 3) {
 			g->options.rack--;
+			g->options.snd = true;
 		}
 		if (right && g->options.rack < RACK_SIZE) {
 			g->options.rack++;
+			g->options.snd = true;
 		}
 		break;
 	}
@@ -1656,10 +1706,10 @@ void update(Env *e)
 		updateScoreBoard(&e->gui.scoreBoard, &e->game, SPF);
 	}
 	switch (e->gui.focus) {
-	case guiFocusTitle: updateTitle(&e->gui, &e->io.controls); break;
-	case guiFocusMenu: e->quit = updateMenu(&e->gui, &e->io.controls); break;
+	case guiFocusTitle: update_guiFocusTitle(&e->gui, &e->io.controls); break;
+	case guiFocusMenu: e->quit = update_guiFocusMenu(&e->gui, &e->io.controls); break;
 	case guiFocusRules: e->quit = update_guiFocusRules(&e->gui, &e->io.controls); break;
-	case guiFocusSettings: updateSettings(&e->gui, &e->io.controls); break;
+	case guiFocusSettings: update_guiFocusSettings(&e->gui, &e->io.controls); break;
 	case guiFocusControls: update_guiFocusControls(&e->gui, &e->io.controls); break;
 	case guiFocusPlayMenu: updatePlayMenu(&e->gui, &e->io.controls, &e->game); break;
 	case guiFocusOptions: update_guiFocusOptions(&e->gui, &e->io.controls, &e->game); break;

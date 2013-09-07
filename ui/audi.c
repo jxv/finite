@@ -48,6 +48,9 @@ void audi_guiFocusSettings(Env *e)
 			Mix_VolumeMusic(g->settings.vol[volMus] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 		}
 	}
+	if (g->settings.snd) {
+		Mix_PlayChannel(audioChanSfx, e->io.scrollSnd, 0); 
+	}
 }
 
 void audi_guiFocusMenu(Env *e)
@@ -123,6 +126,9 @@ void audi_guiFocusOptions(Env *e)
 	
 	g = &e->gui;
 	audiMenuWidget(&g->options.menu, e->io.scrollSnd);
+	if (g->options.snd) {
+		Mix_PlayChannel(audioChanSfx, e->io.scrollSnd, 0); 
+	}
 }
 
 void audi_guiFocusControls(Env *e)
@@ -136,6 +142,9 @@ void audi_guiFocusControls(Env *e)
 	audiMenuWidget(&g->controlsMenu.menu, e->io.scrollSnd);
 	if (g->controlsMenu.dups && g->controlsMenu.time == 1.0f) {
 		Mix_PlayChannel(audioChanSfx, e->io.incorrectSnd, 0); 
+	}
+	if (g->controlsMenu.snd) {
+		Mix_PlayChannel(audioChanSfx, e->io.scrollSnd, 0); 
 	}
 }
 

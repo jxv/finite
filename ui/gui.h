@@ -441,6 +441,7 @@ typedef struct Settings
 	MenuWidget menu;
 	int vol[volCount];
 	GUIFocusType previous;
+	bool snd;
 } Settings;
 
 typedef struct Options
@@ -449,6 +450,7 @@ typedef struct Options
 	int ai;
 	int board;
 	int rack;
+	bool snd;
 } Options;
 
 typedef struct ControlsMenu
@@ -456,6 +458,7 @@ typedef struct ControlsMenu
 	MenuWidget menu;
 	bool dupKey[gameKeyCount];
 	bool dups;
+	bool snd;
 	float time;
 } ControlsMenu;
 
