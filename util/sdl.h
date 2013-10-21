@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
+#include <SDL_net.h>
 
 #define ALPHA_R		0xff
 #define ALPHA_G		0x00

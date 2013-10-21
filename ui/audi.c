@@ -15,7 +15,7 @@ void audiMenuWidget(MenuWidget *mv, Mix_Chunk *mc)
 
 void audiScoreBoard(ScoreBoard *sb, Mix_Chunk *mc)
 {
-	if (!sb->stable /*&& Mix_Playing(audioChanSfx) == 0*/) {
+	if (!sb->stable) {
 		Mix_PlayChannel(audioChanSfx, mc, 0);
 	}
 }
