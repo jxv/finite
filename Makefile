@@ -27,7 +27,6 @@ LIB+=$(shell sdl-config --libs)
 LIB+=-lSDL_image
 LIB+=-lSDL_mixer
 LIB+=-lSDL_net
-LIB+=-lopk
 
 OBJ:=$(SRC:.c=.o)
 

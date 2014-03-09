@@ -1,8 +1,6 @@
 #ifndef FINITE_GUI_H
 #define FINITE_GUI_H
 
-#include <dosk.h>
-
 #include "sdl.h"
 #include "common.h"
 

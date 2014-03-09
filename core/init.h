@@ -1,8 +1,6 @@
 #ifndef FINITE_INIT_H
 #define FINITE_INIT_H
 
-#include <opk.h>
-
 #include "init.h"
 
 void boardInit(Board *);
