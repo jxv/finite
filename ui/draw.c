@@ -494,13 +494,6 @@ void drawMenuViewLeft(SDL_Surface *s, MenuView *mv)
 	}
 }
 
-void drawDemoInfo(Env *e)
-{
-	NOT(e);
-	
-	strDraw(e->io.screen, &e->io.normalFont, "Demo August 2013", 0, SCREEN_HEIGHT - e->io.normalFont.height);
-}
-
 void draw_guiFocusTitle(Env *e)
 {
 	NOT(e);
@@ -511,7 +504,6 @@ void draw_guiFocusTitle(Env *e)
 		surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
 	}
 	/*drawProgressBar(e->io.screen, 0.5f, 60, 180, 200, 10, 1);*/
-	drawDemoInfo(e);
 }
 
 void draw_guiFocusMenu(Env *e)
@@ -890,12 +882,6 @@ void draw_guiFocusOptions(Env *e)
 			lower = false;
 			higher = false;
 			sprintf(str, "Standard");
-			break;
-		}
-		case optionsFocusRack: {
-			lower = e->gui.options.rack > 3;
-			higher = e->gui.options.rack < RACK_SIZE;
-			sprintf(str, "%d", e->gui.options.rack);
 			break;
 		}
 		default: break;

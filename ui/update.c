@@ -1135,7 +1135,6 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	if (submitted(c)) {
 		switch (m->focus) {
 		case playMenuFocusHumanVsHuman: {
-			gm->rackSize = g->options.rack;
 			initGame1vs1Human(gm);
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
@@ -1144,7 +1143,6 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 			break;
 		}
 		case playMenuFocusHumanVsAI: {
-			gm->rackSize = g->options.rack;
 			initGame1vs1HumanAI(gm);
 			initTextLog(&g->gameGui.textLog);
 			resetNewGameGui(g, gm);
@@ -1212,22 +1210,10 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 		}
 		break;
 	}
-	case optionsFocusRack: {
-		if (left && g->options.rack > 3) {
-			g->options.rack--;
-			g->options.snd = true;
-		}
-		if (right && g->options.rack < RACK_SIZE) {
-			g->options.rack++;
-			g->options.snd = true;
-		}
-		break;
-	}
 	default: break;
 	}
 
 	gm->player[1].aiShare.difficulty = g->options.ai;
-	gm->rackSize = g->options.rack;
 }
 
 GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)

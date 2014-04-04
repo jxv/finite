@@ -109,8 +109,8 @@ void initGame1vs1Human(Game *g)
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	initPlayerHuman(&g->player[0], &g->bag, g->rackSize);
-	initPlayerHuman(&g->player[1], &g->bag, g->rackSize);
+	initPlayerHuman(&g->player[0], &g->bag);
+	initPlayerHuman(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
@@ -123,8 +123,8 @@ void initGame1vs1HumanAI(Game *g)
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	initPlayerHuman(&g->player[0], &g->bag, g->rackSize);
-	initPlayerAI(&g->player[1], &g->bag, g->rackSize);
+	initPlayerHuman(&g->player[0], &g->bag);
+	initPlayerAI(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
@@ -180,7 +180,6 @@ void initOptions(Options *o)
 {
 	o->ai = 5;
 	o->board = 0;
-	o->rack = 7;
 
 	initMenuWidget(&o->menu, optionsFocusAI, optionsFocusCount);
 }
@@ -801,7 +800,7 @@ bool initMenuViews(IO *io, GUI *g)
 
 	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
 	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Netplay (N/A)", "Options"};
-	char *optionsText[optionsFocusCount] = {"AI Difficulty:", "Board Style:", "Rack Size:"};
+	char *optionsText[optionsFocusCount] = {"AI Difficulty:", "Board Style:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
 	char *yesNoText[yesNoCount] = {"Yes", "No"};

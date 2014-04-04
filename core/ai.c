@@ -309,10 +309,9 @@ void printCont(Cont *c)
 	printf("\b-%d]\n", c->num);
 }
 
-bool placementToMovePlace(struct MovePlace *mp, Placement *p)
+bool placementToMovePlace(struct MovePlace *mp, const Placement *p)
 {
-	int i;
-
+        int i;
 	NOT(mp);
 	NOT(p);
 	assert(p->type == placementHorizontal || p->type == placementVertical || p->type == placementInvalid);
@@ -431,7 +430,7 @@ int hueristic(ActionPlace *ap, Player *p)
 			c += constant(p->tile[j].letter);
 		}
 	}
-	s += (ap->score * c) / p->rackSize;
+	s += (ap->score * c) / RACK_SIZE;
 	return s;
 }
 

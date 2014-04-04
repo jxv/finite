@@ -21,7 +21,6 @@ CFLAGS+=$(shell sdl-config --cflags)
 
 LIB:=-lc
 LIB+=-lm
-LIB+=-ldosk
 LIB+=-lpthread
 LIB+=$(shell sdl-config --libs)
 LIB+=-lSDL_image
