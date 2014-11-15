@@ -555,7 +555,7 @@ void draw_guiFocusRules(Env *e)
 		"",
 		"End Game:",
 		"7 The game ends when there are",
-		"  there are no words to spell.",	/* 37 */
+		"  no words to spell.",			/* 37 */
 	};
 	SDL_Rect rect;
 	float scroll;
