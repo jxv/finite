@@ -946,7 +946,6 @@ void update_guiFocusSettings(GUI *g, Controls *c)
 	}
 	
 	switch (s->menu.focus) {
-	case settingsFocusMusic:
 	case settingsFocusSfx: {
 			int pvol;
 			int idx = s->menu.focus - volMus;

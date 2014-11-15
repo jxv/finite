@@ -51,9 +51,6 @@ void audi_guiFocusSettings(Env *e)
 				Mix_Volume(i, g->settings.vol[volSfx] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
 			}
 		}
-		case settingsFocusMusic: {
-			Mix_VolumeMusic(g->settings.vol[volMus] * MIX_MAX_VOLUME / MAX_GUI_VOLUME);
-		}
 	}
 	if (g->settings.snd) {
 		Mix_PlayChannel(audioChanSfx, e->io.scrollSnd, 0); 
@@ -177,10 +174,6 @@ void audi_guiFocusTransScreen(Env *e)
 	NOT(e);
 
 	g = &e->gui;
-
-	if (g->next == guiFocusMenu && (!Mix_PlayingMusic() || Mix_PausedMusic())) {
-		Mix_PlayMusic(e->io.gameSong, -1);
-	}
 }
 
 void audi(Env *e)

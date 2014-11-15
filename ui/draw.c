@@ -636,18 +636,18 @@ void draw_guiFocusSettings(Env *e)
 	drawMenuView(e->io.screen, &e->io.settingsMV);
 	for (i = 0; i < settingsFocusCount; i++) {
 		f = i == e->gui.settings.menu.focus ? &e->io.highlightFont : &e->io.normalFont;
-		if (i == settingsFocusMusic || i == settingsFocusSfx) {
+		if (i == settingsFocusSfx) {
 			int v;
 			int ii = interval(e->io.time, 0.2f);
-			v = e->gui.settings.vol[i - settingsFocusMusic];
-			drawNum(e->io.screen, 183, i * e->io.normalFont.height * 2 + 78, v, f);
+			v = e->gui.settings.vol[i - settingsFocusSfx];
+			drawNum(e->io.screen, 183, i * e->io.normalFont.height * 2 + 92, v, f);
 			
 			if (i == e->gui.settings.menu.focus) {
 				if (v > 0) {
-					strDraw(e->io.screen, f, "<", 174 - ii - 6 * placeValues(v), i * e->io.normalFont.height * 2 + 78);
+					strDraw(e->io.screen, f, "<", 174 - ii - 6 * placeValues(v), i * e->io.normalFont.height * 2 + 92);
 				}
 				if (v < MAX_GUI_VOLUME) {
-					strDraw(e->io.screen, f, ">", 190 + ii, i * e->io.normalFont.height * 2 + 78);
+					strDraw(e->io.screen, f, ">", 190 + ii, i * e->io.normalFont.height * 2 + 94);
 				}
 			}
 		}

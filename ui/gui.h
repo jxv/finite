@@ -110,7 +110,6 @@ typedef enum
 typedef enum
 {
 	settingsFocusInvalid = -1,
-	settingsFocusMusic,
 	settingsFocusSfx,
 	settingsFocusControls,
 	settingsFocusCount
@@ -326,8 +325,6 @@ typedef struct IO
 	Mix_Chunk *scrollSnd;
 	Mix_Chunk *startSnd;
 	Mix_Chunk *pauseSnd;
-
-	Mix_Music *gameSong;
 
 	Controls controls;
 } IO;

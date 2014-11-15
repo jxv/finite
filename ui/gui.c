@@ -173,7 +173,7 @@ void initSettings(Settings *s)
 	}
 
 	s->previous = guiFocusMenu; 
-	initMenuWidget(&s->menu, settingsFocusMusic, settingsFocusCount);
+	initMenuWidget(&s->menu, settingsFocusSfx, settingsFocusCount);
 }
 
 void initOptions(Options *o)
@@ -801,7 +801,7 @@ bool initMenuViews(IO *io, GUI *g)
 	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Options"};
 	char *optionsText[optionsFocusCount] = {"AI Difficulty:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
-	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
+	char *settingsText[settingsFocusCount] = {"  SFX:     ", "Controls"};
 	char *yesNoText[yesNoCount] = {"Yes", "No"};
 	char *controlsText[gameKeyCount] = {"Play:", "Recall:", "Shuffle:", "Mode:", "Select:", "Cancel:", "Prev Tile:","Next Tile:", "Up:", "Down:", "Left:", "Right:"};
 
@@ -895,7 +895,6 @@ bool init(Env *e)
 	e->io.accel = NULL;
 	e->io.joyExists = false;
 	e->io.accelExists = false;
-	e->io.gameSong = NULL;
 
 	e->io.openSnd = NULL;
 	e->io.incorrectSnd = NULL;
@@ -929,16 +928,6 @@ bool init(Env *e)
 	if ((e->io.menuBackground = surfaceAlphaLoad(RES_PATH "menu_background.png")) == NULL) {
 		return false;
 	}
-
-	e->io.gameSong = Mix_LoadMUS(RES_PATH "game_music.ogg");
-	if (!e->io.gameSong) {
-		return false;
-	}
-/*
-	if (Mix_PlayMusic(e->io.menuSong, -1) == -1) {
-		return false;
-	}
-*/
 
 	loadingScreen(e);
 
@@ -1047,8 +1036,6 @@ void quit(Env *e)
 	freeChunk(e->io.scrollSnd);
 	freeChunk(e->io.startSnd);
 	freeChunk(e->io.pauseSnd);
-
-	freeMusic(e->io.gameSong);
 
 	Mix_CloseAudio();
 	SDL_Quit();
