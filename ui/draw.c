@@ -517,8 +517,49 @@ void draw_guiFocusMenu(Env *e)
 
 void draw_guiFocusRules(Env *e)
 {
+	const int rule_lines = 37;
+	const char *rules_text[] = {
+		"Objective: Score the most points",
+		"by spelling legal words.",
+		"",
+		"Setup:",
+		"1 Each player is given a random",
+		"  set of 7 letter tiles. Neither",
+		"  player knows what tiles the",
+		"  players have.",
+		"2 The free square in the center",
+		"  must be the location of the",	/* 10 */
+		"  initial move.",
+		"",
+		"Scoring:",
+		"3 Spelling a connected word ends",
+		"  your turn. Each word is spelled",
+		"  checked.",
+		"4 Each tile and square have",
+		"  defined values which are", 
+		"  displayed on the top right.",
+		"  The value of a placed word is",	/* 20 */
+		"  the [sum of [tiles times by the",
+		"  letter square bonuses]] which",
+		"  is all times by the word square",
+		"  bonuses.",
+		"5 The blank tile has no value,",
+		"  but it will attribute to word",
+		"  bonuses.",
+		"",
+		"Discarding:",
+		"6 You may discard tiles from the",	/* 30 */
+		"  from game as a turn. Your",
+		"  tiles will be replaced by the",
+		"  the remaining tiles in the bag.",
+		"",
+		"End Game:",
+		"7 The game ends when there are",
+		"  there are no words to spell.",	/* 37 */
+	};
 	SDL_Rect rect;
 	float scroll;
+	int i;
 
 	NOT(e);
 
@@ -557,7 +598,11 @@ void draw_guiFocusRules(Env *e)
 	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x60, 0x00, 0xff));
 	
 	surfaceDraw(e->io.screen, e->io.rulesTitle, 0 , scroll);
-	strDraw(e->io.screen, &e->io.normalFont, "Test", 60, scroll + 60);
+
+
+	for (i = 0; i < rule_lines; i++) {
+		strDraw(e->io.screen, &e->io.normalFont, rules_text[i], 60, scroll + 60 + i * 12);
+	}
 }
 
 void draw_guiFocusGameGUI(Env *e);
