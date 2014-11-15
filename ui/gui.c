@@ -179,7 +179,6 @@ void initSettings(Settings *s)
 void initOptions(Options *o)
 {
 	o->ai = 5;
-	o->board = 0;
 
 	initMenuWidget(&o->menu, optionsFocusAI, optionsFocusCount);
 }
@@ -800,7 +799,7 @@ bool initMenuViews(IO *io, GUI *g)
 
 	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
 	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Options"};
-	char *optionsText[optionsFocusCount] = {"AI Difficulty:", "Board Style:"};
+	char *optionsText[optionsFocusCount] = {"AI Difficulty:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
 	char *yesNoText[yesNoCount] = {"Yes", "No"};

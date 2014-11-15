@@ -923,12 +923,6 @@ void draw_guiFocusOptions(Env *e)
 			sprintf(str, "%d", e->gui.options.ai);
 			break;
 		}
-		case optionsFocusBoard: {
-			lower = false;
-			higher = false;
-			sprintf(str, "Standard");
-			break;
-		}
 		default: break;
 		}
 		strDraw(e->io.screen, f, str, mv->pos.x + mv->distance + 16, mv->pos.y + i * mv->spacing.y);

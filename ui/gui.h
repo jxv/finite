@@ -129,7 +129,6 @@ typedef enum
 {
 	optionsFocusInvalid = -1,
 	optionsFocusAI = 0,
-	optionsFocusBoard,
 	optionsFocusCount
 } OptionsFocusType;
 
@@ -444,7 +443,6 @@ typedef struct Options
 {
 	MenuWidget menu;
 	int ai;
-	int board;
 	bool snd;
 } Options;
 

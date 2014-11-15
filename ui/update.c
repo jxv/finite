@@ -1199,17 +1199,6 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 		}
 		break;
 	}
-	case optionsFocusBoard: {
-		if (left && g->options.board > 0) {
-			g->options.board--;
-			g->options.snd = true;
-		}
-		if (right && g->options.board < 0) {
-			g->options.board++;
-			g->options.snd = true;
-		}
-		break;
-	}
 	default: break;
 	}
 
