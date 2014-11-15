@@ -178,7 +178,7 @@ void audi_guiFocusTransScreen(Env *e)
 
 	g = &e->gui;
 
-	if (g->next == guiFocusMenu && !Mix_PlayingMusic()) {
+	if (g->next == guiFocusMenu && (!Mix_PlayingMusic() || Mix_PausedMusic())) {
 		Mix_PlayMusic(e->io.gameSong, -1);
 	}
 }
