@@ -799,7 +799,7 @@ bool initMenuViews(IO *io, GUI *g)
 	Font *n, *h;
 
 	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
-	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Netplay (N/A)", "Options"};
+	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Options"};
 	char *optionsText[optionsFocusCount] = {"AI Difficulty:", "Board Style:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"Music:     ", "  SFX:     ", "Controls"};
