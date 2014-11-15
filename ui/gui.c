@@ -895,7 +895,6 @@ bool init(Env *e)
 	e->io.accel = NULL;
 	e->io.joyExists = false;
 	e->io.accelExists = false;
-	e->io.menuSong = NULL;
 	e->io.gameSong = NULL;
 
 	e->io.openSnd = NULL;
@@ -931,10 +930,6 @@ bool init(Env *e)
 		return false;
 	}
 
-	e->io.menuSong = Mix_LoadMUS(RES_PATH "menu_music.ogg");
-	if (!e->io.menuSong) {
-		return false;
-	}
 	e->io.gameSong = Mix_LoadMUS(RES_PATH "game_music.ogg");
 	if (!e->io.gameSong) {
 		return false;
@@ -1053,7 +1048,6 @@ void quit(Env *e)
 	freeChunk(e->io.startSnd);
 	freeChunk(e->io.pauseSnd);
 
-	freeMusic(e->io.menuSong);
 	freeMusic(e->io.gameSong);
 
 	Mix_CloseAudio();

@@ -327,7 +327,6 @@ typedef struct IO
 	Mix_Chunk *startSnd;
 	Mix_Chunk *pauseSnd;
 
-	Mix_Music *menuSong;
 	Mix_Music *gameSong;
 
 	Controls controls;
