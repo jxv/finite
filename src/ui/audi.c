@@ -170,10 +170,8 @@ void audi_guiFocusControls(Env *e)
 void audi_guiFocusTransScreen(Env *e)
 {
 	GUI *g;
-
-	NOT(e);
-
 	g = &e->gui;
+        (void)g;
 }
 
 void audi(Env *e)
