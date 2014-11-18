@@ -445,7 +445,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 	bool firstMove;
 	Cont cont;
 	Combo combo;
-	Placement placement;
+	Placement placement = {.type = placementInvalid, .idx = 0, .num = 0};
 	Move move;
 	Action action;
 	Board *b;
