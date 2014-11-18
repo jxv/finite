@@ -1,7 +1,7 @@
-INC := -I src
-INC += -I src/core
-INC += -I src/ui
-INC += -I src/util
+INC := -I include
+INC += -I include/core
+INC += -I include/ui
+INC += -I include/util
 
 SRC := $(wildcard src/*.c)
 SRC += $(wildcard src/core/*.c)
