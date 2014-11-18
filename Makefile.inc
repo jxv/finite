@@ -8,7 +8,7 @@ SRC += $(wildcard src/core/*.c)
 SRC += $(wildcard src/ui/*.c)
 SRC += $(wildcard src/util/*.c)
 
-CFLAGS := -ansi
+CFLAGS := -std=c99
 # CFLAGS +=-Werror
 # CFLAGS +=-Wextra
 CFLAGS += -Wall
