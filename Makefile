@@ -1,35 +1,8 @@
-CC=cc
-RM=rm
+include Makefile.inc
 
-INC=-I .
-INC+=-I core
-INC+=-I ui
-INC+=-I util
+CFLAGS += $(shell sdl-config --cflags)
+LIB += $(shell sdl-config --libs)
 
-SRC=$(wildcard *.c)
-SRC+=$(wildcard core/*.c)
-SRC+=$(wildcard ui/*.c)
-SRC+=$(wildcard util/*.c)
-
-CFLAGS:=-ansi
-#CFLAGS+=-Werror
-CFLAGS+=-Wall
-CFLAGS+=-pedantic
-CFLAGS+=-O3
-CFLAGS+=-DDEBUG
-CFLAGS+=$(shell sdl-config --cflags)
-
-LIB:=-lc
-LIB+=-lm
-LIB+=-lpthread
-LIB+=$(shell sdl-config --libs)
-LIB+=-lSDL_image
-LIB+=-lSDL_mixer
-LIB+=-lSDL_net
-
-OBJ:=$(SRC:.c=.o)
-
-OUT=finite
 
 %.o:	%.c
 	$(CC) $(CFLAGS) $(INC) $(LIB) -o $@ -c $<

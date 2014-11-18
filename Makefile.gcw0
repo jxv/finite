@@ -1,35 +1,10 @@
-CC:=mipsel-gcw0-linux-uclibc-cc
-SYSROOT:=$(shell $(CC) -print-sysroot)
-RM:=rm -f
+include Makefile.inc
 
-INC:=-I .
-INC+=-I core
-INC+=-I ui
-INC+=-I util
+CC := mipsel-gcw0-linux-uclibc-cc
+SYSROOT := $(shell $(CC) -print-sysroot)
 
-SRC:=$(wildcard *.c)
-SRC+=$(wildcard core/*.c)
-SRC+=$(wildcard ui/*.c)
-SRC+=$(wildcard util/*.c)
-
-CFLAGS:=-ansi
-#CFLAGS+=-Wall
-#CFLAGS+=-Werror
-CFLAGS+=-pedantic
-CFLAGS+=-O3
-CFLAGS+=-DNDEBUG
-CFLAGS+=$(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
-
-LIB:=-lc
-LIB+=-lm
-LIB+=-lpthread
-LIB+=$(shell $(SYSROOT)/usr/bin/sdl-config --libs)
-LIB+=-lSDL_image
-LIB+=-lSDL_mixer
-LIB+=-lSDL_net
-
-OUT:=finite
-OBJ:=$(SRC:.c=.o)
+CFLAGS += $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
+LIB += $(shell $(SYSROOT)/usr/bin/sdl-config --libs)
 
 %.o:	%.c
 	$(CC) $(CFLAGS) $(INC) $(LIB) -o $@ -c $<

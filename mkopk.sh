@@ -1,12 +1,12 @@
-rm -r build finite.opk
+rm -r dist finite.opk
 make -f Makefile.gcw0 clean
 make -f Makefile.gcw0
-mkdir build
-mkdir build/res
-cp finite build
-cp icon.png build
-cp default.gcw0.desktop build
-cp -r res/*.png build/res
-cp -r res/*.wav build/res
-cp -r res/*.txt build/res
-mksquashfs build finite.opk -all-root -noappend -no-exports -no-xattrs
+mkdir dist
+mkdir dist/res
+cp finite dist
+cp icon.png dist
+cp default.gcw0.desktop dist
+cp -r res/*.png dist/res
+cp -r res/*.wav dist/res
+cp -r res/*.txt dist/res
+mksquashfs dist finite.opk -all-root -noappend -no-exports -no-xattrs
