@@ -1,7 +1,7 @@
 #include "common.h"
 #include "print.h"
 
-int defaultLetterScore(LetterType l)
+static int default_letter_score(LetterType l)
 {
 	switch (l) {
 	case letterA: return 1;
@@ -35,107 +35,74 @@ int defaultLetterScore(LetterType l)
 	return 0;
 }
 
-int tileScore(Tile *t)
+int tile_score(const Tile *t)
 {
-	NOT(t);
-
-	if (t->type == tileLetter) {
-		return defaultLetterScore(t->letter);
-	}
+	if (t->type == tileLetter)
+		return default_letter_score(t->letter);
 	return 0;
 }
 
-bool canUseDblLet(Board *b, Dir *d, int p, int x, int y)
-{
-	NOT(b);
-	NOT(d);
-	VALID_BOARD_SIZE(p);
-	VALID_BOARD_X(x);
-	VALID_BOARD_Y(y);
+int tileScore(const Tile *t)
+{ return tile_score(t); }
 
+static bool can_use_dbl_let(const Board *b, const Dir *d, int p, int x, int y)
+{
 	return d->pos[p] && b->sq[y][x] == sqDblLet;
 }
 
-bool canUseTrpLet(Board *b, Dir *d, int p, int x, int y)
+static bool can_use_trp_let(const Board *b, const Dir *d, int p, int x, int y)
 {
-	NOT(b);
-	NOT(d);
-	VALID_BOARD_SIZE(p);
-	VALID_BOARD_X(x);
-	VALID_BOARD_Y(y);
-
 	return d->pos[p] && b->sq[y][x] == sqTrpLet;
 }
 
-bool canUseDblWrd(Board *b, Dir *d, int p, int x, int y)
+static bool can_use_dbl_wrd(const Board *b, const Dir *d, int p, int x, int y)
 {
-	NOT(b);
-	NOT(d);
-	VALID_BOARD_SIZE(p);
-	VALID_BOARD_X(x);
-	VALID_BOARD_Y(y);
-
 	return d->pos[p] && b->sq[y][x] == sqDblWrd;
 }
 	
 
-bool canUseTrpWrd(Board *b, Dir *d, int p, int x, int y)
+static bool can_use_trp_wrd(const Board *b, const Dir *d, int p, int x, int y)
 {
-	NOT(b);
-	NOT(d);
-	VALID_BOARD_SIZE(p);
-	VALID_BOARD_X(x);
-	VALID_BOARD_Y(y);
-
 	return d->pos[p] && b->sq[y][x] == sqTrpWrd;
 }
 
-int dirScore(Board *b, Dir *d)
+static int dir_score(const Board *b, const Dir *d)
 {
-	int dw, tw, x, y, s, i, t;
-
-	NOT(b);
-	NOT(d);
-
-	dw = 0;
-	tw = 0;
-	x = d->x;
-	y = d->y;
-	s = 0;
+	int dbl_wrd = 0;
+	int trp_wrd = 0;
+	int x = d->x;
+	int y = d->y;
+	int score = 0;
 	switch (d->type) {
-	case dirRight: {
-		for (i = d->x; i < d->len + d->x; i++) {
-			t = tileScore(&b->tile[y][i]);
-			t *= canUseDblLet(b, d, i, i, y) ? 2 : 1;
-			t *= canUseTrpLet(b, d, i, i, y) ? 3 : 1;
-			dw += canUseDblWrd(b, d, i, i, y);
-			tw += canUseTrpWrd(b, d, i, i, y);
-			s += t;
+	case dirRight:
+		for (int i = d->x; i < d->len + d->x; i++) {
+			int tile = tile_score(&b->tile[y][i]);
+			tile *= can_use_dbl_let(b, d, i, i, y) ? 2 : 1;
+			tile *= can_use_trp_let(b, d, i, i, y) ? 3 : 1;
+			dbl_wrd += can_use_dbl_wrd(b, d, i, i, y);
+			trp_wrd += can_use_trp_wrd(b, d, i, i, y);
+			score += tile;
 		}
 		break;
-	}
-	case dirDown: {
-		for (i = d->y; i < d->len + d->y; i++) {
-			t = tileScore(&b->tile[i][x]);
-			t *= canUseDblLet(b, d, i, x, i) ? 2 : 1;
-			t *= canUseTrpLet(b, d, i, x, i) ? 3 : 1;
-			dw += canUseDblWrd(b, d, i, x, i);
-			tw += canUseTrpWrd(b, d, i, x, i);
-			s += t;
+	case dirDown:
+		for (int i = d->y; i < d->len + d->y; i++) {
+			int tile = tile_score(&b->tile[i][x]);
+			tile *= can_use_dbl_let(b, d, i, x, i) ? 2 : 1;
+			tile *= can_use_trp_let(b, d, i, x, i) ? 3 : 1;
+			dbl_wrd += can_use_dbl_wrd(b, d, i, x, i);
+			trp_wrd += can_use_trp_wrd(b, d, i, x, i);
+			score += tile;
 		}
 		break;
-	}
 	case dirInvalid: /* fall through */
 	default: return 0;
 	}
 
-	if (dw > 0) {
-		s *= dw * 2;
-	}
-	if (tw > 0) {
-		s *= tw * 3;
-	}
-	return s;
+	if (dbl_wrd > 0)
+		score *= dbl_wrd * 2;
+	if (trp_wrd > 0)
+		score *= trp_wrd * 3;
+	return score;
 }
 
 int metaPathScore(Dir *d, Dir *adj, int n, Board *b)
@@ -148,10 +115,10 @@ int metaPathScore(Dir *d, Dir *adj, int n, Board *b)
 
 	s = 0;
 	if (d->type != dirInvalid) {
-		s = dirScore(b, d);
+		s = dir_score(b, d);
 		for (i = 0; i < n; i++) {
 			if (adj[i].type != dirInvalid) {
-				s += dirScore(b, &adj[i]);
+				s += dir_score(b, &adj[i]);
 			}
 		}
 	}
@@ -171,10 +138,10 @@ int pathScore(Path *p)
 	switch (p->type) {
 	case pathDot: {
 		if (p->data.dot.right.type == dirRight) {
-			s = dirScore(b, &p->data.dot.right);
+			s = dir_score(b, &p->data.dot.right);
 		}
 		if (p->data.dot.down.type == dirDown) {
-			s += dirScore(b, &p->data.dot.down);
+			s += dir_score(b, &p->data.dot.down);
 		}
 		break;
 	}

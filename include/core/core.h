@@ -413,7 +413,7 @@ bool bagEmpty(Bag *b);
 int bagCount(Bag *b);
 int bagSize(Bag *b);
 
-int tileScore(Tile *t);
+int tileScore(const Tile *t);
 
 bool vowel(LetterType);
 bool constant(LetterType);
