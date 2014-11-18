@@ -700,19 +700,13 @@ bool placeInRange(MovePlace *mp)
 
 bool placeOverlap(MovePlace *mp)
 {
-	int i, j;
-
-	NOT(mp);
-	
-	for (i = 0; i < mp->num; i++) {
-		for (j = i + 1; j < mp->num; j++) {
-			if (mp->rackIdx[i] == mp->rackIdx[j]) {
+	for (int i = 0; i < mp->num && i < RACK_SIZE; i++) {
+		for (int j = i + 1; j < mp->num && j < RACK_SIZE; j++) {
+			if (mp->rackIdx[i] == mp->rackIdx[j])
 				return false;
-			}
 			if (mp->coor[i].x == mp->coor[j].x &&
-			    mp->coor[i].y == mp->coor[j].y) {
+			                mp->coor[i].y == mp->coor[j].y)
 				return true;
-			}
 		}
 	}
 	return false;
