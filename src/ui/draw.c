@@ -271,22 +271,22 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 
 		strDraw(io->screen, &io->normalFont, "PLACE", 132 + 12,  8);
 		if (g->gameGui.focus == gameGUIFocusBoard) {
-			SqType sq;
+			sq_t sq;
 			sq = gm->board.sq[idx->y][idx->x];
 
 			surfaceDraw(io->screen, io->sq[sq], 190, 9);
 
 			str = "\0";
 			switch (sq) {
-			case sqNormal: str = "NO BONUS"; break;
-			case sqDblLet: str = "x2 LETTER"; break;
-			case sqTrpLet: str = "x3 LETTER"; break;
-			case sqDblWrd: str = "x2 WORD"; break;
-			case sqTrpWrd: str = "x3 WORD"; break;
-			case sqFree:   str = "FREE SQ."; break;
-			case sqMystery: str = "MYSTERY"; break;
-			case sqNoVowel: str = "VOWEL ONLY"; break;
-			case sqBlock: str = "BLOCK"; break;
+			case SQ_NORMAL: str = "NO BONUS"; break;
+			case SQ_DBL_LET: str = "x2 LETTER"; break;
+			case SQ_TRP_LET: str = "x3 LETTER"; break;
+			case SQ_DBL_WRD: str = "x2 WORD"; break;
+			case SQ_TRP_WRD: str = "x3 WORD"; break;
+			case SQ_FREE: str = "FREE SQ."; break;
+			case SQ_MYSTERY: str = "MYSTERY"; break;
+			case SQ_NO_VOWEL: str = "VOWEL ONLY"; break;
+			case SQ_BLOCK: str = "BLOCK"; break;
 			default: break;
 			}
 			strDraw(io->screen, &io->normalFont, str, 203, 8);

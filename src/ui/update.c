@@ -520,15 +520,15 @@ bool updateTransMovePlaceWild(TransMove *tm, Cmd *c, Board *b, Player *p)
 	}
 	case cmdBoardUp: {
 		int idx = tm->adjust.data.tile[mmp->idx].idx;
-		p->tile[idx].letter += letterCount;
+		p->tile[idx].letter += LETTER_COUNT;
 		p->tile[idx].letter--;
-		p->tile[idx].letter %= letterCount;
+		p->tile[idx].letter %= LETTER_COUNT;
 		return true;
 	}
 	case cmdBoardDown: {
 		int idx = tm->adjust.data.tile[mmp->idx].idx;
 		p->tile[idx].letter++;
-		p->tile[idx].letter %= letterCount;
+		p->tile[idx].letter %= LETTER_COUNT;
 		return true;
 	}
 	default: break;
@@ -762,18 +762,18 @@ bool transMoveToMove(Move *m, TransMove *tm)
 	m->playerIdx = tm->playerIdx;
 	switch (tm->type) {
 	case transMovePlacePlay: {
-		m->type = movePlace;
+		m->type = MOVE_PLACE;
 		moveModePlaceToMovePlace(&m->data.place, &tm->place, &tm->adjust);
 		return true;
 	}
 	case transMoveDiscardPlay: {
-		m->type = moveDiscard;
+		m->type = MOVE_DISCARD;
 		moveModeDiscardToMoveDiscard(&m->data.discard, &tm->discard, &tm->adjust);
 		return true;
 	}
-	case transMoveSkipPlay: m->type = moveSkip; return true;
-	case transMoveQuit: m->type = moveQuit; return true;
-	default: m->type = moveInvalid; break;
+	case transMoveSkipPlay: m->type = MOVE_SKIP; return true;
+	case transMoveQuit: m->type = MOVE_QUIT; return true;
+	default: m->type = MOVE_INVALID; break;
 	}
 	return false;
 }
@@ -1206,13 +1206,13 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 	gm->player[1].aiShare.difficulty = g->options.ai;
 }
 
-GUIFocusType nextGUIFocusByPlayerType(PlayerType pt)
+GUIFocusType nextGUIFocusByplayer_tag_t(player_tag_t pt)
 {
-	assert(pt >= 0 && pt < playerCount);
+	assert(pt >= 0 && pt < PLAYER_COUNT);
 
 	switch (pt) {
-	case playerHuman: return guiFocusGameHotseatPause;
-	case playerAI: return guiFocusGameAIPause;
+	case PLAYER_HUMAN: return guiFocusGameHotseatPause;
+	case PLAYER_AI: return guiFocusGameAIPause;
 	default: break;
 	}
 	assert(false);
@@ -1324,20 +1324,20 @@ void addMoveToTextLog(TextLog *tl, Move *m, Player *p)
 	str[0] = '\0';
 
 	switch (m->type) {
-	case movePlace: {
+	case MOVE_PLACE: {
 		char *numSmall = "PLAYER %d placed tile.";
 		char *numBig = "PLAYER %d placed tiles.";
 		sprintf(str, m->data.place.num > 1 ? numBig : numSmall, m->playerIdx + 1);
 		break;
 	}
-	case moveDiscard: {
+	case MOVE_DISCARD: {
 		char *numSmall = "PLAYER %d discarded tile.";
 		char *numBig = "PLAYER %d discarded tiles.";
 		sprintf(str, m->data.place.num > 1 ? numBig : numSmall, m->playerIdx + 1);
 		break;
 	}
-	case moveSkip: sprintf(str, "PLAYER %d skipped turn.", m->playerIdx + 1); break;
-	case moveQuit: sprintf(str, "PLAYER %d quit.", m->playerIdx + 1); break;
+	case MOVE_SKIP: sprintf(str, "PLAYER %d skipped turn.", m->playerIdx + 1); break;
+	case MOVE_QUIT: sprintf(str, "PLAYER %d quit.", m->playerIdx + 1); break;
 	default: break;
 	}
 	
@@ -1354,23 +1354,23 @@ void addActionToTextLog(TextLog *tl, Action *a)
 	str[0] = '\0';
 
 	switch (a->type) {
-	case actionPlace: {
+	case ACTION_PLACE: {
 		char *singluar = "PLAYER %d scored %d points.";
 		char *plural = "PLAYER %d scored %d points.";
 		sprintf(str, a->data.place.num == 1 ? singluar : plural, a->playerIdx + 1, a->data.place.score);
 		break;
 	}
-	case actionDiscard: {
+	case ACTION_DISCARD: {
 		char *singluar = "PLAYER %d lost %d points.";
 		char *plural = "PLAYER %d lost %d points.";
 		sprintf(str, a->data.place.num == 1 ? singluar : plural, a->playerIdx + 1, -a->data.discard.score);
 		break;
 	}
-	case actionSkip: {
+	case ACTION_SKIP: {
 		sprintf(str, "PLAYER %d skipped a move.", a->playerIdx + 1);
 		break;
 	}
-	case actionQuit: {
+	case ACTION_QUIT: {
 		sprintf(str, "PLAYER %d quit.", a->playerIdx + 1);
 		break;
 	}
@@ -1474,7 +1474,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	if (cmd.type == cmdPlay || cmd.type == cmdQuit)
 		mkLog(&a, &l);
 
-	if (a.type != actionInvalid) {
+	if (a.type != ACTION_INVALID) {
 		addActionToTextLog(&gg->textLog, &a);
 		actionToLastMove(&gg->lastMove, &a);
 		apply_adjust(tm->adjust.data.tile, &gm->player[a.playerIdx]);
@@ -1485,17 +1485,17 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		} else {
 			next_turn(gm);
 			clrTransMove(tm, gm->turn, &gm->player[gm->turn], &gm->board);
-			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+			g->next = nextGUIFocusByplayer_tag_t(gm->player[gm->turn].type);
 		}
 		tm->type = transMoveInvalid;
 	} else {
-		if (m.type != moveInvalid) {
+		if (m.type != MOVE_INVALID) {
 			/* printActionErr(a.type); */
 		}
 	} 
 
 	if (cmd.type == cmdPlay) {
-		gg->validPlay = a.type != actionInvalid ? yes : no;
+		gg->validPlay = a.type != ACTION_INVALID ? yes : no;
 	} else {
 		gg->validPlay = yesNoInvalid;
 	}
@@ -1534,7 +1534,7 @@ void update_guiFocusGameMenu(GUI *g, Controls *c, Game *gm)
 		case gameMenuFocusSkip: {
 			g->transMove.type = transMoveSkipPlay;
 			next_turn(gm);
-			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+			g->next = nextGUIFocusByplayer_tag_t(gm->player[gm->turn].type);
 			break;
 		}
 		case gameMenuFocusQuit: {
@@ -1609,7 +1609,7 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 		apply_action(&gm->player[gm->turn].aiShare.action, gm);
 
 		next_turn(gm);
-		g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
+		g->next = nextGUIFocusByplayer_tag_t(gm->player[gm->turn].type);
 	}
 
 }
@@ -1630,7 +1630,7 @@ void updateGameAreYouSureQuit(GUI *g, Game *gm, Controls *c)
 
 			g->next = guiFocusGameOver;
 
-			m.type = moveQuit;
+			m.type = MOVE_QUIT;
 			m.playerIdx = gm->turn;
 
 			mk_action(gm, &m, &a);

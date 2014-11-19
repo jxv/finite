@@ -220,7 +220,7 @@ void actionToLastMove(LastMove *lm, Action *a)
 			}
 		}
 
-		if (a->type != actionPlace) {
+		if (a->type != ACTION_PLACE) {
 			lm->type = lastMoveNone;
 			return;
 		}
@@ -229,17 +229,17 @@ void actionToLastMove(LastMove *lm, Action *a)
 		p = &a->data.place.path;
 
 		switch (p->type) {
-		case pathDot: {
-			if (p->data.dot.right.type == dirRight) {
+		case PATH_DOT: {
+			if (p->data.dot.right.type == DIR_RIGHT) {
 				lm->data.place[p->data.dot.right.y][p->data.dot.right.x] = true;
 			}
-			if (p->data.dot.down.type == dirDown) {
+			if (p->data.dot.down.type == DIR_DOWN) {
 				lm->data.place[p->data.dot.down.y][p->data.dot.down.x] = true;
 			}
 			break;
 		}
-		case pathHorz: {
-			if (p->data.horz.right.type != dirRight) {
+		case PATH_HORZ: {
+			if (p->data.horz.right.type != DIR_RIGHT) {
 				lm->type = lastMoveNone;
 				break;
 			}
@@ -250,8 +250,8 @@ void actionToLastMove(LastMove *lm, Action *a)
 				
 			break;
 		}
-		case pathVert: {
-			if (p->data.vert.down.type != dirDown) {
+		case PATH_VERT: {
+			if (p->data.vert.down.type != DIR_DOWN) {
 				lm->type = lastMoveNone;
 				break;
 			}
@@ -643,26 +643,26 @@ bool initIO(Env *e)
 	e->io.highlightFont.spacing = -2;
 	count++; e->io.loading += 1.f / COUNT;
 
-	e->io.sq[sqNormal] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
+	e->io.sq[SQ_NORMAL] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqDblLet] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
+	e->io.sq[SQ_DBL_LET] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqDblWrd] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
+	e->io.sq[SQ_DBL_WRD] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqTrpLet] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
+	e->io.sq[SQ_TRP_LET] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqTrpWrd] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
+	e->io.sq[SQ_TRP_WRD] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqFree] = surfaceAlphaLoad(RES_PATH "sq_free.png");
+	e->io.sq[SQ_FREE] = surfaceAlphaLoad(RES_PATH "sq_free.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqNoVowel] = surfaceAlphaLoad(RES_PATH "sq_novowel.png");
+	e->io.sq[SQ_NO_VOWEL] = surfaceAlphaLoad(RES_PATH "sq_novowel.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqBlock] = surfaceAlphaLoad(RES_PATH "sq_block.png");
+	e->io.sq[SQ_BLOCK] = surfaceAlphaLoad(RES_PATH "sq_block.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[sqMystery] = surfaceAlphaLoad(RES_PATH "sq_mystery.png");
+	e->io.sq[SQ_MYSTERY] = surfaceAlphaLoad(RES_PATH "sq_mystery.png");
 	count++; e->io.loading += 1.f / COUNT;
 
-	for (i = 0; i < sqCount; i++) {
+	for (i = 0; i < SQ_COUNT; i++) {
 		if (e->io.sq[i] == NULL) { 
 			return false;
 		}
@@ -687,7 +687,7 @@ bool initIO(Env *e)
 		}
 	}
 
-	for (i = 0; i < letterCount; i++) {
+	for (i = 0; i < LETTER_COUNT; i++) {
 		for (j = 0; j < tileLookCount; j++) {
 			e->io.tile[TILE_WILD][i][j] = surfaceCpy(tile[j]);
 			if (!e->io.tile[TILE_WILD][i][j]) {
@@ -1000,13 +1000,13 @@ void quit(Env *e)
 	surfaceFree(e->io.shuffle);
 	surfaceFree(e->io.shuffleDisable);
 	surfaceFree(e->io.boardCover);
-	for (i = 0; i < sqCount; i++) {
+	for (i = 0; i < SQ_COUNT; i++) {
 		surfaceFree(e->io.sq[i]);
 	}
 	for (i = 0; i < tileLookCount; i++) {
 		surfaceFree(e->io.wild[i]);
 	}	
-	for (i = 0; i < letterCount; i++) {
+	for (i = 0; i < LETTER_COUNT; i++) {
 		for (j = 0; j < tileLookCount; j++) {
 			surfaceFree(e->io.tile[TILE_WILD][i][j]);
 			surfaceFree(e->io.tile[TILE_LETTER][i][j]);

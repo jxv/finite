@@ -3,15 +3,14 @@
 #include "core.h"
 #include "print.h"
 
-void printLetter(LetterType l)
+void printLetter(letter_t l)
 {
-	assert(l >= letterA);
-	assert(l <= letterZ);
-
-	putchar('A' + l - letterA);
+	assert(l >= LETTER_A);
+	assert(l <= LETTER_Z);
+	putchar('A' + l - LETTER_A);
 }
 
-void printWord(word_t *w)
+void printWord(const word_t *w)
 {
 	char str[BOARD_SIZE];
 	int j;
@@ -19,13 +18,13 @@ void printWord(word_t *w)
 	NOT(w);
 
 	for (j = 0; j < w->len; j++) {
-		str[j] = 'A' + w->letter[j] - letterA;
+		str[j] = 'A' + w->letter[j] - LETTER_A;
 	}
 	str[j] = '\0';
 	printf("[%s]\n", str);
 }
 
-void printDict(dict_t *d)
+void printDict(const dict_t *d)
 {
 	int i;
 
@@ -37,7 +36,7 @@ void printDict(dict_t *d)
 	}
 }
 
-void printTile(tile_t *t)
+void printTile(const tile_t *t)
 {
 	char c;
 	
@@ -51,7 +50,7 @@ void printTile(tile_t *t)
 	putchar(c);
 }
 
-void printBag(bag_t *b)
+void printBag(const bag_t *b)
 {
 	int i;
 
@@ -66,18 +65,18 @@ void printBag(bag_t *b)
 	putchar('\n');
 }
 
-void printAction(action_t *a)
+void printAction(const action_t *a)
 {
 	NOT(a);
 
 	switch (a->type) {
-	case actionInvalid: printf("action invalid\n"); break;
-	case actionPlace: {
+	case ACTION_INVALID: printf("action invalid\n"); break;
+	case ACTION_PLACE: {
 		printf("action place\n");
 		switch (a->data.place.path.type) {
-		case pathDot: printf("path_dot\n"); break;
-		case pathHorz: printf("path_horz\n");break;
-		case pathVert: printf("path_vert\n"); break;
+		case PATH_DOT: printf("path_dot\n"); break;
+		case PATH_HORZ: printf("path_horz\n");break;
+		case PATH_VERT: printf("path_vert\n"); break;
 		default: break;
 		}
 		printf("score: %d\n", a->data.place.score);
@@ -87,7 +86,7 @@ void printAction(action_t *a)
 	}
 }
 
-void printScore(game_t *g)
+void printScore(const game_t *g)
 {
 	int i;
 	
@@ -98,29 +97,23 @@ void printScore(game_t *g)
 	}
 }
 
-void printBoard(board_t *b)
+void printBoard(const board_t *b)
 {
-	int x, y;
-	char c;
-	tile_t *t;
-	SqType sq;
-
-	NOT(b);
-
-	for (y = 0; y < BOARD_Y; y++) {
-		for (x = 0; x < BOARD_X; x++) {
-			t = &b->tile[y][x];
-			sq = b->sq[y][x];
+	for (int y = 0; y < BOARD_Y; y++) {
+		for (int x = 0; x < BOARD_X; x++) {
+			const tile_t *t = &b->tile[y][x];
+			sq_t sq = b->sq[y][x];
 			if (t->type != TILE_NONE) {
 				printTile(t);
 			} else {
+                                char c = ' ';
 				switch (sq) {
-				case sqDblLet: c = '-'; break;
-				case sqTrpLet: c = '='; break;
-				case sqDblWrd: c = '+'; break;
-				case sqTrpWrd: c = '#'; break;
-				case sqFree: c = '$'; break;
-				case sqNormal: /* fall through */
+				case SQ_DBL_LET: c = '-'; break;
+				case SQ_TRP_LET: c = '='; break;
+				case SQ_DBL_WRD: c = '+'; break;
+				case SQ_TRP_WRD: c = '#'; break;
+				case SQ_FREE: c = '$'; break;
+				case SQ_NORMAL: /* fall through */
 				default: c = '.'; break;
 				}
 				putchar(c);
@@ -130,10 +123,10 @@ void printBoard(board_t *b)
 	}
 }
 
-void printRack(player_t *p)
+void printRack(const player_t *p)
 {
 	for (int i = 0; i < RACK_SIZE; i++) {
-		tile_t *t = &p->tile[i];
+		const tile_t *t = &p->tile[i];
 		if (t->type != TILE_NONE) {
                         char c;
 			switch(t->type) {
@@ -152,7 +145,7 @@ void printRack(player_t *p)
 	}
 }
 
-void printPlace(move_place_t *mp)
+void printPlace(const move_place_t *mp)
 {
 	for (int i = 0; i < mp->num; i++) {
 		printf("(%d,%d,%d) ", mp->coor[i].x, mp->coor[i].y, mp->rackIdx[i]);
@@ -160,53 +153,52 @@ void printPlace(move_place_t *mp)
 	printf("\n");
 }
 
-void printActionErr(action_err_t err)
+void printActionErr(const action_err_t err)
 {
 	switch (err) {
-	case actionErrUnknown: puts("[err: unknown]"); break;
-	case actionErrPlaceOutOfRange: puts("[err: out of range]"); break;
-	case actionErrPlaceSelfOverlap: puts("[err: self overlap]"); break;
-	case actionErrPlaceBoardOverlap: puts("[err: board overlap]"); break;
-	case actionErrPlaceInvalidRackId: puts("[err: invalid rack id]"); break;
-	case actionErrPlaceInvalidSq: puts("[err: place on free sq. or adjacent to a tile]"); break;
-	case actionErrPlaceNoRack: puts("[err: no tiles placed on the board]"); break;
-	case actionErrPlaceNoDir: puts("[err: tiles don't form a continuous line]"); break;
-	case actionErrPlaceInvalidPath: puts("[err: invalid path]"); break;
-	case actionErrPlaceInvalidWord: puts("[err: misspelled word(s)]"); break;
-	case actionErrDiscardRule: puts("[err: discard rule]"); break;
-	case actionErrSkipRule: puts("[err: skip rule]"); break;
-	case actionErrQuitRule: puts("[err: quit rule]"); break;
-	case actionErrNone: /* fall through */
+	case ACTION_ERR_UNKNOWN: puts("[err: unknown]"); break;
+	case ACTION_ERR_PLACE_OUT_OF_RANGE: puts("[err: out of range]"); break;
+	case ACTION_ERR_PLACE_SELF_OVERLAP: puts("[err: self overlap]"); break;
+	case ACTION_ERR_PLACE_BOARD_OVERLAP: puts("[err: board overlap]"); break;
+	case ACTION_ERR_PLACE_INVALID_RACK_ID: puts("[err: invalid rack id]"); break;
+	case ACTION_ERR_PLACE_INVALID_SQ: puts("[err: place on free sq. or adjacent to a tile]"); break;
+	case ACTION_ERR_PLACE_NO_RACK: puts("[err: no tiles placed on the board]"); break;
+	case ACTION_ERR_PLACE_NO_DIR: puts("[err: tiles don't form a continuous line]"); break;
+	case ACTION_ERR_PLACE_INVALID_PATH: puts("[err: invalid path]"); break;
+	case ACTION_ERR_PLACE_INVALID_WORD: puts("[err: misspelled word(s)]"); break;
+	case ACTION_ERR_DISCARD_RULE: puts("[err: discard rule]"); break;
+	case ACTION_ERR_SKIP_RULE: puts("[err: skip rule]"); break;
+	case ACTION_ERR_QUIT_RULE: puts("[err: quit rule]"); break;
+	case ACTION_ERR_NONE: /* fall through */
 	default: break;
 	}
 }
 
-void printLog(log_t *l)
+void printLog(const log_t *l)
 {
 	NOT(l);
 
 	switch (l->type) {
-	case actionInvalid: {
+	case ACTION_INVALID: {
 		switch (l->data.err) {
-		case actionErrNone: break;
+		case ACTION_ERR_NONE: break;
 		default: break;
 		}
 		break;
 	}
-	case actionPlace: {
+	case ACTION_PLACE: {
 		break;
 	}
-	case actionDiscard: {
+	case ACTION_DISCARD: {
 		break;
 	}
-	case actionSkip: {
+	case ACTION_SKIP: {
 		break;
 	}
-	case actionQuit: {
+	case ACTION_QUIT: {
 		break;
 	}
 	default:
                 break;
 	}
 }
-

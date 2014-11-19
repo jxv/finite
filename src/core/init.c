@@ -16,86 +16,86 @@ void boardInit(Board *b)
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
 			b->tile[y][x].type = TILE_NONE;
-			b->sq[y][x] = sqNormal;
+			b->sq[y][x] = SQ_NORMAL;
 			if ((x == y) || (BOARD_Y - y - 1 == x)) {
-				b->sq[y][x] = sqDblWrd;
+				b->sq[y][x] = SQ_DBL_WRD;
 			}
 			if ((y % 7 == 0) && (x % 7 == 0)) {
-				b->sq[y][x] = sqTrpWrd;
+				b->sq[y][x] = SQ_TRP_WRD;
 			}
 			if ((x % 4 == 1) && (y % 4 == 1)) {
-				b->sq[y][x] = sqTrpLet;
+				b->sq[y][x] = SQ_TRP_LET;
 			}
 			
 		}
 	}
-	b->sq[1][1] = sqDblWrd;
-	b->sq[13][1] = sqDblWrd;
-	b->sq[1][13] = sqDblWrd;
-	b->sq[13][13] = sqDblWrd;
-	b->sq[7][7] = sqFree;
+	b->sq[1][1] = SQ_DBL_WRD;
+	b->sq[13][1] = SQ_DBL_WRD;
+	b->sq[1][13] = SQ_DBL_WRD;
+	b->sq[13][13] = SQ_DBL_WRD;
+	b->sq[7][7] = SQ_FREE;
 
-	b->sq[14][3] = sqDblLet;
-	b->sq[3][14] = sqDblLet;
-	b->sq[0][3] = sqDblLet;
-	b->sq[3][0] = sqDblLet;
-	b->sq[0][11] = sqDblLet;
-	b->sq[11][0] = sqDblLet;
-	b->sq[14][11] = sqDblLet;
-	b->sq[11][14] = sqDblLet;
-	b->sq[2][8] = sqDblLet;
-	b->sq[8][2] = sqDblLet;
-	b->sq[2][6] = sqDblLet;
-	b->sq[6][2] = sqDblLet;
-	b->sq[3][7] = sqDblLet;
-	b->sq[7][3] = sqDblLet;
-	b->sq[8][2] = sqDblLet;
-	b->sq[2][8] = sqDblLet;
-	b->sq[12][6] = sqDblLet;
-	b->sq[6][12] = sqDblLet;
-	b->sq[11][7] = sqDblLet;
-	b->sq[7][11] = sqDblLet;
-	b->sq[12][8] = sqDblLet;
-	b->sq[8][12] = sqDblLet;
-	b->sq[8][8] = sqDblLet;
-	b->sq[6][6] = sqDblLet;
-	b->sq[6][8] = sqDblLet;
-	b->sq[8][6] = sqDblLet;
+	b->sq[14][3] = SQ_DBL_LET;
+	b->sq[3][14] = SQ_DBL_LET;
+	b->sq[0][3] = SQ_DBL_LET;
+	b->sq[3][0] = SQ_DBL_LET;
+	b->sq[0][11] = SQ_DBL_LET;
+	b->sq[11][0] = SQ_DBL_LET;
+	b->sq[14][11] = SQ_DBL_LET;
+	b->sq[11][14] = SQ_DBL_LET;
+	b->sq[2][8] = SQ_DBL_LET;
+	b->sq[8][2] = SQ_DBL_LET;
+	b->sq[2][6] = SQ_DBL_LET;
+	b->sq[6][2] = SQ_DBL_LET;
+	b->sq[3][7] = SQ_DBL_LET;
+	b->sq[7][3] = SQ_DBL_LET;
+	b->sq[8][2] = SQ_DBL_LET;
+	b->sq[2][8] = SQ_DBL_LET;
+	b->sq[12][6] = SQ_DBL_LET;
+	b->sq[6][12] = SQ_DBL_LET;
+	b->sq[11][7] = SQ_DBL_LET;
+	b->sq[7][11] = SQ_DBL_LET;
+	b->sq[12][8] = SQ_DBL_LET;
+	b->sq[8][12] = SQ_DBL_LET;
+	b->sq[8][8] = SQ_DBL_LET;
+	b->sq[6][6] = SQ_DBL_LET;
+	b->sq[6][8] = SQ_DBL_LET;
+	b->sq[8][6] = SQ_DBL_LET;
 
 /*
 	for (y = 0; y <= 7; y++) {
 		for (x = 0; x <= 7; x++) {
-			b->sq[y][x] = sqNormal;
+			b->sq[y][x] = SQ_NORMAL;
 			if (x == y && x == 0) {
-				b->sq[y][x] = sqDblLet;
+				b->sq[y][x] = SQ_DBL_LET;
 				continue;
 			}
 			if (((x == y) && (x == 2 || x == 7)) || (x + y == 5 && x < 4 && y < 4)) {
-				b->sq[y][x] = sqBlock;
+				b->sq[y][x] = SQ_BLOCK;
 				continue;
 			}
 			if (x > 0 && y > 0 && x + y == 3) {
-				b->sq[y][x] = sqFree;
+				b->sq[y][x] = SQ_FREE;
 				continue;
 			}
 			if ((x == 6 && y == 5 ) || (x == 5 && y == 6)) {
-				b->sq[y][x] = sqNoVowel;
+				b->sq[y][x] = SQ_NO_VOWEL;
 				continue;
 			}
 			if (((x == 0 || x == 7) && (y == 0 || y == 7)) || (x == 6 && y == 7) || (x == 7 && y == 6)) {
-				b->sq[y][x] = sqTrpWrd;
+				b->sq[y][x] = SQ_TRP_WRD;
 				continue;
 			}
 			if (x < 6 && y < 6 && x + y == 7) {
-				b->sq[y][x] = sqDblWrd;
+				b->sq[y][x] = SQ_DBL_WRD;
 				continue;
 			}
 			if ((x == 3 || x == 7)&& (y == 3 || y == 7)) {
-				b->sq[y][x] = sqTrpLet;
+				b->sq[y][x] = SQ_TRP_LET;
 				continue;
 			}
 			if ((x % 3 == 2  && y % 3 == 2) || (x % 5 == 1 && y % 5 == 1)) {
-				b->sq[y][x] = sqDblLet;
+				b->sq[y][x] = SQ_DBL_LET;
 				continue;
 			}
 			
@@ -119,49 +119,49 @@ void boardInit(Board *b)
 	}
 
 	for (x = 4; x < 7; x++) {
-		b->sq[13][x] = sqBlock;
-		b->sq[1][14-x] = sqBlock;
+		b->sq[13][x] = SQ_BLOCK;
+		b->sq[1][14-x] = SQ_BLOCK;
 	}
 
-	b->sq[7][7] = sqBlock;
+	b->sq[7][7] = SQ_BLOCK;
 	
-	b->sq[7][3]  = sqNoVowel;
-	b->sq[7][11] = sqNoVowel;
+	b->sq[7][3]  = SQ_NO_VOWEL;
+	b->sq[7][11] = SQ_NO_VOWEL;
 
 */
 
-	b->sq[1][1] = sqDblWrd;
-	b->sq[13][1] = sqDblWrd;
-	b->sq[1][13] = sqDblWrd;
-	b->sq[13][13] = sqDblWrd;
-	b->sq[7][7] = sqFree;
+	b->sq[1][1] = SQ_DBL_WRD;
+	b->sq[13][1] = SQ_DBL_WRD;
+	b->sq[1][13] = SQ_DBL_WRD;
+	b->sq[13][13] = SQ_DBL_WRD;
+	b->sq[7][7] = SQ_FREE;
 
-	b->sq[3][14] = sqDblLet;
-	b->sq[0][3] = sqDblLet;
-	b->sq[3][0] = sqDblLet;
-	b->sq[0][11] = sqDblLet;
-	b->sq[11][0] = sqDblLet;
-	b->sq[14][11] = sqDblLet;
-	b->sq[11][14] = sqDblLet;
-	b->sq[2][8] = sqDblLet;
-	b->sq[8][2] = sqDblLet;
-	b->sq[2][6] = sqDblLet;
-	b->sq[6][2] = sqDblLet;
-	b->sq[3][7] = sqDblLet;
-	b->sq[7][3] = sqDblLet;
-	b->sq[8][2] = sqDblLet;
-	b->sq[2][8] = sqDblLet;
-	b->sq[12][6] = sqDblLet;
-	b->sq[6][12] = sqDblLet;
-	b->sq[11][7] = sqDblLet;
-	b->sq[7][11] = sqDblLet;
-	b->sq[12][8] = sqDblLet;
-	b->sq[8][12] = sqDblLet;
-	b->sq[8][8] = sqDblLet;
-	b->sq[6][6] = sqDblLet;
-	b->sq[6][8] = sqDblLet;
-	b->sq[8][6] = sqDblLet;
-	b->sq[8][6] = sqDblLet;
+	b->sq[3][14] = SQ_DBL_LET;
+	b->sq[0][3] = SQ_DBL_LET;
+	b->sq[3][0] = SQ_DBL_LET;
+	b->sq[0][11] = SQ_DBL_LET;
+	b->sq[11][0] = SQ_DBL_LET;
+	b->sq[14][11] = SQ_DBL_LET;
+	b->sq[11][14] = SQ_DBL_LET;
+	b->sq[2][8] = SQ_DBL_LET;
+	b->sq[8][2] = SQ_DBL_LET;
+	b->sq[2][6] = SQ_DBL_LET;
+	b->sq[6][2] = SQ_DBL_LET;
+	b->sq[3][7] = SQ_DBL_LET;
+	b->sq[7][3] = SQ_DBL_LET;
+	b->sq[8][2] = SQ_DBL_LET;
+	b->sq[2][8] = SQ_DBL_LET;
+	b->sq[12][6] = SQ_DBL_LET;
+	b->sq[6][12] = SQ_DBL_LET;
+	b->sq[11][7] = SQ_DBL_LET;
+	b->sq[7][11] = SQ_DBL_LET;
+	b->sq[12][8] = SQ_DBL_LET;
+	b->sq[8][12] = SQ_DBL_LET;
+	b->sq[8][8] = SQ_DBL_LET;
+	b->sq[6][6] = SQ_DBL_LET;
+	b->sq[6][8] = SQ_DBL_LET;
+	b->sq[8][6] = SQ_DBL_LET;
+	b->sq[8][6] = SQ_DBL_LET;
 }
 
 
@@ -204,7 +204,7 @@ void bagInit(Bag *b)
 {
 	int i, j, k;
 
-	static const int tileLetterNum[letterCount] = {
+	static const int tileLetterNum[LETTER_COUNT] = {
 		9,	/* A */
 		2,	/* B */
 		2,	/* C */
@@ -243,7 +243,7 @@ void bagInit(Bag *b)
 		b->tile[i].type = TILE_WILD;
 		b->tile[i].letter = LETTER_A;
 	}
-	for (k = 0, i = 2; k < letterCount; k++) {
+	for (k = 0, i = 2; k < LETTER_COUNT; k++) {
 		for (j = 0; j < tileLetterNum[k]; j++, i++) {
 			b->tile[i].type = TILE_LETTER;
 			b->tile[i].letter = LETTER_A + k;
@@ -281,7 +281,7 @@ void initPlayerHuman(Player *p, Bag *b)
 	NOT(b);
 
 	playerInit(p, b);
-	p->type = playerHuman;
+	p->type = PLAYER_HUMAN;
 }
 
 void initPlayerAI(Player *p, Bag *b)
@@ -290,7 +290,7 @@ void initPlayerAI(Player *p, Bag *b)
 	NOT(b);
 
 	playerInit(p, b);
-	p->type = playerAI;
+	p->type = PLAYER_AI;
 	p->aiShare.shareStart = false;
 	p->aiShare.shareEnd = false;
 	p->aiShare.loading = 0;
@@ -303,7 +303,7 @@ void moveInit(Move *m)
 	
 	NOT(m);
 
-	m->type = movePlace;
+	m->type = MOVE_PLACE;
 	m->data.place.num = 4;
 	for (i = 0; i < RACK_SIZE; i++) {
 		m->data.place.rackIdx[i] = i;
@@ -328,7 +328,7 @@ void wordCons(Word *w, const char *str)
 	for (i = 0, w->len = 0; str[i] != '\0' && w->len < BOARD_SIZE; i++) {
 		c = toupper(str[i]);
 		if (c >= 'A' && c <= 'Z') {
-			w->letter[w->len] = letterA + c - 'A';
+			w->letter[w->len] = LETTER_A + c - 'A';
 			w->len++;
 		}
 	}

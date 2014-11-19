@@ -245,7 +245,7 @@ typedef struct IO
 	SDL_Surface *gmBack;
 	SDL_Surface *fader;
 	SDL_Surface *menuBg;
-	SDL_Surface *tile[TILE_COUNT][letterCount][tileLookCount];
+	SDL_Surface *tile[TILE_COUNT][LETTER_COUNT][tileLookCount];
 	SDL_Surface *wild[tileLookCount];
 	SDL_Surface *wildUp;
 	SDL_Surface *wildDown;
@@ -265,7 +265,7 @@ typedef struct IO
 	SDL_Surface *playDisable;
 	SDL_Surface *shuffle;
 	SDL_Surface *shuffleDisable;
-	SDL_Surface *sq[sqCount];
+	SDL_Surface *sq[SQ_COUNT];
 	SDL_Surface *areYouSureQuit;
 	SDL_Surface *titleScreen;
 	SDL_Surface *titleHover;

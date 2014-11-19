@@ -251,7 +251,7 @@ void updateRackWidget(GridWidget *rw, TransMove *tm)
 
 	NOT(rw);
 	NOT(tm);
-	assert(tm->adjust.type == adjustRack);
+	assert(tm->adjust.type == ADJUST_RACK);
 
 	idx.y = 0;
 	switch (tm->type) {

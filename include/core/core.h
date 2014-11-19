@@ -33,7 +33,7 @@ enum tile_tag
         TILE_COUNT,
 };
 
-typedef enum sq
+enum sq
 {
         SQ_NORMAL = 0,
         SQ_DBL_LET,
@@ -45,19 +45,9 @@ typedef enum sq
         SQ_NO_VOWEL,
         SQ_BLOCK,
         SQ_COUNT,
-	sqNormal = 0,
-	sqDblLet,
-	sqDblWrd,
-	sqTrpLet,
-	sqTrpWrd,
-	sqFree,
-	sqMystery,
-	sqNoVowel,
-	sqBlock,
-	sqCount
-} SqType;
+};
 
-typedef enum letter
+enum letter
 {
         LETTER_INVALID = -1,
         LETTER_A = 0,
@@ -87,69 +77,31 @@ typedef enum letter
         LETTER_Y,
         LETTER_Z,
         LETTER_COUNT,
-	letterInvalid = -1,
-	letterA = 0,
-	letterB,
-	letterC,
-	letterD,
-	letterE,
-	letterF,
-	letterG,
-	letterH,
-	letterI,
-	letterJ,
-	letterK,
-	letterL,
-	letterM,
-	letterN,
-	letterO,
-	letterP,
-	letterQ,
-	letterR,
-	letterS,
-	letterT, 
-	letterU,
-	letterV,
-	letterW,
-	letterX,
-	letterY,
-	letterZ,
-	letterCount
-} LetterType;
+};
 
-typedef enum player_tag
+enum player_tag
 {
         PLAYER_HUMAN = 0,
         PLAYER_AI,
         PLAYER_COUNT,
-	playerHuman = 0,
-	playerAI,
-	playerCount
-} PlayerType;
+};
 
-typedef enum adjust_tag
+enum adjust_tag
 {
         ADJUST_INVALID = -1,
         ADJUST_RACK = 0,
         ADJUST_COUNT,
-	adjustInvalid = -1,
-	adjustRack = 0,
-	adjustCount
-} AdjustType;
+};
 
-typedef enum adjust_err
+enum adjust_err
 {
         ADJUST_ERR_NONE = 0,
         ADJUST_ERR_RACK_OUT_OF_RANGE,
         ADJUST_ERR_RACK_DUP_IDX,
         ADJUST_ERR_COUNT,
-	adjustErrNone = 0,
-	adjustErrRackOutOfRange,
-	adjustErrRackDuplicateIdx,
-	adjustErrCount
-} AdjustErrType;
+};
 
-typedef enum move_tag
+enum move_tag
 {
         MOVE_INVALID = -1,
         MOVE_PLACE,
@@ -157,15 +109,9 @@ typedef enum move_tag
         MOVE_SKIP,
         MOVE_QUIT,
         MOVE_COUNT,
-	moveInvalid = -1,
-	movePlace = 0,
-	moveDiscard,
-	moveSkip,
-	moveQuit,
-	moveCount
-} MoveType;
+};
 
-typedef enum action_err
+enum action_err
 {
         ACTION_ERR_NONE,
         ACTION_ERR_UNKNOWN,
@@ -183,37 +129,17 @@ typedef enum action_err
         ACTION_ERR_SKIP_RULE,
         ACTION_ERR_QUIT_RULE,
         ACTION_ERR_COUNT,
-	actionErrNone = 0,
-	actionErrUnknown,
-	actionErrDiscardEmpty,
-	actionErrPlaceOutOfRange,
-	actionErrPlaceSelfOverlap,
-	actionErrPlaceBoardOverlap,
-	actionErrPlaceInvalidRackId,
-	actionErrPlaceInvalidSq,
-	actionErrPlaceNoRack,
-	actionErrPlaceNoDir,
-	actionErrPlaceInvalidPath,
-	actionErrPlaceInvalidWord,
-	actionErrDiscardRule,
-	actionErrSkipRule,
-	actionErrQuitRule,
-	actionErrCount
-} ActionErrType;
+};
 
-typedef enum dir_err_tag
+enum dir_err_tag
 {
         DIR_ERR_NONE = 0,
         DIR_ERR_NON_CONT,
         DIR_ERR_INVALID_WORD,
         DIR_ERR_COUNT,
-	dirErrNone = 0,
-	dirErrNonContinuous,
-	dirErrInvalidWord,
-	dirErrCount
-} DirErrType;
+};
 
-typedef enum path_err_tag
+enum path_err_tag
 {
         PATH_ERR_NONE = 0,
         PATH_ERR_NON_CONT,
@@ -221,51 +147,33 @@ typedef enum path_err_tag
         PATH_ERR_INVALID_RULE,
         PATH_ERR_INVALID_PATH,
         PATH_ERR_COUNT,
-	pathErrNone = 0,
-	pathErrNonCont,
-	pathErrInvalidWord,
-	pathErrInvalidRule,
-	pathErrInvalidPath,
-	pathErrCount
-} PathErrType;
+};
 
-typedef enum dir_tag
+enum dir_tag
 {
         DIR_INVALID = -1,
         DIR_RIGHT = 0,
         DIR_DOWN,
         DIR_COUNT,
-	dirInvalid = -1,
-	dirRight = 0,
-	dirDown,
-	dirCount
-} DirType;
+};
 
-typedef enum path_tag
+enum path_tag
 {
         PATH_INVALID = -1,
         PATH_DOT = 0,
         PATH_HORZ,
         PATH_VERT,
         PATH_COUNT,
-	pathInvalid = -1,
-	pathDot = 0,
-	pathHorz,
-	pathVert,
-	pathCount
-} PathType;
+};
 
-typedef enum cmp
+enum cmp
 {
         CMP_LESS = -1,
         CMP_EQUAL = 0,
         CMP_GREATER = 1,
-	cmpLess = -1,
-	cmpEqual = 0,
-	cmpGreater = 1
-} CmpType;
+};
 
-typedef enum action_tag
+enum action_tag
 {
         ACTION_INVALID = -1,
         ACTION_PLACE = 0,
@@ -273,14 +181,7 @@ typedef enum action_tag
         ACTION_SKIP,
         ACTION_QUIT,
         ACTION_COUNT,
-	actionInvalid = -1,
-	actionPlace = 0,
-	actionDiscard,
-	actionSkip,
-	actionQuit,
-	actionCount
-} ActionType;
-
+};
 
 typedef enum tile_tag tile_tag_t;
 typedef enum sq sq_t;
@@ -408,7 +309,7 @@ typedef struct adjust
 
 typedef struct move
 {
-	MoveType type;
+	move_tag_t type;
 	int playerIdx;
 	union {
         	struct move_place place;

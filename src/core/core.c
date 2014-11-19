@@ -73,25 +73,25 @@ int tile_score(const tile_t *t)
 static bool can_use_dbl_let(const board_t *b, const dir_t *d, int p, int x,
 		int y)
 {
-	return d->pos[p] && b->sq[y][x] == sqDblLet;
+	return d->pos[p] && b->sq[y][x] == SQ_DBL_LET;
 }
 
 static bool can_use_trp_let(const board_t *b, const dir_t *d, int p, int x,
 		int y)
 {
-	return d->pos[p] && b->sq[y][x] == sqTrpLet;
+	return d->pos[p] && b->sq[y][x] == SQ_TRP_LET;
 }
 
 static bool can_use_dbl_wrd(const board_t *b, const dir_t *d, int p, int x,
 		int y)
 {
-	return d->pos[p] && b->sq[y][x] == sqDblWrd;
+	return d->pos[p] && b->sq[y][x] == SQ_DBL_WRD;
 }
 
 static bool can_use_trp_wrd(const board_t *b, const dir_t *d, int p, int x,
 		int y)
 {
-	return d->pos[p] && b->sq[y][x] == sqTrpWrd;
+	return d->pos[p] && b->sq[y][x] == SQ_TRP_WRD;
 }
 
 static int dir_score(const board_t *b, const dir_t *d)
@@ -261,7 +261,7 @@ static bool adjust_duplicate_index(const tile_adjusts_t tile)
 
 adjust_err_t find_adjust_err(const adjust_t *a, const player_t *p)
 {
-	assert(a->type == adjustRack);
+	assert(a->type == ADJUST_RACK);
 	if (adjust_out_of_range(a->data.tile))
 		return ADJUST_ERR_RACK_OUT_OF_RANGE;
 	if (adjust_duplicate_index(a->data.tile))
@@ -364,8 +364,8 @@ static bool path_valid(const path_t *p, const dict_t *d,
 		bool b0 = dir_valid(&p->data.dot.down, &p->board, d, &w1);
 		a0 = a0 ? word_valid(&w0, d) : a0;
 		b0 = b0 ? word_valid(&w1, d) : b0;
-		a0 = a0 && rule ? rule(&w0, p->type, dirRight) : a0;
-		b0 = b0 && rule ? rule(&w1, p->type, dirDown) : b0;
+		a0 = a0 && rule ? rule(&w0, p->type, DIR_RIGHT) : a0;
+		b0 = b0 && rule ? rule(&w1, p->type, DIR_DOWN) : b0;
 		const bool a1 = p->data.dot.right.len > 1;
 		const bool b1 = p->data.dot.down.len > 1;
 		if (!((a0 && !(b0 || b1)) || (b0 && !(a0 || a1)) || (a0 && b0)))
@@ -749,8 +749,8 @@ static void mk_place(const game_t *g, const move_t *m, action_t *a)
 		break;
 	}
 	if (!path_valid(path, &g->dict, NULL)) {
-		a->type = actionInvalid;
-		a->data.err = actionErrPlaceInvalidPath;
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_PLACE_INVALID_PATH;
 		return;
 	}
 	a->data.place.score = path_score(path);
