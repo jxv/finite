@@ -20,16 +20,14 @@
 #define BAG_SIZE (100 + 1)	/* needs a dummy element */
 #define MAX_PLAYER 4
 
-enum tile_tag
-{
+enum tile_tag {
 	TILE_NONE = -1,
 	TILE_WILD = 0,
 	TILE_LETTER,
 	TILE_COUNT,
 };
 
-enum sq
-{
+enum sq {
 	SQ_NORMAL = 0,
 	SQ_DBL_LET,
 	SQ_DBL_WRD,
@@ -42,8 +40,7 @@ enum sq
 	SQ_COUNT,
 };
 
-enum letter
-{
+enum letter {
 	LETTER_INVALID = -1,
 	LETTER_A = 0,
 	LETTER_B,
@@ -74,30 +71,26 @@ enum letter
 	LETTER_COUNT,
 };
 
-enum player_tag
-{
+enum player_tag {
 	PLAYER_HUMAN = 0,
 	PLAYER_AI,
 	PLAYER_COUNT,
 };
 
-enum adjust_tag
-{
+enum adjust_tag {
 	ADJUST_INVALID = -1,
 	ADJUST_RACK = 0,
 	ADJUST_COUNT,
 };
 
-enum adjust_err
-{
+enum adjust_err {
 	ADJUST_ERR_NONE = 0,
 	ADJUST_ERR_RACK_OUT_OF_RANGE,
 	ADJUST_ERR_RACK_DUP_IDX,
 	ADJUST_ERR_COUNT,
 };
 
-enum move_tag
-{
+enum move_tag {
 	MOVE_INVALID = -1,
 	MOVE_PLACE,
 	MOVE_DISCARD,
@@ -106,8 +99,7 @@ enum move_tag
 	MOVE_COUNT,
 };
 
-enum action_err
-{
+enum action_err {
 	ACTION_ERR_NONE,
 	ACTION_ERR_UNKNOWN,
 	ACTION_ERR_DISCARD_EMPTY,
@@ -126,16 +118,14 @@ enum action_err
 	ACTION_ERR_COUNT,
 };
 
-enum dir_err_tag
-{
+enum dir_err_tag {
 	DIR_ERR_NONE = 0,
 	DIR_ERR_NON_CONT,
 	DIR_ERR_INVALID_WORD,
 	DIR_ERR_COUNT,
 };
 
-enum path_err_tag
-{
+enum path_err_tag {
 	PATH_ERR_NONE = 0,
 	PATH_ERR_NON_CONT,
 	PATH_ERR_INVALID_WORD,
@@ -144,16 +134,14 @@ enum path_err_tag
 	PATH_ERR_COUNT,
 };
 
-enum dir_tag
-{
+enum dir_tag {
 	DIR_INVALID = -1,
 	DIR_RIGHT = 0,
 	DIR_DOWN,
 	DIR_COUNT,
 };
 
-enum path_tag
-{
+enum path_tag {
 	PATH_INVALID = -1,
 	PATH_DOT = 0,
 	PATH_HORZ,
@@ -161,15 +149,13 @@ enum path_tag
 	PATH_COUNT,
 };
 
-enum cmp
-{
+enum cmp {
 	CMP_LESS = -1,
 	CMP_EQUAL = 0,
 	CMP_GREATER = 1,
 };
 
-enum action_tag
-{
+enum action_tag {
 	ACTION_INVALID = -1,
 	ACTION_PLACE = 0,
 	ACTION_DISCARD,
@@ -218,57 +204,48 @@ struct dict;
 struct rule;
 struct game;
 
-struct word
-{
+struct word {
 	int len;
 	letter_t letter[BOARD_SIZE];
 };
 
-struct tile
-{
+struct tile {
 	tile_tag_t type;
 	letter_t letter;
 };
 
-struct loc
-{
+struct loc {
 	struct tile tile;
 	sq_t sq;
 };
 
-struct board
-{
+struct board {
 	struct tile tile[BOARD_Y][BOARD_X];
 	sq_t sq[BOARD_Y][BOARD_X];
 };
 
-struct coor
-{
+struct coor {
 	int x;
 	int y;
 };
 
-struct move_place
-{
+struct move_place {
 	int num;
 	int rackIdx[RACK_SIZE];
 	struct coor coor[RACK_SIZE];
 };
 
-struct move_discard
-{
+struct move_discard {
 	int num;
 	int rackIdx[RACK_SIZE];
 };
 
-struct tile_adjust
-{
+struct tile_adjust {
 	tile_tag_t type;
 	int idx;
 };
 
-struct adjust
-{
+struct adjust {
 	adjust_tag_t type;
 	union {
 		struct tile_adjust tile[RACK_SIZE];
@@ -276,8 +253,7 @@ struct adjust
 	} data;
 };
 
-struct move
-{
+struct move {
 	move_tag_t type;
 	int playerIdx;
 	union {
@@ -286,15 +262,13 @@ struct move
 	} data;
 };
 
-struct bag
-{
+struct bag {
 	int head;
 	int tail;
 	struct tile tile[BAG_SIZE];
 };
 
-struct dir
-{
+struct dir {
 	dir_tag_t type;
 	int x;
 	int y;
@@ -302,26 +276,22 @@ struct dir
 	bool pos[BOARD_SIZE];
 };
 
-struct path_dot
-{
+struct path_dot {
 	struct dir right;
 	struct dir down;
 };
 
-struct path_horz
-{
+struct path_horz {
 	struct dir right;
 	struct dir down[BOARD_X];
 };
 
-struct path_vert
-{
+struct path_vert {
 	struct dir right[BOARD_Y];
 	struct dir down;
 };
 
-struct path
-{
+struct path {
 	path_tag_t type;
 	struct board board;
 	union {
@@ -331,23 +301,20 @@ struct path
 	} data;
 };
 
-struct action_place
-{
+struct action_place {
 	int score;
 	int num;
 	int rackIdx[RACK_SIZE];
 	struct path path;
 };
 
-struct action_discard
-{
+struct action_discard {
 	int score;
 	int num;
 	int rackIdx[RACK_SIZE];
 };
 
-struct action
-{
+struct action {
 	action_tag_t type;
 	int playerIdx;
 	union {
@@ -357,8 +324,7 @@ struct action
 	} data;
 };
 
-struct ai_share
-{
+struct ai_share {
 	struct game *game;
 	struct action action;
 	float loading;
@@ -367,8 +333,7 @@ struct ai_share
 	int difficulty;
 };
 
-struct player
-{
+struct player {
 	player_tag_t type;
 	bool active;
 	int score;
@@ -376,22 +341,19 @@ struct player
 	struct ai_share aiShare;
 };
 
-struct dict
-{
+struct dict {
 	long num;
 	struct word *words;
 };
 
-struct rule
-{
+struct rule {
 	bool (*place)(const struct word *, path_tag_t, dir_tag_t);
 	bool (*discard)(const struct game *, const struct move_discard *);
 	bool (*skip)(const struct game *);
 	bool (*quit)(const struct game *);
 };
 
-struct game
-{
+struct game {
 	int turn;
 	int playerNum;
 	struct player player[MAX_PLAYER];
