@@ -269,7 +269,7 @@ void playerInit(Player *p, Bag *b)
 		p->tile[i].type = tileNone;
 		p->tile[i].letter = letterA;
 	}
-	rackRefill(p, b);
+	rack_refill(b, p);
 
 	p->score = 0;
 	p->active = true;
@@ -350,10 +350,7 @@ void swapWord(Word *w0, Word *w1)
 
 int cmpWordWrapper(const void *p0, const void *p1)
 {
-	NOT(p0);
-	NOT(p1);
-
-	return cmpWord((Word*)p0, (Word*)p1);
+	return cmp_word(p0, p1);
 }
 
 bool dictInit(Dict *d, const char *name)

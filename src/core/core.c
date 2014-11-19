@@ -1,107 +1,108 @@
 #include "common.h"
 #include "print.h"
 
-static int letter_score(letter_tag_t l)
+static int letter_score(letter_t l)
 {
 	switch (l) {
 	case LETTER_A:
-                return 1;
+		return 1;
 	case LETTER_B:
-                return 3;
+		return 3;
 	case LETTER_C:
-                return 3;
+		return 3;
 	case LETTER_D:
-                return 2;
+		return 2;
 	case LETTER_E:
-                return 1;
+		return 1;
 	case LETTER_F:
-                return 4;
+		return 4;
 	case LETTER_G:
-                return 2;
+		return 2;
 	case LETTER_H:
-                return 4;
+		return 4;
 	case LETTER_I:
-                return 1;
+		return 1;
 	case LETTER_J:
-                return 8;
+		return 8;
 	case LETTER_K:
-                return 5;
+		return 5;
 	case LETTER_L:
-                return 1;
+		return 1;
 	case LETTER_M:
-                return 3;
+		return 3;
 	case LETTER_N:
-                return 1;
+		return 1;
 	case LETTER_O:
-                return 1;
+		return 1;
 	case LETTER_P:
-                return 3;
+		return 3;
 	case LETTER_Q:
-                return 10;
+		return 10;
 	case LETTER_R:
-                return 1;
+		return 1;
 	case LETTER_S:
-                return 1;
+		return 1;
 	case LETTER_T:
-                return 1;
+		return 1;
 	case LETTER_U:
-                return 1;
+		return 1;
 	case LETTER_V:
-                return 4;
+		return 4;
 	case LETTER_W:
-                return 4;
+		return 4;
 	case LETTER_X:
-                return 8;
+		return 8;
 	case LETTER_Y:
-                return 4;
+		return 4;
 	case LETTER_Z:
-                return 10;
+		return 10;
 	default:
-                assert(false); 
-                break;
+		assert(false); 
+		break;
 	}
 	return 0;
 }
 
-int tile_score(const Tile *t)
+int tile_score(const tile_t *t)
 {
 	if (t->type == TILE_LETTER)
 		return letter_score(t->letter);
 	return 0;
 }
 
-int tileScore(const Tile *t)
-{ return tile_score(t); }
-
-static bool can_use_dbl_let(const Board *b, const Dir *d, int p, int x, int y)
+static bool can_use_dbl_let(const board_t *b, const dir_t *d, int p, int x,
+		int y)
 {
 	return d->pos[p] && b->sq[y][x] == sqDblLet;
 }
 
-static bool can_use_trp_let(const Board *b, const Dir *d, int p, int x, int y)
+static bool can_use_trp_let(const board_t *b, const dir_t *d, int p, int x,
+		int y)
 {
 	return d->pos[p] && b->sq[y][x] == sqTrpLet;
 }
 
-static bool can_use_dbl_wrd(const Board *b, const Dir *d, int p, int x, int y)
+static bool can_use_dbl_wrd(const board_t *b, const dir_t *d, int p, int x,
+		int y)
 {
 	return d->pos[p] && b->sq[y][x] == sqDblWrd;
 }
 
-static bool can_use_trp_wrd(const Board *b, const Dir *d, int p, int x, int y)
+static bool can_use_trp_wrd(const board_t *b, const dir_t *d, int p, int x,
+		int y)
 {
 	return d->pos[p] && b->sq[y][x] == sqTrpWrd;
 }
 
-static int dir_score(const Board *b, const Dir *d)
+static int dir_score(const board_t *b, const dir_t *d)
 {
+	const int x = d->x;
+	const int y = d->y;
 	int dbl_wrd = 0;
 	int trp_wrd = 0;
-	int x = d->x;
-	int y = d->y;
 	int score = 0;
 	switch (d->type) {
-	case dirRight:
+	case DIR_RIGHT:
 		for (int i = d->x; i < d->len + d->x; i++) {
 			int tile = tile_score(&b->tile[y][i]);
 			tile *= can_use_dbl_let(b, d, i, i, y) ? 2 : 1;
@@ -111,7 +112,7 @@ static int dir_score(const Board *b, const Dir *d)
 			score += tile;
 		}
 		break;
-	case dirDown:
+	case DIR_DOWN:
 		for (int i = d->y; i < d->len + d->y; i++) {
 			int tile = tile_score(&b->tile[i][x]);
 			tile *= can_use_dbl_let(b, d, i, x, i) ? 2 : 1;
@@ -121,11 +122,11 @@ static int dir_score(const Board *b, const Dir *d)
 			score += tile;
 		}
 		break;
-	case dirInvalid:
-                return 0;
+	case DIR_INVALID:
+		return 0;
 	default:
-                assert(false);
-                return 0;
+		assert(false);
+		return 0;
 	}
 	if (dbl_wrd > 0)
 		score *= dbl_wrd * 2;
@@ -134,931 +135,620 @@ static int dir_score(const Board *b, const Dir *d)
 	return score;
 }
 
-static int meta_path_dot_score(const path_dot_t *dot, const Board *b)
+static int meta_path_dot_score(const path_dot_t *dot, const board_t *b)
 {
-        int score = 0;
-	if (dot->right.type == dirRight)
+	int score = 0;
+	if (dot->right.type == DIR_RIGHT)
 		score = dir_score(b, &dot->right);
-	if (dot->down.type == dirDown)
+	if (dot->down.type == DIR_DOWN)
 		score += dir_score(b, &dot->down);
 	return score;
 }
 
-static int meta_path_score(const Dir *d, const Dir *adj, int n, const Board *b)
+static int meta_path_score(const dir_t *d, const dir_t *adj, int n,
+		const board_t *b)
 {
 	int score = 0;
-	if (d->type != dirInvalid) {
+	if (d->type != DIR_INVALID) {
 		score = dir_score(b, d);
 		for (int i = 0; i < n; i++)
-			if (adj[i].type != dirInvalid)
+			if (adj[i].type != DIR_INVALID)
 				score += dir_score(b, &adj[i]);
 	}
 	return score;
 }
 
-static int path_score(const Path *p)
+static int path_score(const path_t *p)
 {
-	const Board *b = &p->board;
+	const board_t *b = &p->board;
 	switch (p->type) {
-	case pathDot:
-                return meta_path_dot_score(&p->data.dot, b);
-	case pathHorz:
+	case PATH_DOT:
+		return meta_path_dot_score(&p->data.dot, b);
+	case PATH_HORZ:
 		return meta_path_score(&p->data.horz.right, p->data.horz.down,
-                                BOARD_X, b);
-	case pathVert:
+				BOARD_X, b);
+	case PATH_VERT:
 		return meta_path_score(&p->data.vert.down, p->data.vert.right,
-                                BOARD_Y, b);
-	case pathInvalid:
-                return 0;
+				BOARD_Y, b);
+	case PATH_INVALID:
+		return 0;
 	default:
-                assert(false);
-                return 0;
+		assert(false);
+		return 0;
 	}
 }
 
-bool bag_full(const Bag *b)
+bool bag_full(const bag_t *b)
 {
 	return (b->head + 1) % BAG_SIZE == b->tail;
 }
 
-bool bagEmpty(Bag *b)
+bool bag_empty(const bag_t *b)
 {
 	return b->head == b->tail;
 }
 
-int bagSize(Bag *b)
+int bag_size(const bag_t *b)
 {
-	NOT(b);
-
-	if (b->head > b->tail) {
+	if (b->head > b->tail)
 		return b->head - b->tail;
-	}
 	return b->tail - b->head;
 }
 
-Tile bagPeek(Bag *b)
+static tile_t bag_peek(const bag_t *b)
 {
-	Tile next;
-
-	NOT(b);
-
-	next.type = tileNone;
-	if (b->head != b->tail) {
+	tile_t next = { .type = TILE_NONE };
+	if (b->head != b->tail)
 		next = b->tile[b->head];
-	}
 	return next;
 }
 
-void bagDrop(Bag *b)
+static void bag_drop(bag_t *b)
 {
-	NOT(b);
-
 	b->head++;
 	b->head %= BAG_SIZE;
 }
 
-void bagAdd(Bag *b, Tile t)
+/* unused */
+/*
+static void bag_add(tile_t t, bag_t *b)
 {
-	NOT(b);
-
 	b->tile[b->tail] = t;
 	b->tail++;
 	b->tail %= BAG_SIZE;
 }
+*/
 
-bool adjustOutOfRange(Adjust *a)
+bool adjust_out_of_range(const tile_adjusts_t tile)
 {
-	int i;
-
-	NOT(a);
-	assert(a->type == adjustRack);
-
-	for (i = 0; i < RACK_SIZE; i++) {
-		if (a->data.tile[i].idx < 0) {
+	for (int i = 0; i < RACK_SIZE; i++) {
+		if (tile[i].idx < 0)
 			return true;
-		}
-		if (a->data.tile[i].idx >= RACK_SIZE) {
+		if (tile[i].idx >= RACK_SIZE)
 			return true;
-		}
 	}
 	return false;
 }
 
-void adjustSwap(Adjust *a, int i, int j)
+void adjust_swap(int i, int j, tile_adjusts_t tile)
 {
-	TileAdjust tmp;
-
-	NOT(a);
-	assert(a->type == adjustRack);
 	VALID_RACK_SIZE(i);
 	VALID_RACK_SIZE(j);
-
-	tmp = a->data.tile[i];
-	a->data.tile[i] = a->data.tile[j];
-	a->data.tile[j] = tmp;
+	const tile_adjust_t tmp = tile[i];
+	tile[i] = tile[j];
+	tile[j] = tmp;
 }
 
-void mkAdjust(Adjust *a, Player *p)
+void mk_adjust(const player_t *p, adjust_t *a)
 {
-	int i;
-
-	NOT(a);
-	NOT(p);
-
-	a->type = adjustRack;
-	for (i = 0; i < RACK_SIZE; i++) {
+	a->type = ADJUST_RACK;
+	for (int i = 0; i < RACK_SIZE; i++) {
 		a->data.tile[i].type = p->tile[i].type;
 		a->data.tile[i].idx = i;
 	}
 }
 
-bool adjustDuplicateIndex(Adjust *a)
+static bool adjust_duplicate_index(const tile_adjusts_t tile)
 {
-	int i, j, idx;
-
-	NOT(a);
-
-	assert(a->type == adjustRack);
-
-	for (i = 0; i < RACK_SIZE; i++) {
-		idx = a->data.tile[i].idx;
-		assert(idx >= 0);
-		assert(idx < RACK_SIZE);
-		for (j = i + 1; j < RACK_SIZE; j++) {
-			if (idx == a->data.tile[j].idx) {
+	for (int i = 0; i < RACK_SIZE; i++) {
+		int idx = tile[i].idx;
+		for (int j = i + 1; j < RACK_SIZE; j++)
+			if (idx == tile[j].idx)
 				return true;
-			}
-		}
 	}
 	return false;
 }
 
-AdjustErrType fdAdjustErr(Adjust *a, Player *p)
+adjust_err_t find_adjust_err(const adjust_t *a, const player_t *p)
 {
-	NOT(a);
-	NOT(p);
-	
 	assert(a->type == adjustRack);
-	
-	if (adjustOutOfRange(a)) {
-		return adjustErrRackOutOfRange;
-	}
-	if (adjustDuplicateIndex(a)) {
-		return adjustErrRackDuplicateIdx;
-	}
-	return adjustErrNone;
+	if (adjust_out_of_range(a->data.tile))
+		return ADJUST_ERR_RACK_OUT_OF_RANGE;
+	if (adjust_duplicate_index(a->data.tile))
+		return ADJUST_ERR_RACK_DUP_IDX;
+	return ADJUST_ERR_NONE;
 }
 
-void applyAdjust(Player *p, Adjust *a)
+void apply_adjust(const tile_adjusts_t tile, player_t *p)
 {
-	int i, idx;
-	Tile tile[RACK_SIZE];
-
-	NOT(p);
-	NOT(a);
-	assert(a->type == adjustRack);
-
-	for (i = 0; i < RACK_SIZE; i++) {
-		idx = a->data.tile[i].idx;
-		tile[i] = p->tile[idx];
-	}
-	memCpy(p->tile, tile, sizeof(tile));
+	tile_t p_tile[RACK_SIZE];
+	for (int i = 0; i < RACK_SIZE; i++)
+		p_tile[i] = p->tile[tile[i].idx];
+	for (int i = 0; i < RACK_SIZE; i++)
+		p->tile[i] = p_tile[i];
 }
 
-CmpType cmpWord(Word *w0, Word *w1) 
+cmp_t cmp_word(const word_t *w0, const word_t *w1) 
 {
-	/*
-	w0 > w1 -> cmpGreater
-	w0 < w1 -> cmpLess
-	w0 == w1 -> cmpEqual
-	*/
-	int i;
-
-	NOT(w0);
-	NOT(w1);
-
-	for (i = 0; ; i++) {
-		if (w0->len  > w1->len && i == w1->len) {
-			return cmpGreater;
-		}
-		if (w0->len  < w1->len && i == w0->len) {
-			return  cmpLess;
-		}
-		if (w0->len == w1->len && i == w1->len) {
-			return cmpEqual;
-		}
-		if (w0->letter[i] == w1->letter[i]) {
+	/* w0 > w1 -> CMP_GREATER
+	 * w0 < w1 -> CMP_LESS
+	 * w0 == w1 -> CMP_EQUAL */
+	for (int i = 0; ; i++) {
+		if (w0->len  > w1->len && i == w1->len)
+			return CMP_GREATER;
+		if (w0->len  < w1->len && i == w0->len)
+			return CMP_LESS;
+		if (w0->len == w1->len && i == w1->len)
+			return CMP_EQUAL;
+		if (w0->letter[i] == w1->letter[i])
 			continue;
-		}
-		if (w0->letter[i]  > w1->letter[i]) {
-			return cmpGreater;
-		}
-		if (w0->letter[i]  < w1->letter[i]) {
-			return cmpLess;
-		}
+		if (w0->letter[i]  > w1->letter[i])
+			return CMP_GREATER;
+		if (w0->letter[i]  < w1->letter[i])
+			return CMP_LESS;
 	}
-	return cmpEqual;
+	return CMP_EQUAL;
 }
 
-bool wordValid(Word *w, Dict *d)
+bool word_valid(const word_t *w, const dict_t *d)
 {
-	long min, max, mid;
-	
-	NOT(w);
-	NOT(d);
-	
-	min = 0;
-	max = d->num;
-	mid = d->num / 2;
-
+	long min = 0;
+	long max = d->num;
+	long mid = d->num / 2;
 	while (min <= max) {
-		switch (cmpWord(w, &d->words[mid])) {
-		case cmpEqual: return true;
-		case cmpGreater: min = mid + 1; break;
-		case cmpLess: max = mid - 1; break;
-		default: return false; /* Should never arrive here via cmpWord */
+		switch (cmp_word(w, &d->words[mid])) {
+		case CMP_EQUAL:
+			return true;
+		case CMP_GREATER:
+			min = mid + 1;
+			break;
+		case CMP_LESS:
+			max = mid - 1;
+			break;
+		default:
+			assert(false);
+			return false;
 		}
 		mid = (min + max) / 2;
 	}
 	return false;
 }
 
-bool dirValid(Dir *dir, Board *b, Dict *dict, Word *w)
+static bool dir_valid(const dir_t *dir, const board_t *b, const dict_t *dict,
+			word_t *w)
 {
-	int x, y, i;
-
-	NOT(dir);
-	NOT(b);
-	NOT(dict);
-
-	x = dir->x;
-	y = dir->y;
+	const int x = dir->x;
+	const int y = dir->y;
 	w->len = dir->len;
 	switch (dir->type) {
-	case dirRight: {
-		for (i = 0; i < w->len; i++) {
-			if (b->tile[y][x + i].type != tileNone) {
+	case DIR_RIGHT:
+		for (int i = 0; i < w->len; i++)
+			if (b->tile[y][x + i].type != TILE_NONE)
 				w->letter[i] = b->tile[y][x + i].letter;
-			} else {
+			else
 				return false;
-			}
-		}
-		break;
-	}
-	case dirDown: {
-		for (i = 0; i < w->len; i++) {
-			if (b->tile[y + i][x].type != tileNone) {
+		return true;
+	case DIR_DOWN:
+		for (int i = 0; i < w->len; i++)
+			if (b->tile[y + i][x].type != TILE_NONE)
 				w->letter[i] = b->tile[y + i][x].letter;
-			} else {
+			else
 				return false;
-			}
-		}
-		break;
+		return true;
+	case DIR_INVALID:
+		return false;
+	default:
+		assert(false);
+		return false;
 	}
-	case dirInvalid: /* fall through */
-	default: return false;
-	}
-	return true;
 }
 
-bool pathValid(Path *p, Dict *d, bool (*rule)(Word *, PathType, DirType))
+static bool path_valid(const path_t *p, const dict_t *d,
+		bool (*rule)(word_t *, path_tag_t, dir_tag_t))
 {
-	int i;
-	Word w0, w1;
-	bool result;
-
-	NOT(p);
-	NOT(d);
-
-	result = true;
+	word_t w0, w1;
+	bool result = true;
 	switch (p->type) {
-	case pathDot: {
-		bool a0, a1, b0, b1;
-		a0 = dirValid(&p->data.dot.right, &p->board, d, &w0);
-		b0 = dirValid(&p->data.dot.down, &p->board, d, &w1);
-
-		a0 = a0 ? wordValid(&w0, d) : a0;
-		b0 = b0 ? wordValid(&w1, d) : b0;
-
+	case PATH_DOT: {
+		bool a0 = dir_valid(&p->data.dot.right, &p->board, d, &w0);
+		bool b0 = dir_valid(&p->data.dot.down, &p->board, d, &w1);
+		a0 = a0 ? word_valid(&w0, d) : a0;
+		b0 = b0 ? word_valid(&w1, d) : b0;
 		a0 = a0 && rule ? rule(&w0, p->type, dirRight) : a0;
 		b0 = b0 && rule ? rule(&w1, p->type, dirDown) : b0;
-
-		a1 = p->data.dot.right.len > 1;
-		b1 = p->data.dot.down.len > 1;
-
-		if (!((a0 && !(b0 || b1)) || (b0 && !(a0 || a1)) || (a0 && b0))) {
+		const bool a1 = p->data.dot.right.len > 1;
+		const bool b1 = p->data.dot.down.len > 1;
+		if (!((a0 && !(b0 || b1)) || (b0 && !(a0 || a1)) || (a0 && b0)))
 			result = false;	
-		}
 		break;
 	}
-	case pathHorz: {
-		if (!dirValid(&p->data.horz.right, &p->board, d, &w0)) {
+	case PATH_HORZ:
+		if (!dir_valid(&p->data.horz.right, &p->board, d, &w0)) {
 			result = false;
-		} else if (!wordValid(&w0, d)) {
+		} else if (!word_valid(&w0, d)) {
 			result = false;
-		} else if (rule && !rule(&w0, p->type, dirRight)) {
+		} else if (rule && !rule(&w0, p->type, DIR_RIGHT)) {
 			result = false;
 		}
-		for (i = 0; i < BOARD_X; i++) {
-			if (p->data.horz.down[i].type == dirDown) {
-				if (!dirValid(&p->data.horz.down[i], &p->board, d, &w1)) {
+		for (int i = 0; i < BOARD_X; i++)
+			if (p->data.horz.down[i].type == DIR_DOWN) {
+				if (!dir_valid(&p->data.horz.down[i],
+						&p->board, d, &w1)) {
 					result = false;
-				} else if (w1.len > 1 && !wordValid(&w1, d)) {
+				} else if (w1.len > 1 && !word_valid(&w1, d)) {
 					result = false;
-				} else if (w1.len > 1 && rule && !rule(&w1, p->type, dirDown)) {
+				} else if (w1.len > 1 && rule &&
+						!rule(&w1,p->type, DIR_DOWN)) {
 					result = false;
 				}
 			}
-		}
 		break;
-	}
-	case pathVert: {
-		if (!dirValid(&p->data.vert.down, &p->board, d, &w0)) {
+	case PATH_VERT:
+		if (!dir_valid(&p->data.vert.down, &p->board, d, &w0)) {
 			result = false;
-		} else if (!wordValid(&w0, d)) {
+		} else if (!word_valid(&w0, d)) {
 			result = false;
-		} else if (rule && !rule(&w0, p->type, dirDown)) {
+		} else if (rule && !rule(&w0, p->type, DIR_DOWN)) {
 			result = false;
 		}
-		for (i = 0; i < BOARD_Y; i++) {
-			if (p->data.vert.right[i].type == dirRight) {
-				if(!dirValid(&p->data.vert.right[i], &p->board, d, &w1)) {
+		for (int i = 0; i < BOARD_Y; i++)
+			if (p->data.vert.right[i].type == DIR_RIGHT) {
+				if(!dir_valid(&p->data.vert.right[i], &p->board,
+						d, &w1)) {
 					result = false;
-				} else if (w1.len > 1 && !wordValid(&w1, d)) {
+				} else if (w1.len > 1 && !word_valid(&w1, d)) {
 					result = false;
-				} else if (w1.len > 1 && rule && !rule(&w1, p->type, dirRight)) {
+				} else if (w1.len > 1 && rule && !rule(&w1,
+						p->type, DIR_RIGHT)) {
 					result = false;
 				}
 			}
-		}
 		break;
-	}
-	case pathInvalid: /* fall through */
-	default: result = false; break; 
+	case PATH_INVALID:
+		result = false;
+		break; 
+	default:
+		assert(false);
+		result = false;
+		break; 
 	}
 	return result; 
 }
 
-/*
-PathErrType pathValidWithErr(Path *p, Dict *d)
+static bool tiles_adjacent(const board_t *b, const move_place_t *mp,
+		const player_t *p)
 {
-	int i;
-	Word w0, w1;
-
-	NOT(p);
-	NOT(d);
-
-	switch (p->type) {
-	case pathDot: {
-		bool a0, a1, b0, b1;
-		a0 = dirValid(&p->data.dot.right, &p->board, d, &w0);
-		b0 = dirValid(&p->data.dot.down, &p->board, d, &w1);
-		a0 = a0 ? wordValid(&w0, d) : a0;
-		b0 = b0 ? wordValid(&w1, d) : b0;
-		a1 = p->data.dot.right.len > 1;
-		b1 = p->data.dot.down.len > 1;
-
-		if (!((a0 && !(b0 || b1)) || (b0 && !(a0 || a1)) || (a0 && b0))) {
-			return false;
-		}
-		break;
-	}
-	case pathHorz: {
-		if (!dirValid(&p->data.horz.right, &p->board, d, &w0)) {
-			return pathErrNonCont;
-		}
-		if (!wordValid(&w0, d)) {
-			return pathErrInvalidWord;
-		}
-		for (i = 0; i < BOARD_X; i++) {
-			if (p->data.horz.down[i].type == dirDown) {
-				if (!dirValid(&p->data.horz.down[i], &p->board, d, &w1)) {
-					return pathErrNonCont;
-				}
-				if (!wordValid(&w1, d)) {
-					return pathErrInvalidWord;
-				}
-			}
-		}
-		break;
-	}
-	case pathVert: {
-		if (!dirValid(&p->data.vert.down, &p->board, d, &w0)) {
-			return pathErrNonCont; 
-		}
-		if (!wordValid(&w0, d)) {
-			return pathErrInvalidWord;
-		}
-		for (i = 0; i < BOARD_Y; i++) {
-			if (p->data.vert.right[i].type == dirRight) {
-				if(!dirValid(&p->data.vert.right[i], &p->board, d, &w1)) {
-					return pathErrNonCont;
-				}
-				if (!wordValid(&w1, d)) {
-					return pathErrInvalidWord;
-				}
-			}
-		}
-		break;
-	}
-	case pathInvalid:
-	default: return pathErrInvalidPath;
-	}
-	return pathErrNone;
-}
-*/
-
-bool tilesAdjacent(Board *b, MovePlace *mp, Player *p)
-{
-	int x, y, i, r;
-
-	NOT(b);
-	NOT(mp);
-	NOT(p);
-
-	for (i = 0; i < mp->num; i++) {
-		r = mp->rackIdx[i];
-		y = mp->coor[i].y;
-		x = mp->coor[i].x;
-		if (p->tile[r].type != tileNone) {
-			if (x > 0 && b->tile[y][x - 1].type != tileNone) {
+	for (int i = 0; i < mp->num; i++) {
+		const int r = mp->rackIdx[i];
+		const int y = mp->coor[i].y;
+		const int x = mp->coor[i].x;
+		if (p->tile[r].type != TILE_NONE) {
+			if (x > 0 && b->tile[y][x - 1].type != TILE_NONE) 
 				return true;
-			}
-			if (y > 0 && b->tile[y - 1][x].type != tileNone) {
+			if (y > 0 && b->tile[y - 1][x].type != TILE_NONE)
 				return true;
-			}
 			if (x < BOARD_X - 1 &&
-					b->tile[y][x + 1].type != tileNone) {
+					b->tile[y][x + 1].type != TILE_NONE)
 				return true;
-			}
 			if (y < BOARD_Y - 1 &&
-					b->tile[y + 1][x].type != tileNone) {
+					b->tile[y + 1][x].type != TILE_NONE)
 				return true;
-			}
 		}
 			
 	}
 	return false;
 }
 
-bool onFreeSquares(Board *b, MovePlace *mp, Player *p)
+static bool on_free_squares(const board_t *b, const move_place_t *mp,
+		const player_t *p)
 {
-	int x, y, i, r;
-
-	NOT(b);
-	NOT(mp);
-	NOT(p);
-
-	for (i = 0; i < mp->num; i++) {
-		r = mp->rackIdx[i];
-		y = mp->coor[i].y;
-		x = mp->coor[i].x;
-		if (p->tile[r].type != tileNone && b->sq[y][x] == sqFree) {
+	for (int i = 0; i < mp->num; i++) {
+		const int r = mp->rackIdx[i];
+		const int y = mp->coor[i].y;
+		const int x = mp->coor[i].x;
+		if (p->tile[r].type != tileNone && b->sq[y][x] == SQ_FREE)
 			return true;
-		}
 	}
 	return false;
 }
 
-bool onVowels(Board *b, MovePlace *mp, Player *p)
+static bool on_vowels(const board_t *b, const move_place_t *mp,
+		const player_t *p)
 {
-	int x, y, i, r;
-
-	NOT(b);
-	NOT(mp);
-	NOT(p);
-
-	for (i = 0; i < mp->num; i++) {
-		r = mp->rackIdx[i];
-		y = mp->coor[i].y;
-		x = mp->coor[i].x;
-		if (b->sq[y][x] == sqNoVowel && p->tile[r].type != tileNone && constant(p->tile[r].letter)) {
+	for (int i = 0; i < mp->num; i++) {
+		const int r = mp->rackIdx[i];
+		const int y = mp->coor[i].y;
+		const int x = mp->coor[i].x;
+		if (b->sq[y][x] == SQ_NO_VOWEL && p->tile[r].type != TILE_NONE &&
+				constant(p->tile[r].letter))
 			return false;
-		}
 	}
 	return true;
 }
 
-bool onBlocks(Board *b, MovePlace *mp, Player *p)
+static bool on_blocks(const board_t *b, const move_place_t *mp,
+		const player_t *p)
 {
-	int x, y, i, r;
-
-	NOT(b);
-	NOT(mp);
-	NOT(p);
-
-	for (i = 0; i < mp->num; i++) {
-		r = mp->rackIdx[i];
-		y = mp->coor[i].y;
-		x = mp->coor[i].x;
-		if (b->sq[y][x] == sqBlock && p->tile[r].type != tileNone) {
+	for (int i = 0; i < mp->num; i++) {
+		const int r = mp->rackIdx[i];
+		const int y = mp->coor[i].y;
+		const int x = mp->coor[i].x;
+		if (b->sq[y][x] == SQ_BLOCK && p->tile[r].type != TILE_NONE)
 			return true;
-		}
 	}
 	return false;
 }
 
-bool placeInRange(MovePlace *mp)
+static bool place_in_range(const move_place_t *mp)
 {
-	int i;
-	
-	NOT(mp);
-	
-	for (i = 0; i < mp->num; i++) {
-		if (mp->rackIdx[i] < 0 || mp->rackIdx[i] >= RACK_SIZE) {
+	for (int i = 0; i < mp->num; i++) {
+		if (mp->rackIdx[i] < 0 || mp->rackIdx[i] >= RACK_SIZE)
 			return false;
-		}
-		if (mp->coor[i].x < 0 || mp->coor[i].x >= BOARD_X) {
+		if (mp->coor[i].x < 0 || mp->coor[i].x >= BOARD_X)
 			return false;
-		}
-		if (mp->coor[i].y < 0 || mp->coor[i].y >= BOARD_Y) {
+		if (mp->coor[i].y < 0 || mp->coor[i].y >= BOARD_Y)
 			return false;
-		}
 	}
 	return true;
 }
 
-bool placeOverlap(MovePlace *mp)
+static bool place_overlap(const move_place_t *mp)
 {
-	for (int i = 0; i < mp->num && i < RACK_SIZE; i++) {
+	for (int i = 0; i < mp->num && i < RACK_SIZE; i++)
 		for (int j = i + 1; j < mp->num && j < RACK_SIZE; j++) {
 			if (mp->rackIdx[i] == mp->rackIdx[j])
 				return false;
 			if (mp->coor[i].x == mp->coor[j].x &&
-			                mp->coor[i].y == mp->coor[j].y)
+					mp->coor[i].y == mp->coor[j].y)
 				return true;
 		}
-	}
 	return false;
 }
 
-bool placeOverlapBoard(MovePlace *mp, Board *b)
+static bool place_overlap_board(const move_place_t *mp, const board_t *b)
 {
-	int i, x, y;
-
-	NOT(mp);
-	NOT(b);
-	
-	for (i = 0; i < mp->num; i++) {
-		x = mp->coor[i].x;
-		y = mp->coor[i].y;
-		if (b->tile[y][x].type != tileNone) {
+	for (int i = 0; i < mp->num; i++) {
+		const int x = mp->coor[i].x;
+		const int y = mp->coor[i].y;
+		if (b->tile[y][x].type != TILE_NONE)
 			return true;
-		}
 	}
 	return false;
 }
 
-bool placeRackExist(MovePlace *mp, Player *p)
+static bool place_rack_exist(const move_place_t *mp, const player_t *p)
 {
-	int i, r;
-
-	NOT(mp);
-	NOT(p);
-
-	for (i = 0; i < mp->num; i++) {
-		r = mp->rackIdx[i];
-		if (p->tile[r].type == tileNone) {
+	for (int i = 0; i < mp->num; i++)
+		if (p->tile[mp->rackIdx[i]].type == TILE_NONE)
 			return false;
-		}
-	}
 	return true;
 }
 
-void cpyRackBoard(Board *b, MovePlace *mp, Player *p)
+static void cpy_rack_board(const move_place_t *mp, const player_t *p,
+		board_t *b)
 {
-	int x, y, i, r;
-
-	NOT(b);
-	NOT(mp);
-	NOT(p);
-
-	for (i = 0; i < mp->num; i++) {
-		r = mp->rackIdx[i];
-		y = mp->coor[i].y;
-		x = mp->coor[i].x;
-		memCpy(&b->tile[y][x], &p->tile[r], sizeof(Tile));
+	for (int i = 0; i < mp->num; i++) {
+		const int r = mp->rackIdx[i];
+		const int y = mp->coor[i].y;
+		const int x = mp->coor[i].x;
+		memcpy(&b->tile[y][x], &p->tile[r], sizeof(tile_t));
 	}
 }
 
-bool isHorz(Action *a, Move *m)
+static bool is_horz(const action_t *a, const move_t *m)
 {
-	int i, min, max, y;
-	Coor *coor;
-	Board *b;
-
-	NOT(a);
-	NOT(m);
-
-	b = &a->data.place.path.board;
-	y = m->data.place.coor[0].y;
-	min = max = m->data.place.coor[0].x;
-	if (m->data.place.num < 2) {
+	const board_t *b = &a->data.place.path.board;
+	const int y = m->data.place.coor[0].y;
+        int min = m->data.place.coor[0].x;
+        int max = m->data.place.coor[0].x;
+	if (m->data.place.num < 2)
 		return false;
-	}
-	for (i = 1; i < m->data.place.num; i++) {
-		coor = &m->data.place.coor[i];
-		if (y != coor->y) {
+	for (int i = 1; i < m->data.place.num; i++) {
+	        const coor_t *coor = &m->data.place.coor[i];
+		if (y != coor->y)
 			return false;
-		}
-		if (min < coor->x) {
+		if (min < coor->x)
 			min = coor->x;
-		}
-		if (max > coor->x) {
+		if (max > coor->x)
 			max = coor->x;
-		}
 	}
-	for (i = min; i <= max; i++) {
-		if (b->tile[y][i].type == tileNone) {
+	for (int i = min; i <= max; i++)
+		if (b->tile[y][i].type == TILE_NONE)
 			return false;
-		}
-	}
 	return true;
 }
 
-bool isVert(Action *a, Move *m)
+static bool is_vert(const action_t *a, const move_t *m)
 {
-	int i, min, max, x;
-	Board *board;
-	Coor *coor;
-	
-	NOT(a);
-	NOT(m);
-
-	x = m->data.place.coor[0].x;
-	board = &a->data.place.path.board;
-	min = max = m->data.place.coor[0].y;
-
-	if (m->data.place.num < 2) {
+	const int x = m->data.place.coor[0].x;
+	const board_t *board = &a->data.place.path.board;
+	int min = m->data.place.coor[0].y;
+	int max = m->data.place.coor[0].y;
+	if (m->data.place.num < 2)
 		return false;
-	}
-	for (i = 1; i < m->data.place.num; i++) {
-		coor = &m->data.place.coor[i];
-		if (x != coor->x) {
+	for (int i = 1; i < m->data.place.num; i++) {
+		const coor_t *coor = &m->data.place.coor[i];
+		if (x != coor->x)
 			return false;
-		}
-		if (min > coor->y) {
+		if (min > coor->y)
 			min = coor->y;
-		}
-		if (max < coor->y) {
+		if (max < coor->y)
 			max = coor->y;
-		}
 	}
-	for (i = min; i <= max; i++) {
-		if (board->tile[i][x].type == tileNone) {
+	for (int i = min; i <= max; i++)
+		if (board->tile[i][x].type == TILE_NONE)
 			return false;
-		}
-	}
 	return true;
 }
 
-void mkRight(Dir *d, int x, int y, Board *b)
+static void mk_right(int x, int y, const board_t *b, dir_t *d)
 {
-	int i;
-
-	NOT(d);
-	NOT(b);
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
-
-	d->type = dirRight;
+	d->type = DIR_RIGHT;
 	d->x = x;
 	d->y = y;
-	memSet(d->pos, false, sizeof(bool) * BOARD_SIZE);
+	memset(d->pos, false, sizeof(bool) * BOARD_SIZE);
 	d->pos[x] = true;
-
-	for (i = x; i >= 0 && b->tile[y][i].type != tileNone; i--) {
+	for (int i = x; i >= 0 && b->tile[y][i].type != TILE_NONE; i--)
 		d->x = i;
-	}
-
-	for (i = x; i < BOARD_X && b->tile[y][i].type != tileNone; i++) {
+	for (int i = x; i < BOARD_X && b->tile[y][i].type != TILE_NONE; i++)
 		d->len = i;
-	}
 	d->len -= d->x - 1;
-
-	/* a word cannot be 1 letter long */
-	if (d->len == 1) {
-		 d->type = dirInvalid;
-	}
+	/* A word cannot be 1 letter long. */
+	if (d->len == 1)
+		 d->type = DIR_INVALID;
 }
 
-void mkDown(Dir *d, int x, int y, Board *b)
+static void mk_down(int x, int y, const board_t *b, dir_t *d)
 {
-	int i;
-
-	NOT(d);
-	NOT(b);
 	VALID_BOARD_X(x);
 	VALID_BOARD_Y(y);
-
-	d->type = dirDown;
+	d->type = DIR_DOWN;
 	d->x = x;
 	d->y = y;
-	memSet(d->pos, false, sizeof(bool) * BOARD_SIZE);
+	memset(d->pos, false, sizeof(bool) * BOARD_SIZE);
 	d->pos[y] = true;
-
-	for (i = y; i >= 0 && b->tile[i][x].type != tileNone; i--) {
+	for (int i = y; i >= 0 && b->tile[i][x].type != TILE_NONE; i--)
 		d->y = i;
-	}
-
-	for (i = y; i < BOARD_Y && b->tile[i][x].type != tileNone; i++) {
+	for (int i = y; i < BOARD_Y && b->tile[i][x].type != TILE_NONE; i++)
 		d->len = i;
-	}
 	d->len -= d->y - 1;
-
-	/* a word cannot be 1 letter long */
-	if (d->len == 1) {	
-		d->type = dirInvalid;
-	}
+	/* A word cannot be 1 letter long. */
+	if (d->len == 1)
+		d->type = DIR_INVALID;
 }
 
-void mkDot(Action *a, Move *m)
+static void mk_dot(const move_t *m, action_t *a)
 {
-	int x, y;
-	Path *p;
-	Board *b;
-	Dir *d;
-
-	NOT(a);
-	NOT(m);
-
-	x = m->data.place.coor[0].x;
-	y = m->data.place.coor[0].y;
-	p = &a->data.place.path; 
-	b = &a->data.place.path.board;
-	d = NULL;
-
-	p->type = pathDot;
-
-	d = &p->data.dot.right;
-	mkRight(d, x, y, b);
-
+	const int x = m->data.place.coor[0].x;
+	const int y = m->data.place.coor[0].y;
+	const board_t *b = &a->data.place.path.board;
+	path_t *p = &a->data.place.path; 
+	dir_t *d = &p->data.dot.right;
+	p->type = PATH_DOT;
+	mk_right(x, y, b, d);
 	d = &p->data.dot.down;
-	mkDown(d, x, y, b);
+	mk_down(x, y, b, d);
 }
 
-void mkHorz(Action *a, Move *m)
+static void mk_horz(const move_t *m, action_t *a)
 {
-	int i, x, y;
-	Path *p;
-	Board *b;
-	Dir *d;
-
-	NOT(a);
-	NOT(m);
-
-	x = m->data.place.coor[0].x;
-	y = m->data.place.coor[0].y;
-	p = &a->data.place.path; 
-	b = &a->data.place.path.board;
-
-	p->type = pathHorz;
-
-	d = &p->data.horz.right;
-	mkRight(d, x, y, b);
-
-	for (i = 0; i < m->data.place.num; i++) {
-		x = m->data.place.coor[i].x;
-		d->pos[x] = true;
-	}
-	for (i = 0; i < BOARD_X; i++) {
-		p->data.horz.down[i].type = dirInvalid;
-	}
-	for (i = 0; i < m->data.place.num; i++) {
+        const move_place_t *mp = &m->data.place;
+	const board_t *b = &a->data.place.path.board;
+	path_t *p = &a->data.place.path; 
+	dir_t *d = &p->data.horz.right;
+	p->type = PATH_HORZ;
+	mk_right(mp->coor[0].x, mp->coor[0].y, b, d);
+	for (int i = 0; i < mp->num; i++)
+		d->pos[mp->coor[i].x] = true;
+	for (int i = 0; i < BOARD_X; i++)
+		p->data.horz.down[i].type = DIR_INVALID;
+	for (int i = 0; i < mp->num; i++) {
 		d = &p->data.horz.down[i];
-		x = m->data.place.coor[i].x;
-		y = m->data.place.coor[i].y;
-		mkDown(d, x, y, b);
+		mk_down(mp->coor[i].x, mp->coor[i].y, b, d);
 	}
 }
 
-void mkVert(Action *a, Move *m)
+static void mk_vert(const move_t *m, action_t *a)
 {
-	int i, x, y;
-	Path *path;
-	Board *b;
-	Dir *d;
-
-	NOT(a);
-	NOT(m);
-
-	x = m->data.place.coor[0].x;
-	y = m->data.place.coor[0].y;
-	b = &a->data.place.path.board;
-	d = NULL;
-
-	path = &a->data.place.path; 
-	d = &path->data.vert.down;
-
-	path->type = pathVert;
-	mkDown(d, x, y, b);
-
-	for (i = 0; i < m->data.place.num; i++) {
-		y = m->data.place.coor[i].y;
-		d->pos[y] = true;
-	}
-	for (i = 0; i < BOARD_Y; i++) {
-		path->data.vert.right[i].type = dirInvalid;
-	}
-	for (i = 0; i < m->data.place.num; i++) {
+        const move_place_t *mp = &m->data.place;
+	const int x = m->data.place.coor[0].x;
+	const int y = m->data.place.coor[0].y;
+	const board_t *b = &a->data.place.path.board;
+	path_t *path = &a->data.place.path; 
+	dir_t *d = &path->data.vert.down;
+	path->type = PATH_VERT;
+	mk_down(x, y, b, d);
+	for (int i = 0; i < mp->num; i++)
+		d->pos[mp->coor[i].y] = true;
+	for (int i = 0; i < BOARD_Y; i++)
+		path->data.vert.right[i].type = DIR_INVALID;
+	for (int i = 0; i < mp->num; i++) {
 		d = &path->data.vert.right[i];
-		x = m->data.place.coor[i].x;
-		y = m->data.place.coor[i].y;
-		mkRight(d, x, y, b);
+		const int x = m->data.place.coor[i].x;
+		const int y = m->data.place.coor[i].y;
+		mk_right(x, y, b, d);
 	}
 }
 
-ActionErrType fdPlaceErr(MovePlace *mp,Player *p, Board *b)
+static action_err_t find_place_err(const move_place_t *mp, const player_t *p,
+                const board_t *b)
 {
-	NOT(mp);
-	NOT(p);
-	NOT(b);
-	
-	if (!placeInRange(mp)) {
-		return actionErrPlaceOutOfRange;
-	}
-	if (placeOverlap(mp)) {
-		return actionErrPlaceSelfOverlap;
-	}
-	if (placeOverlapBoard(mp, b)) {
-		return actionErrPlaceBoardOverlap;
-	}
-	if (!placeRackExist(mp, p)) {
-		return actionErrPlaceInvalidRackId;
-	}
-	if ((!tilesAdjacent(b, mp, p) && !onFreeSquares(b, mp, p)) || !onVowels(b, mp, p) || onBlocks(b, mp, p)) {
-		return actionErrPlaceInvalidSq;
-	}
-	return actionErrNone;
+	if (!place_in_range(mp))
+		return ACTION_ERR_PLACE_OUT_OF_RANGE;
+	if (place_overlap(mp))
+		return ACTION_ERR_PLACE_SELF_OVERLAP;
+	if (place_overlap_board(mp, b))
+		return ACTION_ERR_PLACE_BOARD_OVERLAP;
+	if (!place_rack_exist(mp, p))
+		return ACTION_ERR_PLACE_INVALID_RACK_ID;
+	if ((!tiles_adjacent(b, mp, p) && !on_free_squares(b, mp, p)) ||
+			!on_vowels(b, mp, p) || on_blocks(b, mp, p))
+		return ACTION_ERR_PLACE_INVALID_SQ;
+	return ACTION_ERR_NONE;
 }
 
-bool ruleZ4Char(Word *w, PathType pt, DirType dt)
+/* unused */
+/*
+static bool rule_z4_char(const word_t *w, path_tag_t pt, dir_tag_t dt)
 {
-	NOT(w);
-	printWord(w);
-	putchar('\n');
-	return w->len == 4 && w->letter[0] == letterZ;
+	return w->len == 4 && w->letter[0] == LETTER_Z;
 }
+*/
 
-void mkPlace(Action *a, Game *g, Move *m)
+static void mk_place(const game_t *g, const move_t *m, action_t *a)
 {
-	int num, i;
-	Path *path;
-	Player *player;
-	ActionErrType err;
-
-	NOT(a);
-	NOT(g);
-	NOT(m);
-
-	num = m->data.place.num;
-	path = &a->data.place.path;
-	player = &g->player[m->playerIdx];
-	a->type = actionPlace;
-
+	const int num = m->data.place.num;
+	path_t *path = &a->data.place.path;
+	const player_t *player = &g->player[m->playerIdx];
+	a->type = ACTION_PLACE;
 	a->data.place.num = m->data.place.num;
-	for (i = 0; i < num; i++) {
+	for (int i = 0; i < num; i++)
 		a->data.place.rackIdx[i] = m->data.place.rackIdx[i];
-	}
-	err = fdPlaceErr(&m->data.place, player, &g->board);
-	if (err != actionErrNone) {
-		a->type = actionInvalid;
+	action_err_t err = find_place_err(&m->data.place, player, &g->board);
+	if (err != ACTION_ERR_NONE) {
+		a->type = ACTION_INVALID;
 		a->data.err = err;
 		return;
 	}
-
-	memCpy(&path->board, &g->board, sizeof(Board));
-	cpyRackBoard(&path->board, &m->data.place, player);
-
+	memcpy(&path->board, &g->board, sizeof(board_t));
+	cpy_rack_board(&m->data.place, player, &path->board);
 	assert(num >= 0);
 	switch (num) {
-	case 0: {
-		a->type = actionInvalid;
-		a->data.err = actionErrPlaceNoRack;
+	case 0: 
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_PLACE_NO_RACK;
 		return;
-	}
-	case 1: {
-		mkDot(a, m);
+	case 1: 
+		mk_dot(m, a);
 		break;
-	}
-	default: {
+	default:
 		assert(num > 1);
-		if (isHorz(a, m)) {
-			mkHorz(a, m);
+		if (is_horz(a, m)) {
+			mk_horz(m, a);
 		} else { 
-			if (isVert(a, m)) {
-				mkVert(a, m);
+			if (is_vert(a, m)) {
+				mk_vert(m, a);
 			} else {
-				a->type = actionInvalid;
-				a->data.err = actionErrPlaceNoDir;
+				a->type = ACTION_INVALID;
+				a->data.err = ACTION_ERR_PLACE_NO_DIR;
 				return;
 			}
 		}
 		break;
 	}
-	}
-
-	if (!pathValid(path, &g->dict, NULL)) {
+	if (!path_valid(path, &g->dict, NULL)) {
 		a->type = actionInvalid;
 		a->data.err = actionErrPlaceInvalidPath;
 		return;
@@ -1066,350 +756,264 @@ void mkPlace(Action *a, Game *g, Move *m)
 	a->data.place.score = path_score(path);
 }
 
-void mkDiscard(Action *a, Game *g, Move *m)
+void mk_discard(const game_t *g, const move_t *m, action_t *a)
 {
-	int i;
-
-	NOT(a);
-	NOT(g);
-	NOT(m);
-
 	if (m->data.discard.num == 0) {
-		a->type = actionInvalid;
-		a->data.err = actionErrDiscardEmpty;
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_DISCARD_EMPTY;
 		return;
 	}
-
 	assert(m->data.discard.num > 0);
-
-	a->type = actionDiscard;
+	a->type = ACTION_DISCARD;
 	a->data.discard.score = -m->data.discard.num;
 	if (a->data.discard.score + g->player[a->playerIdx].score < 0) {
 		a->data.discard.score += g->player[a->playerIdx].score - a->data.discard.score;
 	}
 	a->data.discard.num = m->data.discard.num;
-
-	for (i = 0; i < a->data.discard.num; i++) {
+	for (int i = 0; i < a->data.discard.num; i++) {
 		a->data.discard.rackIdx[i] = m->data.discard.rackIdx[i];
 	}
 }
 
-void mkSkip(Action *a, Game *g)
+void mk_skip(const game_t *g, action_t *a)
 {
-	NOT(a);
-	NOT(g);
-	
 	if (g->rule.skip && !g->rule.skip(g)) {
-		a->type = actionInvalid;
-		a->data.err = actionErrSkipRule;
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_SKIP_RULE;
 		return;
 	}
-	a->type = actionSkip;
+	a->type = ACTION_SKIP;
 }
 
-void mkQuit(Action *a, Game *g)
+void mk_quit(const game_t *g, action_t *a)
 {
-	NOT(a);
-	NOT(g);
-	
 	if (g->rule.quit && !g->rule.quit(g)) {
-		a->type = actionInvalid;
-		a->data.err = actionErrQuitRule;
+		a->type = ACTION_INVALID;
+		a->data.err = ACTION_ERR_QUIT_RULE;
 		return;
 	}
-	a->type = actionQuit;
+	a->type = ACTION_QUIT;
 }
 
-void mkAction(Action *a, Game *g, Move *m)
+void mk_action(const game_t *g, const move_t *m, action_t *a)
 {
-	NOT(a);
-	NOT(g);
-	NOT(m);
-
 	a->playerIdx = m->playerIdx;
 	switch (m->type) {
-	case movePlace: mkPlace(a, g, m); break;
-	case moveDiscard: mkDiscard(a, g, m); break;
-	case moveSkip: mkSkip(a, g); break;
-	case moveQuit: mkQuit(a, g); break;
-	case moveInvalid: /* fall through */
-	default: a->type = actionInvalid; break;
+	case MOVE_PLACE:
+                mk_place(g, m, a);
+                break;
+	case MOVE_DISCARD:
+                mk_discard(g, m, a);
+                break;
+	case MOVE_SKIP:
+                mk_skip(g, a);
+                break;
+	case MOVE_QUIT:
+                mk_quit(g, a);
+                break;
+	case MOVE_INVALID:
+	        a->type = ACTION_INVALID;
+                break;
+        default:
+                assert(false);
+	        a->type = ACTION_INVALID;
+                break;
 	}
 }
 
-void rackShift(Player *p)
+void rack_shift(player_t *p)
 {
-	int i, j;
-
-	NOT(p);
-
-	j = 0;
-	i = 0;
+	int j = 0;
+	int i = 0;
 	while (i < RACK_SIZE) {
-		while (p->tile[i].type == tileNone && i < RACK_SIZE) {
+		while (p->tile[i].type == TILE_NONE && i < RACK_SIZE)
 			i++;
-		}
-		if (i == RACK_SIZE) {
+		if (i == RACK_SIZE)
 			break;
-		}
 		p->tile[j] = p->tile[i];
 		i++;
 		j++;
 	}
 	while (j < RACK_SIZE) {
-		p->tile[j].type = tileNone;
+		p->tile[j].type = TILE_NONE;
 		j++;
 	}
 }
 
-void rackRefill(Player *p, Bag *b)
+void rack_refill(bag_t *b, player_t *p)
 {
-	int i;
-	
-	NOT(p);
-	NOT(b);
-
-	for (i = 0; i < RACK_SIZE && !bagEmpty(b); i++) {
-		if (p->tile[i].type == tileNone) {
-			p->tile[i] = bagPeek(b);
-			bagDrop(b);
+	for (int i = 0; i < RACK_SIZE && !bag_empty(b); i++)
+		if (p->tile[i].type == TILE_NONE) {
+			p->tile[i] = bag_peek(b);
+			bag_drop(b);
 		}
-	}
 }
 
-bool applyAction(Game *g, Action *a)
+bool apply_action(const action_t *a, game_t *g)
 {
-	int id, i, r;
-
-	NOT(g);
-	NOT(a);
-
-	id = a->playerIdx;
+	const int id = a->playerIdx;
 	VALID_TILES(g->player[id]);
-	if (id != g->turn) {
+	if (id != g->turn)
 		return false;
-	}
 	switch (a->type) {
-	case actionPlace: {
+	case ACTION_PLACE:
 		VALID_TILES(g->player[id]);
-		memCpy(&g->board, &a->data.place.path.board, sizeof(a->data.place.path.board));
-		for (i = 0; i < a->data.place.num; i++) {
-			r = a->data.place.rackIdx[i];
-			g->player[id].tile[r].type = tileNone;
+		memcpy(&g->board, &a->data.place.path.board,
+                        sizeof(a->data.place.path.board));
+		for (int i = 0; i < a->data.place.num; i++) {
+			const int r = a->data.place.rackIdx[i];
+			g->player[id].tile[r].type = TILE_NONE;
 		}
 		VALID_TILES(g->player[id]);
-		rackRefill(&g->player[id], &g->bag);
+		rack_refill(&g->bag, &g->player[id]);
 		VALID_TILES(g->player[id]);
-		rackShift(&g->player[id]);
+		rack_shift(&g->player[id]);
 		g->player[id].score += a->data.place.score;
 		VALID_TILES(g->player[id]);
 		break;
-	}
-	case actionDiscard: {
-		for (i = 0; i < a->data.discard.num; i++) {
-			r = a->data.discard.rackIdx[i];
-			g->player[id].tile[r].type = tileNone;
+	case ACTION_DISCARD:
+		for (int i = 0; i < a->data.discard.num; i++) {
+			const int r = a->data.discard.rackIdx[i];
+			g->player[id].tile[r].type = TILE_NONE;
 		}
-		rackRefill(&g->player[id], &g->bag);
-		rackShift(&g->player[id]);
+		rack_refill(&g->bag, &g->player[id]);
+		rack_shift(&g->player[id]);
 		g->player[id].score += a->data.discard.score;
 		break;
-	}
-	case actionSkip: {
+	case ACTION_SKIP:
 		break;
-	}
-	case actionQuit: {
+	case ACTION_QUIT:
 		g->player[id].active = false;
 		break;
-	}
-	case actionInvalid: /* fall through */
-	default: return false;
+	case ACTION_INVALID:
+                return false;
+	default:
+                assert(false);
+                return false;
 	}
 
 	return true;
 }
 
-void rmRackTile(Player *p, int *rackIdx, int n)
+void rm_rack_tile(const int *rack_idx, int n, player_t *p)
 {
-	int i;
-
-	NOT(p);
-	NOT(rackIdx);
-
-	for (i = 0; i < n; i++) {
-		p->tile[rackIdx[i]].type = tileNone;
-	}
+	for (int i = 0; i < n; i++)
+		p->tile[rack_idx[i]].type = TILE_NONE;
 }
 
-void nextTurn(Game *g)
+void next_turn(game_t *g)
 {
-	NOT(g);
-
 	do {
 		g->turn ++;
 		g->turn %= g->playerNum;
 	} while (!g->player[g->turn].active);
 }
 
-void moveClr(Move *m)
+void move_clear(move_t *m)
 {
-	NOT(m);
-
-	memSet(m, 0, sizeof(Move));
-	m->type = moveInvalid;
+	memset(m, 0x00, sizeof(move_t));
+	m->type = MOVE_INVALID;
 }
 
-void actionClr(Action *a)
+void action_clear(action_t *a)
 {
-	NOT(a);
-
-	memSet(a, 0, sizeof(Action));
-	a->type = actionInvalid;
+	memset(a, 0x00, sizeof(action_t));
+	a->type = ACTION_INVALID;
 }
 
-bool endGame(Game *g)
+bool end_game(const game_t *g)
 {
-	int i, j, k;
-
-	NOT(g);
-
 	/* 2 active players min. */	
-	j = 0;
-	for (i = 0; i < g->playerNum; i++) {
-		if (g->player[i].active) {
+	int j = 0;
+	for (int i = 0; i < g->playerNum; i++)
+		if (g->player[i].active)
 			j++;
-		}
-	}
-	if (j < 2) {
+	if (j < 2)
 			return true;
-	}
-	/* 1 player wth tiles on the rack */
+	/* 1 player wth tiles on the rack. */
 	j = 0;
-	for (i = 0; i < g->playerNum; i++) {
-		if (g->player[i].active) {
-			for (k = 0; k < RACK_SIZE; k++) {
-				if (g->player[i].tile[k].type != tileNone) {
+	for (int i = 0; i < g->playerNum; i++)
+		if (g->player[i].active)
+			for (int k = 0; k < RACK_SIZE; k++)
+				if (g->player[i].tile[k].type != TILE_NONE)
 					j++;
-				}
-			}
-		}
-	}
-	if (j == 0) {
+	if (j == 0)
 		return true;
-	}
 	return false;
 }
 
-int fdWinner(Game *g)
+/* RETURN VALUE: Winner's index on success and -1 on failure. */
+int find_winner(const game_t *g)
 {
-	int max, idx, i, j;
-
-	NOT(g);
-
-	/* if exist winner then winnerIdx else -1 */
-
-	idx = -1;
-	j = 0;
-
-	for (i = 0; i < g->playerNum; i++) {
-		if (g->player[i].active) {
-			idx = i;
+	int j = 0;
+	for (int i = 0; i < g->playerNum; i++)
+		if (g->player[i].active)
 			j++;
-		}
-	} 
-	if (j <= 1) {
-		return idx;
-	}
-	idx = -1;
-	max = 0;
-	for (i = 0; i < g->playerNum; i++) {
-		if (g->player[i].active) {
-			if (max < g->player[i].score) {
+	if (j <= 1)
+		return -1;
+	int idx = -1;
+	int max = 0;
+	for (int i = 0; i < g->playerNum; i++)
+		if (g->player[i].active && max < g->player[i].score) {
 				idx = i;
 				max = g->player[i].score;
-			}
 		}
-	} 
 	return idx;
 }
 
-bool validRackIdx(int id)
+bool valid_rack_idx(int id)
 {
 	return id >= 0 && id < RACK_SIZE;
 }
 
-bool validBoardIdx(Coor c)
+bool valid_board_idx(coor_t c)
 {
 	return c.x >= 0 && c.y >= 0 && c.x < BOARD_X && c.y < BOARD_Y;
 }
 
-int rackCount(Player *p)
+int rack_count(const player_t *p)
 {
-	int i, count;
-
-	NOT(p);
-	
-	count = 0;
-	for (i = 0; i < RACK_SIZE; i++) {
-		if (p->tile[i].type != tileNone) {
+	int count = 0;
+	for (int i = 0; i < RACK_SIZE; i++)
+		if (p->tile[i].type != TILE_NONE)
 			count++;
-		}
-	}
 	return count;
 }
 
-int adjustTileCount(Adjust *a)
+int adjust_tile_count(const tile_adjusts_t tile)
 {
-	int i, count;
-
-	NOT(a);
-	
-	count = 0;
-	for (i = 0; i < RACK_SIZE; i++) {
-		assert(a->data.tile[i].type == tileNone || a->data.tile[i].type == tileWild || a->data.tile[i].type == tileLetter);
-		if (a->data.tile[i].type != tileNone) {
+	int count = 0;
+	for (int i = 0; i < RACK_SIZE; i++)
+		if (tile[i].type != TILE_NONE)
 			count++;
-		}
-	}
 	return count;
 }
 
-bool boardEmpty(Board *b)
+bool board_empty(const board_t *b)
 {
-	int y, x;
-
-	NOT(b);
-
-	for (y = 0; y < BOARD_Y; y++) {
-		for (x = 0; x < BOARD_X; x++) {
-			if (b->tile[y][x].type != tileNone) {
+	for (int y = 0; y < BOARD_Y; y++)
+		for (int x = 0; x < BOARD_X; x++)
+			if (b->tile[y][x].type != TILE_NONE)
 				return false;
-			}
-		}
-	}
-
 	return true;
 }
 
-int bagCount(Bag *b)
+int bag_count(const bag_t *b)
 {
-	NOT(b);
 	return b->tail > b->head ? b->tail - b->head : b->head - b-> tail;
-
 }
 
-bool vowel(LetterType lt)
+bool vowel(letter_t l)
 {
-	return lt == LETTER_A ||
-	                lt == LETTER_E ||
-        		lt == LETTER_I ||
-        		lt == LETTER_O ||
-        		lt == LETTER_U ||
-        		lt == LETTER_Y;
+	return l == LETTER_A ||
+			l == LETTER_E ||
+			l == LETTER_I ||
+			l == LETTER_O ||
+			l == LETTER_U ||
+			l == LETTER_Y;
 }
 
-bool constant(LetterType lt)
+bool constant(letter_t l)
 {
-	return !vowel(lt);
+	return !vowel(l);
 }
-

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <memory.h>
 
 #include "dbg.h"
 #include "mem.h"
@@ -60,7 +61,7 @@ typedef enum sq
 	sqCount
 } SqType;
 
-typedef enum letter_tag
+typedef enum letter
 {
         LETTER_INVALID = -1,
         LETTER_A = 0,
@@ -140,7 +141,7 @@ typedef enum adjust_tag
 	adjustCount
 } AdjustType;
 
-typedef enum adjust_err_tag
+typedef enum adjust_err
 {
         ADJUST_ERR_NONE = 0,
         ADJUST_ERR_RACK_OUT_OF_RANGE,
@@ -168,7 +169,7 @@ typedef enum move_tag
 	moveCount
 } MoveType;
 
-typedef enum action_err_tag
+typedef enum action_err
 {
         ACTION_ERR_NONE,
         ACTION_ERR_UNKNOWN,
@@ -176,12 +177,12 @@ typedef enum action_err_tag
         ACTION_ERR_PLACE_OUT_OF_RANGE,
         ACTION_ERR_PLACE_SELF_OVERLAP,
         ACTION_ERR_PLACE_BOARD_OVERLAP,
-        ACTION_ERR_INVALID_RACK_ID,
-        ACTION_ERR_INVALID_SQ,
-        ACTION_ERR_NO_RACK,
-        ACTION_ERR_NO_DIR,
-        ACTION_ERR_INVALID_PATH,
-        ACTION_ERR_INVALID_WORD,
+        ACTION_ERR_PLACE_INVALID_RACK_ID,
+        ACTION_ERR_PLACE_INVALID_SQ,
+        ACTION_ERR_PLACE_NO_RACK,
+        ACTION_ERR_PLACE_NO_DIR,
+        ACTION_ERR_PLACE_INVALID_PATH,
+        ACTION_ERR_PLACE_INVALID_WORD,
         ACTION_ERR_DISCARD_RULE,
         ACTION_ERR_SKIP_RULE,
         ACTION_ERR_QUIT_RULE,
@@ -287,12 +288,12 @@ typedef enum action_tag
 
 typedef enum tile_tag tile_tag_t;
 typedef enum sq sq_t;
-typedef enum letter_tag letter_tag_t;
+typedef enum letter letter_t;
 typedef enum player_tag player_tag_t;
 typedef enum adjust_tag adjust_tag_t;
-typedef enum adjust_err_tag adjust_err_tag_t;
+typedef enum adjust_err adjust_err_t;
 typedef enum move_tag move_tag_t;
-typedef enum action_err_tag action_err_tag_t;
+typedef enum action_err action_err_t;
 typedef enum dir_err_tag dir_err_tag_t;
 typedef enum path_err_tag path_err_tag_t;
 typedef enum dir_tag dir_tag_t;
@@ -328,13 +329,13 @@ struct game;
 typedef struct word
 {
 	int len;
-	LetterType letter[BOARD_SIZE];
+	letter_t letter[BOARD_SIZE];
 } Word;
 
 typedef struct tile
 {
 	tile_tag_t type;
-	LetterType letter;
+	letter_t letter;
 } Tile;
 
 #define VALID_TILE_TYPE(tt) (RANGE(tt, (-1), tileCount - 1))
@@ -405,7 +406,7 @@ typedef struct adjust
 	adjust_tag_t type;
 	union {
 	        struct tile_adjust tile[RACK_SIZE];
-        	adjust_err_tag_t err;
+        	adjust_err_t err;
 	} data;
 } Adjust;
 
@@ -486,7 +487,7 @@ typedef struct action
 	union {
 	        struct action_place place;
         	struct action_discard discard;
-	        action_err_tag_t err;
+	        action_err_t err;
 	} data;
 } Action;
 
@@ -517,10 +518,10 @@ typedef struct dict
 
 typedef struct rule
 {
-	bool (*place)(struct word *, path_tag_t, dir_tag_t);
-	bool (*discard)(struct game *, struct move_discard *);
-	bool (*skip)(struct game *);
-	bool (*quit)(struct game *);
+	bool (*place)(const struct word *, path_tag_t, dir_tag_t);
+	bool (*discard)(const struct game *, const struct move_discard *);
+	bool (*skip)(const struct game *);
+	bool (*quit)(const struct game *);
 } Rule;
 
 typedef struct game
@@ -542,6 +543,7 @@ typedef struct coor coor_t;
 typedef struct move_place move_place_t;
 typedef struct move_discard move_discard_t;
 typedef struct tile_adjust tile_adjust_t;
+typedef struct tile_adjust tile_adjusts_t[RACK_SIZE];
 typedef struct adjust adjust_t;
 typedef struct move move_t;
 typedef struct bag bag_t; 
@@ -559,37 +561,33 @@ typedef struct dict dict_t;
 typedef struct rule rule_t;
 typedef struct game game_t;
 
-void mkAdjust(Adjust *, Player *);
-void adjustSwap(Adjust *, int, int);
-AdjustErrType fdAdjustErr(Adjust *, Player *);
-void applyAdjust(Player *, Adjust *);
-void mkAction(Action *, Game *, Move *);
-bool applyAction(Game *, Action *);
-void nextTurn(Game *);
-CmpType cmpWord(Word *, Word *);
-void moveClr(Move *);
-void actionClr(Action *);
-void rmRackTile(Player *, int *, int);
-void rackShift(Player *);
-void rackRefill(Player *, Bag *);
-bool endGame(Game *);
-int fdWinner( Game *);
-bool validRackIdx(int);
-bool validBoardIdx(Coor);
-int rackCount(Player *);
-int adjustTileCount(Adjust *);
-bool wordValid(Word *, Dict *);
-bool boardEmpty(Board *b);
-
-bool bag_full(const Bag *b);
-bool bagEmpty(Bag *b);
-int bagCount(Bag *b);
-int bagSize(Bag *b);
-
-int tileScore(const Tile *t);
-
-bool vowel(LetterType);
-bool constant(LetterType);
+void	mk_adjust(const player_t *, adjust_t *);
+void	adjust_swap(int, int, tile_adjusts_t);
+adjust_err_t	find_adjust_err(const adjust_t *, const player_t *);
+void	apply_adjust(const tile_adjusts_t, player_t *);
+void	mk_action(const game_t *, const move_t *, action_t *);
+bool	apply_action(const action_t *, game_t *);
+void	next_turn(game_t *);
+cmp_t	cmp_word(const word_t *, const word_t *);
+void	move_clear(move_t *);
+void	action_clear(action_t *);
+void	rm_rack_tile(const int *, const int, player_t *);
+void	rack_shift(player_t *);
+void	rack_refill(bag_t *, player_t *);
+bool	end_game(const game_t *);
+int	find_winner(const game_t *);
+bool	valid_rack_idx(int);
+bool	valid_board_idx(coor_t);
+int	rack_count(const player_t *);
+int	adjust_tile_count(const tile_adjusts_t);
+bool	word_valid(const word_t *, const dict_t *);
+bool	board_empty(const board_t *b);
+bool	bag_full(const bag_t *);
+bool	bag_empty(const bag_t *);
+int	bag_count(const bag_t *);
+int	bag_size(const bag_t *);
+int	tile_score(const tile_t *);
+bool	vowel(letter_t);
+bool	constant(letter_t);
 
 #endif
-

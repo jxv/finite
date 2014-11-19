@@ -382,7 +382,7 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 		for (i = 0; i < RACK_SIZE; i++) {
 			j = tm->adjust.data.tile[i].idx;
 			idx = tm->place.boardIdx[j];
-			if (validBoardIdx(idx)) {
+			if (valid_board_idx(idx)) {
 				t = &p->tile[tm->adjust.data.tile[tm->place.rackIdx[idx.y][idx.x]].idx];
 				ts = io->tile[t->type][t->letter][tileLookHold];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
@@ -442,7 +442,7 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 			}
 			s = NULL;
 			if (tm->place.idx != i) {
-				if (!validBoardIdx(tm->place.boardIdx[i])) {
+				if (!valid_board_idx(tm->place.boardIdx[i])) {
 					tt = tileLookNormal;
 					s = t->type == tileWild ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 				}

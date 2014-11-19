@@ -5,7 +5,7 @@ typedef struct log
 {
 	action_tag_t type;
 	union {
-	        action_err_tag_t err;
+	        action_err_t err;
 	} data;
 } Log;
 

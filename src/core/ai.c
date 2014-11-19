@@ -470,7 +470,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 	lowScore = 0;
 	midScore = 0;
 	
-	combo.rackCount = rackCount(p);
+	combo.rackCount = rack_count(p);
 
 	if (combo.rackCount == 0) {
 		m->playerIdx = pIdx;
@@ -482,7 +482,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 	move.playerIdx = pIdx; 
 	m->playerIdx = pIdx;
 
-	firstMove = boardEmpty(b);
+	firstMove = board_empty(b);
 
 	for (j = 0; j < 2; j++) {
 		for (i = 0; i < bd[j]; i++) {
@@ -508,7 +508,7 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 					if (!placementToMovePlace(&move.data.place, &placement)) {
 						continue;
 					}
-					mkAction(&action, g, &move);
+					mk_action(g, &move, &action);
 					if (action.type == actionPlace) {
 						int diff, h;
 						diff = abs(hiScore - lowScore) * p->aiShare.difficulty / 10;
@@ -536,8 +536,8 @@ void aiFindMove(Move *m, int pIdx, Game *g, Rule *r, float *loading)
 	if (midScore > 0) {
 		m->type = movePlace;
 	} else {
-		assert(rackCount(p) > 0);
-		m->type = moveDiscard;
+		assert(rack_count(p) > 0);
+		m->type = MOVE_DISCARD;
 		m->data.discard.num = 1;
 		m->data.discard.rackIdx[0] = 0;
 	}

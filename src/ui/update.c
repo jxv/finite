@@ -275,7 +275,8 @@ void findNextMoveModePlaceIdx(TransMove *tm)
 	do {
 		mmp->idx++;
 		mmp->idx %= RACK_SIZE;
-	} while (validBoardIdx(mmp->boardIdx[mmp->idx]) || tm->adjust.data.tile[mmp->idx].type == tileNone);
+	} while (valid_board_idx(mmp->boardIdx[mmp->idx]) ||
+                        tm->adjust.data.tile[mmp->idx].type == TILE_NONE);
 }
 
 void shuffleRackTransMove(TransMove *tm)
@@ -295,12 +296,12 @@ void shuffleRackTransMove(TransMove *tm)
 	for (i = 0; i < RACK_SIZE; i++) {
 		for (j = 0; j < RACK_SIZE; j++) {
 			if (val[i] > val[j]) {
-				if (validBoardIdx(tm->place.boardIdx[i])) {
+				if (valid_board_idx(tm->place.boardIdx[i])) {
 						tm->place.rackIdx
 						[tm->place.boardIdx[i].y]
 						[tm->place.boardIdx[i].x] = j;
 				}
-				if (validBoardIdx(tm->place.boardIdx[j])) {
+				if (valid_board_idx(tm->place.boardIdx[j])) {
 					tm->place.rackIdx
 						[tm->place.boardIdx[j].y]
 						[tm->place.boardIdx[j].x] = i;
@@ -349,7 +350,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		int *idx;
 
 		idx = &mmp->rackIdx[c->data.board.y][c->data.board.x];
-		if (validRackIdx(*idx)) {
+		if (valid_rack_idx(*idx)) {
 			int a0, a1;
 			TileAdjust b0, b1;
 			a0 = mmp->rackIdx[c->data.board.y][c->data.board.x];
@@ -370,8 +371,8 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			mmp->boardIdx[mmp->idx] = c->data.board;
 			if (tm->adjust.data.tile[*idx].type == tileLetter) {
 				mmp->num++;
-				assert(mmp->num > 0 && mmp->num <= adjustTileCount(&tm->adjust));
-				if (adjustTileCount(&tm->adjust) == mmp->num) {
+				assert(mmp->num > 0 && mmp->num <= adjust_tile_count(tm->adjust.data.tile));
+				if (adjust_tile_count(tm->adjust.data.tile) == mmp->num) {
 					tm->type = transMovePlaceEnd;
 				} else {
 					findNextMoveModePlaceIdx(tm);
@@ -389,10 +390,11 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		assert(c->data.rack >= 0);
 		assert(c->data.rack < RACK_SIZE);
 		t = tm->adjust.data.tile[c->data.rack].type;
-		assert(t == tileNone || t == tileLetter || t == tileWild);
+		assert(t == TILE_NONE || t == TILE_LETTER || t == TILE_WILD);
 		if (t != tileNone && mmp->idx != c->data.rack) {
-			adjustSwap(&tm->adjust, mmp->idx, c->data.rack);
-			if (validBoardIdx(mmp->boardIdx[c->data.rack])) {
+			adjust_swap(mmp->idx, c->data.rack,
+                                tm->adjust.data.tile);
+			if (valid_board_idx(mmp->boardIdx[c->data.rack])) {
 				int *idx;
 				idx = &mmp->rackIdx[mmp->boardIdx[mmp->idx].y][mmp->boardIdx[mmp->idx].x];
 				*idx = -1;
@@ -418,7 +420,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		bIdx = c->data.board;
 		rIdx = mmp->rackIdx[bIdx.y][bIdx.x];
 	
-		if (validRackIdx(rIdx)) {
+		if (valid_rack_idx(rIdx)) {
 			assert(mmp->rackIdx[mmp->boardIdx[rIdx].y][mmp->boardIdx[rIdx].x] == rIdx);
 			mmp->rackIdx[bIdx.y][bIdx.x] = -1;
 			mmp->boardIdx[rIdx].x = -1;
@@ -433,7 +435,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			mmp->idx += RACK_SIZE;
 			mmp->idx--;
 			mmp->idx %= RACK_SIZE;
-		} while(validBoardIdx(mmp->boardIdx[mmp->idx]));
+		} while(valid_board_idx(mmp->boardIdx[mmp->idx]));
 		return true;
 	}
 	case cmdTileNext: {
@@ -448,7 +450,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			assert(mmp->idx != original);
 #endif
 	
-		} while (validBoardIdx(mmp->boardIdx[mmp->idx]));
+		} while (valid_board_idx(mmp->boardIdx[mmp->idx]));
 		return true;
 	}
 	case cmdMode: {
@@ -480,7 +482,7 @@ bool updateTransMovePlacePlay(TransMove *tm, Cmd *c, Board *b, Player *p)
 	assert(c->type != cmdQuit);
 
 	mmp = &tm->place;
-	tm->type = (adjustTileCount(&tm->adjust) == mmp->num) ? transMovePlaceEnd : transMovePlace;
+	tm->type = (adjust_tile_count(tm->adjust.data.tile) == mmp->num) ? transMovePlaceEnd : transMovePlace;
 
 	return true;
 }
@@ -500,8 +502,8 @@ bool updateTransMovePlaceWild(TransMove *tm, Cmd *c, Board *b, Player *p)
 	switch (c->type) {
 	case cmdBoardSelect: {
 		mmp->num++;
-		assert(mmp->num > 0 && mmp->num <= adjustTileCount(&tm->adjust));
-		if (adjustTileCount(&tm->adjust) == mmp->num) {
+		assert(mmp->num > 0 && mmp->num <= adjust_tile_count(tm->adjust.data.tile));
+		if (adjust_tile_count(tm->adjust.data.tile) == mmp->num) {
 			tm->type = transMovePlaceEnd;
 		} else {
 			tm->type = transMovePlace;
@@ -556,7 +558,7 @@ bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
 		bIdx = c->data.board;
 		rIdx = mmp->rackIdx[bIdx.y][bIdx.x];
 	
-		if (validRackIdx(rIdx)) {
+		if (valid_rack_idx(rIdx)) {
 			assert(mmp->boardIdx[rIdx].x == bIdx.x && mmp->boardIdx[rIdx].y == bIdx.y);
 			mmp->rackIdx[bIdx.y][bIdx.x] = -1;
 			mmp->boardIdx[rIdx].x = -1;
@@ -702,7 +704,7 @@ void clrTransMove(TransMove *tm, int pidx, Player *p, Board *b)
 
 	tm->type = transMovePlace;
 	tm->playerIdx = pidx;
-	mkAdjust(&tm->adjust, p);
+	mk_adjust(p, &tm->adjust);
 	clrMoveModePlace(&tm->place, b);
 	clrMoveModeDiscard(&tm->discard);
 }
@@ -720,7 +722,7 @@ void moveModePlaceToMovePlace(MovePlace *mp, MoveModePlace *mmp, Adjust *a)
 	for (i = 0, k = 0; i < RACK_SIZE; i++) {
 		j = a->data.tile[i].idx;
 		idx = mmp->boardIdx[j];
-		if (!validBoardIdx(idx)) {
+		if (!valid_board_idx(idx)) {
 			continue;
 		}
 		ridx = a->data.tile[mmp->rackIdx[idx.y][idx.x]].idx;
@@ -1466,24 +1468,22 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 
 	transMoveToMove(&m, tm);
 
-	mkAction(&a, gm, &m);
-	applyAction(gm, &a);
+	mk_action(gm, &m, &a);
+	apply_action(&a, gm);
 
-	if (cmd.type == cmdPlay || cmd.type == cmdQuit) {
+	if (cmd.type == cmdPlay || cmd.type == cmdQuit)
 		mkLog(&a, &l);
-		/* printLog(&l); */
-	}
 
 	if (a.type != actionInvalid) {
 		addActionToTextLog(&gg->textLog, &a);
 		actionToLastMove(&gg->lastMove, &a);
-		applyAdjust(&gm->player[a.playerIdx], &tm->adjust);
+		apply_adjust(tm->adjust.data.tile, &gm->player[a.playerIdx]);
 		/* log action */
-		if (endGame(gm)) {
+		if (end_game(gm)) {
 			g->next = guiFocusGameOver;
 			/* log game over */
 		} else {
-			nextTurn(gm);
+			next_turn(gm);
 			clrTransMove(tm, gm->turn, &gm->player[gm->turn], &gm->board);
 			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 		}
@@ -1533,7 +1533,7 @@ void update_guiFocusGameMenu(GUI *g, Controls *c, Game *gm)
 		}
 		case gameMenuFocusSkip: {
 			g->transMove.type = transMoveSkipPlay;
-			nextTurn(gm);
+			next_turn(gm);
 			g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 			break;
 		}
@@ -1571,7 +1571,7 @@ void *cbUpdateAi(void *data)
 
 	aiFindMove(&m, gm->turn, gm, NULL, &as->loading);
 
-	mkAction(&as->action, gm, &m);
+	mk_action(gm, &m, &as->action);
 
 	as->loading = 1.f;
 
@@ -1606,9 +1606,9 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 
 		addActionToTextLog(&g->gameGui.textLog, &gm->player[gm->turn].aiShare.action);
 		actionToLastMove(&g->gameGui.lastMove, &gm->player[gm->turn].aiShare.action);
-		applyAction(gm, &gm->player[gm->turn].aiShare.action);
+		apply_action(&gm->player[gm->turn].aiShare.action, gm);
 
-		nextTurn(gm);
+		next_turn(gm);
 		g->next = nextGUIFocusByPlayerType(gm->player[gm->turn].type);
 	}
 
@@ -1633,11 +1633,11 @@ void updateGameAreYouSureQuit(GUI *g, Game *gm, Controls *c)
 			m.type = moveQuit;
 			m.playerIdx = gm->turn;
 
-			mkAction(&a, gm, &m);
+			mk_action(gm, &m, &a);
 
-			assert(a.type == actionQuit);
+			assert(a.type == ACTION_QUIT);
 
-			applyAction(gm, &a);
+			apply_action(&a, gm);
 		}
 		return;
 	}

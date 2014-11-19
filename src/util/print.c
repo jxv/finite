@@ -160,7 +160,7 @@ void printPlace(move_place_t *mp)
 	printf("\n");
 }
 
-void printActionErr(action_err_tag_t err)
+void printActionErr(action_err_t err)
 {
 	switch (err) {
 	case actionErrUnknown: puts("[err: unknown]"); break;

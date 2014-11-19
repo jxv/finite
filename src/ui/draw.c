@@ -259,7 +259,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 			SDL_Surface *s;
 			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
 			surfaceDraw(io->screen, s, 269, 9);
-			sprintf(str0,": %d", tileScore(t));
+			sprintf(str0,": %d", tile_score(t));
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);
 		}
 	} else {
@@ -300,7 +300,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 			SDL_Surface *s;
 			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
 			surfaceDraw(io->screen, s, 269, 9);
-			sprintf(str0,": %d", tileScore(t));
+			sprintf(str0,": %d", tile_score(t));
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);
 		}
 	}
@@ -309,13 +309,14 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 	{
 		int len;
 		char tilesLeft[32] = "\0";
-		if (!bagEmpty(&gm->bag)) {
-			sprintf(tilesLeft, "BAG: %d", bagCount(&gm->bag));
+		if (!bag_empty(&gm->bag)) {
+			sprintf(tilesLeft, "BAG: %d", bag_count(&gm->bag));
 		} else {
 			int idx;
 			assert(gm->turn == 0 || gm->turn == 1);
 			idx = gm->turn == 0 ? 1 : 0;
-			sprintf(tilesLeft, "PLAYER %d: %d", idx + 1, rackCount(&gm->player[idx]));
+			sprintf(tilesLeft, "PLAYER %d: %d", idx + 1,
+                                rack_count(&gm->player[idx]));
 		}
 		strDraw(io->screen, &io->normalFont, tilesLeft, 13, 82);
 		len = strlen(tilesLeft) * (io->normalFont.width + io->normalFont.spacing) + 13;
@@ -1028,13 +1029,13 @@ void draw_guiFocusGameOver(Env *e)
 
 	{
 		char text[64];
-		sprintf(text, "PLAYER %d WON!", fdWinner(&e->game) + 1);
+		sprintf(text, "PLAYER %d WON!", find_winner(&e->game) + 1);
 		strDraw(e->io.screen, &e->io.highlightFont, text, (SCREEN_WIDTH - (strlen(text) * (e->io.normalFont.width + e->io.normalFont.spacing))) / 2, 80);
 	}
 
 	for (i = 0; i < e->game.playerNum; i++) {
 		char text[64];
-		Font *f = (fdWinner(&e->game) == i) ? &e->io.highlightFont : &e->io.normalFont;
+		Font *f = (find_winner(&e->game) == i) ? &e->io.highlightFont : &e->io.normalFont;
 		sprintf(text, "PLAYER %d:     %d", i + 1, e->game.player[i].score);
 		strDraw(e->io.screen, f, text,
 			(SCREEN_WIDTH - (15 * (f->width + f->spacing))) / 2 - 12/2, 
