@@ -7,7 +7,7 @@
 #include "widget.h"
 #include "print.h"
 
-void actionToLastMove(LastMove *lm, Action *a);
+void actionToLastMove(LastMove *lm, action_t *a);
 
 bool intervalTick(float lapsed, float interval)
 {
@@ -227,10 +227,10 @@ bool isPressedHeld(Controls *c, GameKeyType gkt)
 	return isPressed(c, gkt) || (ks->type == keyStateHeld && ks->time >= delayTime) || axis;
 }
 
-void clrMoveModePlace(MoveModePlace *mmp, Board *b) 
+void clrMoveModePlace(MoveModePlace *mmp, board_t *b) 
 {
 	int i;
-	Coor idx;
+	coor_t idx;
 
 	NOT(mmp);
 	
@@ -284,8 +284,8 @@ void shuffleRackTransMove(TransMove *tm)
 
 	int val[RACK_SIZE], i, j, k;
 	bool d;
-	TileAdjust tmp;
-	Coor coor;
+	tile_adjust_t tmp;
+	coor_t coor;
 
 	NOT(tm);
 
@@ -332,7 +332,7 @@ void shuffleRackTransMove(TransMove *tm)
 	}
 }
 
-bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMovePlace(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	MoveModePlace *mmp;
 	
@@ -352,7 +352,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		idx = &mmp->rackIdx[c->data.board.y][c->data.board.x];
 		if (valid_rack_idx(*idx)) {
 			int a0, a1;
-			TileAdjust b0, b1;
+			tile_adjust_t b0, b1;
 			a0 = mmp->rackIdx[c->data.board.y][c->data.board.x];
 			a1 = mmp->idx;
 			b0 = tm->adjust.data.tile[a0];
@@ -414,7 +414,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 		return true;
 	}
 	case cmdBoardCancel: {
-		Coor bIdx;
+		coor_t bIdx;
 		int rIdx;
 		
 		bIdx = c->data.board;
@@ -470,7 +470,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return false;
 }
 
-bool updateTransMovePlacePlay(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMovePlacePlay(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	MoveModePlace *mmp;
 	
@@ -487,7 +487,7 @@ bool updateTransMovePlacePlay(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return true;
 }
 
-bool updateTransMovePlaceWild(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMovePlaceWild(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	MoveModePlace *mmp;
 
@@ -537,7 +537,7 @@ bool updateTransMovePlaceWild(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return false;
 }
 
-bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	MoveModePlace *mmp;
 
@@ -552,7 +552,7 @@ bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
 	switch (c->type) {
 	case cmdBoardSelect:
 	case cmdBoardCancel: {
-		Coor bIdx;
+		coor_t bIdx;
 		int rIdx;
 		
 		bIdx = c->data.board;
@@ -584,7 +584,7 @@ bool updateTransMovePlaceEnd(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return false;
 }
 
-bool updateTransMoveDiscard(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMoveDiscard(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	MoveModeDiscard *mmd;
 
@@ -640,7 +640,7 @@ bool updateTransMoveDiscard(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return false;
 }
 
-bool updateTransMoveSkip(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMoveSkip(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	NOT(tm);
 	NOT(c);
@@ -665,7 +665,7 @@ bool updateTransMoveSkip(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return false;
 }
 
-bool updateTransMoveQuit(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMoveQuit(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	NOT(tm);
 	NOT(c);
@@ -676,7 +676,7 @@ bool updateTransMoveQuit(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return true;
 }
 
-bool updateTransMove(TransMove *tm, Cmd *c, Board *b, Player *p)
+bool updateTransMove(TransMove *tm, Cmd *c, board_t *b, player_t *p)
 {
 	NOT(tm);
 	NOT(c);
@@ -698,7 +698,7 @@ bool updateTransMove(TransMove *tm, Cmd *c, Board *b, Player *p)
 	return false;
 }
 
-void clrTransMove(TransMove *tm, int pidx, Player *p, Board *b)
+void clrTransMove(TransMove *tm, int pidx, player_t *p, board_t *b)
 {
 	NOT(tm);
 
@@ -709,10 +709,10 @@ void clrTransMove(TransMove *tm, int pidx, Player *p, Board *b)
 	clrMoveModeDiscard(&tm->discard);
 }
 
-void moveModePlaceToMovePlace(MovePlace *mp, MoveModePlace *mmp, Adjust *a)
+void moveModePlaceToMovePlace(move_place_t *mp, MoveModePlace *mmp, adjust_t *a)
 {
 	int i, ridx, j, k;
-	Coor idx;
+	coor_t idx;
 	
 	NOT(mp);
 	NOT(mmp);
@@ -726,7 +726,6 @@ void moveModePlaceToMovePlace(MovePlace *mp, MoveModePlace *mmp, Adjust *a)
 			continue;
 		}
 		ridx = a->data.tile[mmp->rackIdx[idx.y][idx.x]].idx;
-		VALID_RACK_SIZE(ridx);
 		mp->rackIdx[k] = ridx;
 		mp->coor[k] = mmp->boardIdx[j];
 		k++;
@@ -734,7 +733,8 @@ void moveModePlaceToMovePlace(MovePlace *mp, MoveModePlace *mmp, Adjust *a)
 	assert(mp->num == k);
 }
 
-void moveModeDiscardToMoveDiscard(MoveDiscard *md, MoveModeDiscard *mmd, Adjust *a)
+void moveModeDiscardToMoveDiscard(move_discard_t *md, MoveModeDiscard *mmd,
+				  adjust_t *a)
 {
 	int i, j, k;
 	
@@ -754,7 +754,7 @@ void moveModeDiscardToMoveDiscard(MoveDiscard *md, MoveModeDiscard *mmd, Adjust 
 	assert(md->num == j);
 }
 
-bool transMoveToMove(Move *m, TransMove *tm)
+bool transMoveToMove(move_t *m, TransMove *tm)
 {
 	NOT(m);
 	NOT(tm);
@@ -1093,19 +1093,15 @@ void update_guiFocusControls(GUI *g, Controls *c)
 	}
 }
 
-void updateGameGUIWidgets(GameGUI *gg, TransMove *tm, Board *b)
+void updateGameGUIWidgets(GameGUI *gg, TransMove *tm, board_t *b)
 {
 	updateBoardWidget(&gg->boardWidget, tm, b); 
 	updateRackWidget(&gg->rackWidget, tm);
 }
 
-void resetNewGameGui(GUI *g, Game *gm)
+void resetNewGameGui(GUI *g, game_t *gm)
 {
 	Cmd c;
-
-	NOT(g);
-	NOT(gm);
-
 	g->next = guiFocusGameGUI;
 	clrTransMove(&g->transMove, gm->turn, &gm->player[gm->turn], &gm->board);
 	c.type = cmdInvalid;
@@ -1116,7 +1112,7 @@ void resetNewGameGui(GUI *g, Game *gm)
 
 void initTextLog(TextLog *tl);
 
-void updatePlayMenu(GUI *g, Controls *c, Game *gm)
+void updatePlayMenu(GUI *g, Controls *c, game_t *gm)
 {
 	MenuWidget *m;
 
@@ -1125,7 +1121,6 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	NOT(gm);
 
 	m = &g->playMenu;
-	
 	updateMenuWidget(m, c);
 
 	if (goBack(c)) {
@@ -1160,7 +1155,7 @@ void updatePlayMenu(GUI *g, Controls *c, Game *gm)
 	}
 }
 
-void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
+void update_guiFocusOptions(GUI *g, Controls *c, game_t *gm)
 {
 	const float delayTime = 1.f;
 	bool left, right;
@@ -1180,13 +1175,15 @@ void update_guiFocusOptions(GUI *g, Controls *c, Game *gm)
 	}
 
 	left = c->hardware.key[hardwareKeyLeft].type == keyStatePressed ||
-		(c->hardware.key[hardwareKeyLeft].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
-		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value < 0);
-	
+		(c->hardware.key[hardwareKeyLeft].type == keyStateHeld &&
+		 c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
+		(c->hardware.axisX.type == axisStateExitDeadZone &&
+		 c->hardware.axisX.value < 0);
 	right = c->hardware.key[hardwareKeyRight].type == keyStatePressed ||
-		(c->hardware.key[hardwareKeyRight].type == keyStateHeld && c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
-		(c->hardware.axisX.type == axisStateExitDeadZone &&  c->hardware.axisX.value > 0);
-
+		(c->hardware.key[hardwareKeyRight].type == keyStateHeld &&
+		 c->hardware.key[hardwareKeyLeft].time >= delayTime) ||
+		(c->hardware.axisX.type == axisStateExitDeadZone &&
+		 c->hardware.axisX.value > 0);
 	g->options.snd = false;
 	switch (g->options.menu.focus) {
 	case optionsFocusAI: {
@@ -1219,7 +1216,7 @@ GUIFocusType nextGUIFocusByplayer_tag_t(player_tag_t pt)
 	return guiFocusGameGUI;
 }
 
-void updateScoreBoard(ScoreBoard *sb, Game *gm, float timeStep)
+void updateScoreBoard(ScoreBoard *sb, game_t *gm, float timeStep)
 {
 	int i;
 
@@ -1314,7 +1311,7 @@ void addStrToTextLog(TextLog *tl, char *str)
 	}
 }
 
-void addMoveToTextLog(TextLog *tl, Move *m, Player *p)
+void addMoveToTextLog(TextLog *tl, move_t *m, player_t *p)
 {
 	char str[64];
 
@@ -1344,7 +1341,7 @@ void addMoveToTextLog(TextLog *tl, Move *m, Player *p)
 	addStrToTextLog(tl, str);
 }
 
-void addActionToTextLog(TextLog *tl, Action *a)
+void addActionToTextLog(TextLog *tl, action_t *a)
 {
 	char str[64];
 
@@ -1380,11 +1377,11 @@ void addActionToTextLog(TextLog *tl, Action *a)
 	addStrToTextLog(tl, str);
 }
 
-void updateGameGUI(GUI *g, Controls *c, Game *gm)
+void updateGameGUI(GUI *g, Controls *c, game_t *gm)
 {
 	Cmd cmd;
-	Move m;
-	Action a;
+	move_t m;
+	action_t a;
 	Log l;
 	GameGUI *gg;
 	TransMove *tm;
@@ -1492,7 +1489,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 		if (m.type != MOVE_INVALID) {
 			/* printActionErr(a.type); */
 		}
-	} 
+	}
 
 	if (cmd.type == cmdPlay) {
 		gg->validPlay = a.type != ACTION_INVALID ? yes : no;
@@ -1503,7 +1500,7 @@ void updateGameGUI(GUI *g, Controls *c, Game *gm)
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
-void update_guiFocusGameMenu(GUI *g, Controls *c, Game *gm)
+void update_guiFocusGameMenu(GUI *g, Controls *c, game_t *gm)
 {
 	MenuWidget *m;
 
@@ -1547,7 +1544,7 @@ void update_guiFocusGameMenu(GUI *g, Controls *c, Game *gm)
 	}
 }
 
-void updateGameHotseatPause(GUI *g, Controls *c, Game *gm)
+void updateGameHotseatPause(GUI *g, Controls *c, game_t *gm)
 {
 	NOT(g);
 	NOT(c);
@@ -1560,9 +1557,9 @@ void updateGameHotseatPause(GUI *g, Controls *c, Game *gm)
 
 void *cbUpdateAi(void *data)
 {
-	Move m;
-	AiShare *as; 
-	Game *gm;
+	move_t m;
+	ai_share_t *as; 
+	game_t *gm;
 
 	NOT(data);
 
@@ -1580,7 +1577,7 @@ void *cbUpdateAi(void *data)
 	return NULL;
 }
 
-void updateGameAIPause(GUI *g, Controls *c, Game *gm)
+void updateGameAIPause(GUI *g, Controls *c, game_t *gm)
 {
 	NOT(g);
 	NOT(c);
@@ -1614,7 +1611,7 @@ void updateGameAIPause(GUI *g, Controls *c, Game *gm)
 
 }
 
-void updateGameAreYouSureQuit(GUI *g, Game *gm, Controls *c)
+void updateGameAreYouSureQuit(GUI *g, game_t *gm, Controls *c)
 {
 	NOT(g);
 	NOT(c);
@@ -1625,8 +1622,8 @@ void updateGameAreYouSureQuit(GUI *g, Game *gm, Controls *c)
 	if (submitted(c)) {
 		g->next = guiFocusGameMenu;
 		if (g->gameAreYouSureQuit.focus == yes) {
-			Move m;
-			Action a;
+			move_t m;
+			action_t a;
 
 			g->next = guiFocusGameOver;
 
@@ -1646,7 +1643,7 @@ void updateGameAreYouSureQuit(GUI *g, Game *gm, Controls *c)
 	}
 }
 
-void updateGameOver(GUI *g, Controls *c, Game *gm)
+void updateGameOver(GUI *g, Controls *c, game_t *gm)
 {
 	NOT(g);
 	NOT(c);

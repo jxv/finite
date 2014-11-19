@@ -150,8 +150,8 @@ typedef struct HighText
 
 typedef struct MenuView
 {
-	Coor pos;
-	Coor spacing;
+	coor_t pos;
+	coor_t spacing;
 	HighText *text;
 	int len;
 	int distance;
@@ -333,7 +333,7 @@ typedef struct Cmd
 {
 	CmdType type;
 	union {
-	Coor board;
+	coor_t board;
 	int rack;
 	int choice;
 	} data;
@@ -341,11 +341,11 @@ typedef struct Cmd
 
 typedef struct GridWidget
 {
-	Coor index;
+	coor_t index;
 	bool **button;
 	int width;
 	int height;
-	Coor pos;
+	coor_t pos;
 } GridWidget;
 
 typedef enum
@@ -457,7 +457,7 @@ typedef struct MoveModePlace
 	int idx;
 	bool taken[BOARD_Y][BOARD_X];
 	int rackIdx[BOARD_Y][BOARD_X];
-	Coor boardIdx[RACK_SIZE];
+	coor_t boardIdx[RACK_SIZE];
 } MoveModePlace;
 
 typedef struct MoveModeDiscard
@@ -470,12 +470,12 @@ typedef struct TransMove
 {
 	TransMoveType type;
 	int playerIdx;
-	Adjust adjust;
+	adjust_t adjust;
 	MoveModePlace place;
 	MoveModeDiscard discard;
 } TransMove;
 
-typedef enum 
+typedef enum trans_screen
 {
 	transScreeInvalid = -1,
 	transScreenFadeBlack = 0,
@@ -514,16 +514,16 @@ typedef struct GUI
 typedef struct Env
 {
 	IO io;
-	Game game;
+	game_t game;
 	GUI gui;
 	bool quit;
 } Env;
 
 int gui();
 
-void initGame1vs1Human(Game *g);
-void initGame1vs1HumanAI(Game *g);
-void initScoreBoard(ScoreBoard *sb, Game *g);
+void initGame1vs1Human(game_t *g);
+void initGame1vs1HumanAI(game_t *g);
+void initScoreBoard(ScoreBoard *sb, game_t *g);
 
 void keyStateUpdate(KeyState *ks, bool);
 

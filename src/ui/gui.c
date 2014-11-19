@@ -92,52 +92,42 @@ void controlsInit(Controls *c)
 	initGameControls(&c->game);
 }
 
-void initDefaultRule(Rule *r)
+void initDefaultRule(rule_t *r)
 {
-	NOT(r);
-
 	r->place = NULL;
 	r->discard = NULL;
 	r->skip = NULL;
 	r->quit = NULL;
 }
 
-void initGame1vs1Human(Game *g)
+void initGame1vs1Human(game_t *g)
 {
-	NOT(g);
-
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	initPlayerHuman(&g->player[0], &g->bag);
-	initPlayerHuman(&g->player[1], &g->bag);
+	initplayer_tHuman(&g->player[0], &g->bag);
+	initplayer_tHuman(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
 }
 
-void initGame1vs1HumanAI(Game *g)
+void initGame1vs1HumanAI(game_t *g)
 {
-	NOT(g);
-
 	boardInit(&g->board);
 	bagInit(&g->bag);
 	g->playerNum = 2;
-	initPlayerHuman(&g->player[0], &g->bag);
-	initPlayerAI(&g->player[1], &g->bag);
+	initplayer_tHuman(&g->player[0], &g->bag);
+	initplayer_tAI(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
 }
 
-void initScoreBoard(ScoreBoard *sb, Game *g)
+void initScoreBoard(ScoreBoard *sb, game_t *g)
 {
 	int i;
-
-	NOT(sb);
-	NOT(g);
-
-	sb->turn = g->turn;	
+	sb->turn = g->turn;
 	sb->playerNum = g->playerNum;
 	sb->speed = 1.f/20.f;
 	sb->stable = true;
@@ -206,10 +196,10 @@ void initGameGUI(GameGUI *gg)
 	gg->lastMove.type = lastMoveNone;
 }
 
-void actionToLastMove(LastMove *lm, Action *a)
+void actionToLastMove(LastMove *lm, action_t *a)
 {
-		Coor idx;
-		Path *p;
+		coor_t idx;
+		path_t *p;
 
 		NOT(lm);
 		NOT(a);
@@ -798,7 +788,7 @@ bool initMenuViews(IO *io, GUI *g)
 	Font *n, *h;
 
 	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
-	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Options"};
+	char *playMenuText[playMenuFocusCount] = {"1 player_t", "2 player_t", "Options"};
 	char *optionsText[optionsFocusCount] = {"AI Difficulty:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"  SFX:     ", "Controls"};

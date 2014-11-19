@@ -4,9 +4,9 @@
 #include "core.h"
 
 #define PLACEMENTS(x) (((x) * (x) - (x)) / 2)
-#define ALL_PLACEMENTS  (BOARD_X * PLACEMENTS(BOARD_Y) + BOARD_Y * PLACEMENTS(BOARD_X))
+#define ALL_PLACEMENTS  (BOARD_X * PLACEMENTS(BOARD_Y) + \
+			 BOARD_Y * PLACEMENTS(BOARD_X))
 
-void aiFindMove(Move *, int, Game *, Rule *, float *loading);
+void aiFindMove(move_t *, int, game_t *, rule_t *, float *loading);
 
 #endif
-

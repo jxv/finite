@@ -191,9 +191,9 @@ void rackWidgetControls(Cmd *cmd, GameGUI *gg, Controls *c)
 	}
 }
 
-void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
+void updateBoardWidget(GridWidget *bw, TransMove *tm, board_t *b)
 {
-	Coor idx;
+coor_t idx;
 
 	NOT(bw);
 	NOT(tm);
@@ -246,7 +246,7 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 
 void updateRackWidget(GridWidget *rw, TransMove *tm)
 {
-	Coor idx;
+coor_t idx;
 	tile_tag_t tt;
 
 	NOT(rw);
@@ -347,11 +347,11 @@ void updateGameGUIViaCmd(GameGUI *gg, Cmd *c, TransMoveType tmt)
 	}
 }
 
-void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm, LastMove *lm, Coor dim)
+void boardWidgetDraw(IO *io, GridWidget *bw, player_t *p, board_t *b, TransMove *tm, LastMove *lm, coor_t dim)
 {
-	Tile *t;
+	tile_t *t;
 	SDL_Surface *ts;
-	Coor idx;
+coor_t idx;
 	TileLookType tlt;
 	int i;
 
@@ -395,11 +395,11 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 
 }
 
-void boardWidgetDrawWithoutTransMove(IO *io, GridWidget *bw, Board *b, LastMove *lm, Coor dim)
+void boardWidgetDrawWithoutTransMove(IO *io, GridWidget *bw, board_t *b, LastMove *lm, coor_t dim)
 {
-	Tile *t;
+	tile_t *t;
 	SDL_Surface *ts;
-	Coor idx;
+coor_t idx;
 	TileLookType tlt;
 
 	NOT(io);
@@ -420,7 +420,7 @@ void boardWidgetDrawWithoutTransMove(IO *io, GridWidget *bw, Board *b, LastMove 
 
 }
 
-void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
+void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, coor_t dim, player_t *p)
 {
 	int i;
 	tile_t *t;
@@ -465,7 +465,6 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 			if (t->type == TILE_NONE) {
 				continue;
 			}
-			VALID_TILE(*t);
 			tt = tm->discard.rack[i] ? tileLookDisable : tileLookNormal;
 			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
 			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
@@ -487,7 +486,7 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 	}
 }
 
-void gridWidgetDraw(SDL_Surface *s, GridWidget *gw, Coor pos, Coor dim)
+void gridWidgetDraw(SDL_Surface *s, GridWidget *gw, coor_t pos, coor_t dim)
 {
 	int y, x;
 	SDL_Rect clip;

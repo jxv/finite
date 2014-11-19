@@ -232,8 +232,6 @@ bool adjust_out_of_range(const tile_adjusts_t tile)
 
 void adjust_swap(int i, int j, tile_adjusts_t tile)
 {
-	VALID_RACK_SIZE(i);
-	VALID_RACK_SIZE(j);
 	const tile_adjust_t tmp = tile[i];
 	tile[i] = tile[j];
 	tile[j] = tmp;
@@ -593,8 +591,6 @@ static bool is_vert(const action_t *a, const move_t *m)
 
 static void mk_right(int x, int y, const board_t *b, dir_t *d)
 {
-	VALID_BOARD_X(x);
-	VALID_BOARD_Y(y);
 	d->type = DIR_RIGHT;
 	d->x = x;
 	d->y = y;
@@ -612,8 +608,6 @@ static void mk_right(int x, int y, const board_t *b, dir_t *d)
 
 static void mk_down(int x, int y, const board_t *b, dir_t *d)
 {
-	VALID_BOARD_X(x);
-	VALID_BOARD_Y(y);
 	d->type = DIR_DOWN;
 	d->x = x;
 	d->y = y;
@@ -852,24 +846,19 @@ void rack_refill(bag_t *b, player_t *p)
 bool apply_action(const action_t *a, game_t *g)
 {
 	const int id = a->playerIdx;
-	VALID_TILES(g->player[id]);
 	if (id != g->turn)
 		return false;
 	switch (a->type) {
 	case ACTION_PLACE:
-		VALID_TILES(g->player[id]);
 		memcpy(&g->board, &a->data.place.path.board,
                         sizeof(a->data.place.path.board));
 		for (int i = 0; i < a->data.place.num; i++) {
 			const int r = a->data.place.rackIdx[i];
 			g->player[id].tile[r].type = TILE_NONE;
 		}
-		VALID_TILES(g->player[id]);
 		rack_refill(&g->bag, &g->player[id]);
-		VALID_TILES(g->player[id]);
 		rack_shift(&g->player[id]);
 		g->player[id].score += a->data.place.score;
-		VALID_TILES(g->player[id]);
 		break;
 	case ACTION_DISCARD:
 		for (int i = 0; i < a->data.discard.num; i++) {

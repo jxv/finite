@@ -113,42 +113,46 @@ void printTransMove(TransMove *tm)
 
 void guiDrawLockon(IO *io, GameGUI *gg)
 {
-	const int w = TILE_WIDTH, h = TILE_HEIGHT; 
+	const int w = TILE_WIDTH;
+	const int h = TILE_HEIGHT;
 	SDL_Surface *s;
 
-	Coor idx;
+	coor_t idx;
 
 	NOT(io);
 	NOT(gg);
-	
 	s = interval(io->time, 0.2f) ? io->lockon : io->lockon0;
 	switch (gg->focus) {
 	case gameGUIFocusBoard: {
 		idx = gg->boardWidget.index;
-		surfaceDraw(io->screen, s, gg->boardWidget.pos.x - 2 + idx.x * w, gg->boardWidget.pos.y - 2 + idx.y * h);
+		surfaceDraw(io->screen, s,
+			    gg->boardWidget.pos.x - 2 + idx.x * w,
+			    gg->boardWidget.pos.y - 2 + idx.y * h);
 		break;
 	}
 	case gameGUIFocusRack: {
 		idx = gg->rackWidget.index;
-		surfaceDraw(io->screen, s, gg->rackWidget.pos.x - 2 + idx.x * w, gg->rackWidget.pos.y - 2);
+		surfaceDraw(io->screen, s,
+			    gg->rackWidget.pos.x - 2 + idx.x * w,
+			    gg->rackWidget.pos.y - 2);
 		break;
 	}
 	default: break;
 	}
 }
 
-void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, GridWidget *bw)
+void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, player_t *p,
+		      GridWidget *bw)
 {
 	int i;
-	Coor idx;
+	coor_t idx;
 	SDL_Surface *s;
-	Tile *t;
+	tile_t *t;
 
 	NOT(io);
 	NOT(tm);
 	NOT(p);
 	NOT(bw);
-	
 	if (gf != gameGUIFocusBoard) {
 		return;
 	}
@@ -179,9 +183,9 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, Gri
 	}
 }
 
-void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm, LastMove *lm)
+void guiDrawBoard(IO *io, GridWidget *bw, game_t *g, TransMove *tm, LastMove *lm)
 {
-	Coor dim;
+	coor_t dim;
 	
 	NOT(io);
 	NOT(bw);
@@ -194,9 +198,9 @@ void guiDrawBoard(IO *io, GridWidget *bw, Game *g, TransMove *tm, LastMove *lm)
 	boardWidgetDraw(io, bw, &g->player[tm->playerIdx], &g->board, tm, lm, dim);
 }
 
-void guiDrawBoardWithoutTransMove(IO *io, GridWidget *bw, Game *g, LastMove *lm)
+void guiDrawBoardWithoutTransMove(IO *io, GridWidget *bw, game_t *g, LastMove *lm)
 {
-	Coor dim;
+	coor_t dim;
 	
 	NOT(io);
 	NOT(bw);
@@ -207,9 +211,9 @@ void guiDrawBoardWithoutTransMove(IO *io, GridWidget *bw, Game *g, LastMove *lm)
 
 	boardWidgetDrawWithoutTransMove(io, bw, &g->board, lm, dim);
 }
-void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
+void guiDrawRack(IO *io, GridWidget *rw, game_t *g, TransMove *tm)
 {
-	Coor dim;
+	coor_t dim;
 	
 	NOT(io);
 	NOT(rw);
@@ -227,7 +231,7 @@ bool interval(float lapsed, float interval)
 	return interval == 0 ? 0 : ((int)floorf(lapsed / interval)) % 2 == 0;
 }
 
-void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
+void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 {
 	int i, j;
 
@@ -247,7 +251,7 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 	}
 	guiDrawLockon(io, &g->gameGui);
 	if (tm->type == transMoveDiscard || tm->type == transMoveDiscardPlay) {
-		Tile *t;
+		tile_t *t;
 
 		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
 		surfaceDraw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
@@ -263,9 +267,9 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);
 		}
 	} else {
-		Coor *idx;
+		coor_t *idx;
 		char *str = "\0";
-		Tile *t;
+		tile_t *t;
 
 		idx = &g->gameGui.boardWidget.index;
 
@@ -744,7 +748,7 @@ void draw_guiFocusGameGUI(Env *e)
 		if (e->gui.transMove.type == transMoveDiscard) {
 			int y;
 			SDL_Rect rect;
-			Coor *pos;
+			coor_t *pos;
 			
 			pos = &e->gui.gameGui.boardWidget.pos;
 
@@ -805,7 +809,7 @@ void draw_guiFocusGameGUI(Env *e)
 			/* current is transMovePlace[*] */
 			int y;
 			SDL_Rect rect;
-			Coor *idx, *pos;
+			coor_t *idx, *pos;
 			
 			idx  = &e->gui.gameGui.boardWidget.index;
 			pos = &e->gui.gameGui.boardWidget.pos;
