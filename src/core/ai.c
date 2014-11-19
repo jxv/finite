@@ -309,7 +309,7 @@ void printCont(Cont *c)
 	printf("\b-%d]\n", c->num);
 }
 
-bool placementToMovePlace(struct MovePlace *mp, const Placement *p)
+bool placementToMovePlace(move_place_t *mp, const Placement *p)
 {
         int i;
 	NOT(mp);

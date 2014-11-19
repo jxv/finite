@@ -11,7 +11,7 @@ void printLetter(LetterType l)
 	putchar('A' + l - letterA);
 }
 
-void printWord(struct Word *w)
+void printWord(word_t *w)
 {
 	char str[BOARD_SIZE];
 	int j;
@@ -25,7 +25,7 @@ void printWord(struct Word *w)
 	printf("[%s]\n", str);
 }
 
-void printDict(struct Dict *d)
+void printDict(dict_t *d)
 {
 	int i;
 
@@ -37,7 +37,7 @@ void printDict(struct Dict *d)
 	}
 }
 
-void printTile(struct Tile *t)
+void printTile(tile_t *t)
 {
 	char c;
 	
@@ -51,7 +51,7 @@ void printTile(struct Tile *t)
 	putchar(c);
 }
 
-void printBag(struct Bag *b)
+void printBag(bag_t *b)
 {
 	int i;
 
@@ -66,7 +66,7 @@ void printBag(struct Bag *b)
 	putchar('\n');
 }
 
-void printAction(struct Action *a)
+void printAction(action_t *a)
 {
 	NOT(a);
 
@@ -87,7 +87,7 @@ void printAction(struct Action *a)
 	}
 }
 
-void printScore(struct Game *g)
+void printScore(game_t *g)
 {
 	int i;
 	
@@ -98,11 +98,11 @@ void printScore(struct Game *g)
 	}
 }
 
-void printBoard(struct Board *b)
+void printBoard(board_t *b)
 {
 	int x, y;
 	char c;
-	struct Tile *t;
+	tile_t *t;
 	SqType sq;
 
 	NOT(b);
@@ -130,40 +130,37 @@ void printBoard(struct Board *b)
 	}
 }
 
-void printRack(struct Player *p)
+void printRack(player_t *p)
 {
-	int i;
-	char c;
-	struct Tile *t;
-
-	NOT(p);
-
-	for (i = 0; i < RACK_SIZE; i++) {
-		t = &p->tile[i];
+	for (int i = 0; i < RACK_SIZE; i++) {
+		tile_t *t = &p->tile[i];
 		if (t->type != tileNone) {
+                        char c;
 			switch(t->type) {
-			case tileWild: c = '*'; break;
-			case tileLetter: c = 'A' + t->letter; break;
-			default: c = ' '; break;
+			case tileWild:
+                                c = '*';
+                                break;
+			case tileLetter:
+                                c = 'A' + t->letter;
+                                break;
+			default:
+                                c = ' ';
+                                break;
 			}
 			printf("(%d:%c)", i, c);
 		}
 	}
 }
 
-void printPlace(struct MovePlace *mp)
+void printPlace(move_place_t *mp)
 {
-	int i;
-	
-	NOT(mp);
-
-	for (i = 0; i < mp->num; i++) {
+	for (int i = 0; i < mp->num; i++) {
 		printf("(%d,%d,%d) ", mp->coor[i].x, mp->coor[i].y, mp->rackIdx[i]);
 	}
 	printf("\n");
 }
 
-void printActionErr(ActionErrType err)
+void printActionErr(action_err_tag_t err)
 {
 	switch (err) {
 	case actionErrUnknown: puts("[err: unknown]"); break;
@@ -184,7 +181,7 @@ void printActionErr(ActionErrType err)
 	}
 }
 
-void printLog(struct Log *l)
+void printLog(log_t *l)
 {
 	NOT(l);
 
@@ -208,7 +205,8 @@ void printLog(struct Log *l)
 	case actionQuit: {
 		break;
 	}
-	default: break;
+	default:
+                break;
 	}
 }
 

@@ -1,21 +1,20 @@
 #include "common.h"
 
-void mkPlaceLog(struct Action *a, struct Log *l)
+void mkPlaceLog(action_t *a, log_t *l)
 {
-	NOT(a);
-	NOT(l);
-
-	
+        (void)a;
+        (void)l;
 }
 
-void mkLog(struct Action *a, struct Log *l)
+void mkLog(action_t *a, log_t *l)
 {
-	NOT(a);
-	NOT(l);
-
+        (void)a;
+        (void)l;
 	switch (a->type) {
-	case actionPlace: mkPlaceLog(a, l); break;
-	default: break;
+	case ACTION_PLACE:
+                mkPlaceLog(a, l);
+                break;
+	default:
+                break;
 	}
 }
-

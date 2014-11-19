@@ -1,44 +1,72 @@
 #include "common.h"
 #include "print.h"
 
-static int default_letter_score(LetterType l)
+static int letter_score(letter_tag_t l)
 {
 	switch (l) {
-	case letterA: return 1;
-	case letterB: return 3;
-	case letterC: return 3;
-	case letterD: return 2;
-	case letterE: return 1;
-	case letterF: return 4;
-	case letterG: return 2;
-	case letterH: return 4;
-	case letterI: return 1;
-	case letterJ: return 8;
-	case letterK: return 5;
-	case letterL: return 1;
-	case letterM: return 3;
-	case letterN: return 1;
-	case letterO: return 1;
-	case letterP: return 3;
-	case letterQ: return 10;
-	case letterR: return 1;
-	case letterS: return 1;
-	case letterT: return 1;
-	case letterU: return 1;
-	case letterV: return 4;
-	case letterW: return 4;
-	case letterX: return 8;
-	case letterY: return 4;
-	case letterZ: return 10;
-	default: break;
+	case LETTER_A:
+                return 1;
+	case LETTER_B:
+                return 3;
+	case LETTER_C:
+                return 3;
+	case LETTER_D:
+                return 2;
+	case LETTER_E:
+                return 1;
+	case LETTER_F:
+                return 4;
+	case LETTER_G:
+                return 2;
+	case LETTER_H:
+                return 4;
+	case LETTER_I:
+                return 1;
+	case LETTER_J:
+                return 8;
+	case LETTER_K:
+                return 5;
+	case LETTER_L:
+                return 1;
+	case LETTER_M:
+                return 3;
+	case LETTER_N:
+                return 1;
+	case LETTER_O:
+                return 1;
+	case LETTER_P:
+                return 3;
+	case LETTER_Q:
+                return 10;
+	case LETTER_R:
+                return 1;
+	case LETTER_S:
+                return 1;
+	case LETTER_T:
+                return 1;
+	case LETTER_U:
+                return 1;
+	case LETTER_V:
+                return 4;
+	case LETTER_W:
+                return 4;
+	case LETTER_X:
+                return 8;
+	case LETTER_Y:
+                return 4;
+	case LETTER_Z:
+                return 10;
+	default:
+                assert(false); 
+                break;
 	}
 	return 0;
 }
 
 int tile_score(const Tile *t)
 {
-	if (t->type == tileLetter)
-		return default_letter_score(t->letter);
+	if (t->type == TILE_LETTER)
+		return letter_score(t->letter);
 	return 0;
 }
 
@@ -59,7 +87,6 @@ static bool can_use_dbl_wrd(const Board *b, const Dir *d, int p, int x, int y)
 {
 	return d->pos[p] && b->sq[y][x] == sqDblWrd;
 }
-	
 
 static bool can_use_trp_wrd(const Board *b, const Dir *d, int p, int x, int y)
 {
@@ -94,10 +121,12 @@ static int dir_score(const Board *b, const Dir *d)
 			score += tile;
 		}
 		break;
-	case dirInvalid: /* fall through */
-	default: return 0;
+	case dirInvalid:
+                return 0;
+	default:
+                assert(false);
+                return 0;
 	}
-
 	if (dbl_wrd > 0)
 		score *= dbl_wrd * 2;
 	if (trp_wrd > 0)
@@ -105,71 +134,55 @@ static int dir_score(const Board *b, const Dir *d)
 	return score;
 }
 
-int metaPathScore(Dir *d, Dir *adj, int n, Board *b)
+static int meta_path_dot_score(const path_dot_t *dot, const Board *b)
 {
-	int i, s;
+        int score = 0;
+	if (dot->right.type == dirRight)
+		score = dir_score(b, &dot->right);
+	if (dot->down.type == dirDown)
+		score += dir_score(b, &dot->down);
+	return score;
+}
 
-	NOT(d);
-	NOT(adj);
-	NOT(b);
-
-	s = 0;
+static int meta_path_score(const Dir *d, const Dir *adj, int n, const Board *b)
+{
+	int score = 0;
 	if (d->type != dirInvalid) {
-		s = dir_score(b, d);
-		for (i = 0; i < n; i++) {
-			if (adj[i].type != dirInvalid) {
-				s += dir_score(b, &adj[i]);
-			}
-		}
+		score = dir_score(b, d);
+		for (int i = 0; i < n; i++)
+			if (adj[i].type != dirInvalid)
+				score += dir_score(b, &adj[i]);
 	}
-	return s;
+	return score;
 }
 
-int pathScore(Path *p)
+static int path_score(const Path *p)
 {
-	int s;
-	Board *b;
-
-	NOT(p);
-
-	s = 0;
-	b = &p->board;
-
+	const Board *b = &p->board;
 	switch (p->type) {
-	case pathDot: {
-		if (p->data.dot.right.type == dirRight) {
-			s = dir_score(b, &p->data.dot.right);
-		}
-		if (p->data.dot.down.type == dirDown) {
-			s += dir_score(b, &p->data.dot.down);
-		}
-		break;
+	case pathDot:
+                return meta_path_dot_score(&p->data.dot, b);
+	case pathHorz:
+		return meta_path_score(&p->data.horz.right, p->data.horz.down,
+                                BOARD_X, b);
+	case pathVert:
+		return meta_path_score(&p->data.vert.down, p->data.vert.right,
+                                BOARD_Y, b);
+	case pathInvalid:
+                return 0;
+	default:
+                assert(false);
+                return 0;
 	}
-	case pathHorz: {
-		s = metaPathScore(&p->data.horz.right, p->data.horz.down, BOARD_X, b);
-		break;
-	}
-	case pathVert: {
-		s = metaPathScore(&p->data.vert.down, p->data.vert.right, BOARD_Y, b);
-		break;
-	}
-	case pathInvalid: /* fall through */
-	default: return 0;
-	}
-	return s;
 }
 
-bool bagFull(Bag *b)
+bool bag_full(const Bag *b)
 {
-	NOT(b);
-
 	return (b->head + 1) % BAG_SIZE == b->tail;
 }
 
 bool bagEmpty(Bag *b)
 {
-	NOT(b);
-
 	return b->head == b->tail;
 }
 
@@ -1050,7 +1063,7 @@ void mkPlace(Action *a, Game *g, Move *m)
 		a->data.err = actionErrPlaceInvalidPath;
 		return;
 	}
-	a->data.place.score = pathScore(path);
+	a->data.place.score = path_score(path);
 }
 
 void mkDiscard(Action *a, Game *g, Move *m)
@@ -1387,13 +1400,12 @@ int bagCount(Bag *b)
 
 bool vowel(LetterType lt)
 {
-	return 
-		lt == letterA ||
-		lt == letterE ||
-		lt == letterI ||
-		lt == letterO ||
-		lt == letterU ||
-		lt == letterY;
+	return lt == LETTER_A ||
+	                lt == LETTER_E ||
+        		lt == LETTER_I ||
+        		lt == LETTER_O ||
+        		lt == LETTER_U ||
+        		lt == LETTER_Y;
 }
 
 bool constant(LetterType lt)

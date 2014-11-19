@@ -1,15 +1,17 @@
 #ifndef FINITE_CORE_LOG_H
 #define FINITE_CORE_LOG_H
 
-typedef struct Log
+typedef struct log
 {
-	ActionType type;
+	action_tag_t type;
 	union {
-	ActionErrType err;
+	        action_err_tag_t err;
 	} data;
 } Log;
 
-void mkLog(Action *, Log *);
+typedef struct log log_t;
+
+void mkLog(action_t *, log_t *);
 
 #endif
 

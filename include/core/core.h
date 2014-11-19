@@ -24,16 +24,30 @@
 #define VALID_BOARD_SIZE(s) RANGE(s, 0, BOARD_SIZE - 1)
 #define VALID_RACK_SIZE(r) RANGE(r, 0, RACK_SIZE - 1)
 
-typedef enum
+typedef enum tile_tag
 {
+        TILE_NONE = -1,
+        TILE_WILD = 0,
+        TILE_LETTER,
+        TILE_COUNT,
 	tileNone = -1,
 	tileWild = 0,
 	tileLetter,
 	tileCount
 } TileType;
 
-typedef enum
+typedef enum sq
 {
+        SQ_NORMAL = 0,
+        SQ_DBL_LET,
+        SQ_DBL_WRD,
+        SQ_TRP_LET,
+        SQ_TRP_WRD,
+        SQ_FREE,
+        SQ_MYSTERY,
+        SQ_NO_VOWEL,
+        SQ_BLOCK,
+        SQ_COUNT,
 	sqNormal = 0,
 	sqDblLet,
 	sqDblWrd,
@@ -46,8 +60,36 @@ typedef enum
 	sqCount
 } SqType;
 
-typedef enum
+typedef enum letter_tag
 {
+        LETTER_INVALID = -1,
+        LETTER_A = 0,
+        LETTER_B,
+        LETTER_C,
+        LETTER_D,
+        LETTER_E,
+        LETTER_F,
+        LETTER_G,
+        LETTER_H,
+        LETTER_I,
+        LETTER_J,
+        LETTER_K,
+        LETTER_L,
+        LETTER_M,
+        LETTER_N,
+        LETTER_O,
+        LETTER_P,
+        LETTER_Q,
+        LETTER_R,
+        LETTER_S,
+        LETTER_T,
+        LETTER_U,
+        LETTER_V,
+        LETTER_W,
+        LETTER_X,
+        LETTER_Y,
+        LETTER_Z,
+        LETTER_COUNT,
 	letterInvalid = -1,
 	letterA = 0,
 	letterB,
@@ -78,30 +120,46 @@ typedef enum
 	letterCount
 } LetterType;
 
-typedef enum
+typedef enum player_tag
 {
+        PLAYER_HUMAN = 0,
+        PLAYER_AI,
+        PLAYER_COUNT,
 	playerHuman = 0,
 	playerAI,
 	playerCount
 } PlayerType;
 
-typedef enum
+typedef enum adjust_tag
 {
+        ADJUST_INVALID = -1,
+        ADJUST_RACK = 0,
+        ADJUST_COUNT,
 	adjustInvalid = -1,
 	adjustRack = 0,
 	adjustCount
 } AdjustType;
 
-typedef enum
+typedef enum adjust_err_tag
 {
+        ADJUST_ERR_NONE = 0,
+        ADJUST_ERR_RACK_OUT_OF_RANGE,
+        ADJUST_ERR_RACK_DUP_IDX,
+        ADJUST_ERR_COUNT,
 	adjustErrNone = 0,
 	adjustErrRackOutOfRange,
 	adjustErrRackDuplicateIdx,
 	adjustErrCount
 } AdjustErrType;
 
-typedef enum
+typedef enum move_tag
 {
+        MOVE_INVALID = -1,
+        MOVE_PLACE,
+        MOVE_DISCARD,
+        MOVE_SKIP,
+        MOVE_QUIT,
+        MOVE_COUNT,
 	moveInvalid = -1,
 	movePlace = 0,
 	moveDiscard,
@@ -110,8 +168,24 @@ typedef enum
 	moveCount
 } MoveType;
 
-typedef enum
+typedef enum action_err_tag
 {
+        ACTION_ERR_NONE,
+        ACTION_ERR_UNKNOWN,
+        ACTION_ERR_DISCARD_EMPTY,
+        ACTION_ERR_PLACE_OUT_OF_RANGE,
+        ACTION_ERR_PLACE_SELF_OVERLAP,
+        ACTION_ERR_PLACE_BOARD_OVERLAP,
+        ACTION_ERR_INVALID_RACK_ID,
+        ACTION_ERR_INVALID_SQ,
+        ACTION_ERR_NO_RACK,
+        ACTION_ERR_NO_DIR,
+        ACTION_ERR_INVALID_PATH,
+        ACTION_ERR_INVALID_WORD,
+        ACTION_ERR_DISCARD_RULE,
+        ACTION_ERR_SKIP_RULE,
+        ACTION_ERR_QUIT_RULE,
+        ACTION_ERR_COUNT,
 	actionErrNone = 0,
 	actionErrUnknown,
 	actionErrDiscardEmpty,
@@ -130,16 +204,26 @@ typedef enum
 	actionErrCount
 } ActionErrType;
 
-typedef enum
+typedef enum dir_err_tag
 {
+        DIR_ERR_NONE = 0,
+        DIR_ERR_NON_CONT,
+        DIR_ERR_INVALID_WORD,
+        DIR_ERR_COUNT,
 	dirErrNone = 0,
 	dirErrNonContinuous,
 	dirErrInvalidWord,
 	dirErrCount
 } DirErrType;
 
-typedef enum
+typedef enum path_err_tag
 {
+        PATH_ERR_NONE = 0,
+        PATH_ERR_NON_CONT,
+        PATH_ERR_INVALID_WORD,
+        PATH_ERR_INVALID_RULE,
+        PATH_ERR_INVALID_PATH,
+        PATH_ERR_COUNT,
 	pathErrNone = 0,
 	pathErrNonCont,
 	pathErrInvalidWord,
@@ -148,16 +232,25 @@ typedef enum
 	pathErrCount
 } PathErrType;
 
-typedef enum
+typedef enum dir_tag
 {
+        DIR_INVALID = -1,
+        DIR_RIGHT = 0,
+        DIR_DOWN,
+        DIR_COUNT,
 	dirInvalid = -1,
 	dirRight = 0,
 	dirDown,
 	dirCount
 } DirType;
 
-typedef enum
+typedef enum path_tag
 {
+        PATH_INVALID = -1,
+        PATH_DOT = 0,
+        PATH_HORZ,
+        PATH_VERT,
+        PATH_COUNT,
 	pathInvalid = -1,
 	pathDot = 0,
 	pathHorz,
@@ -165,15 +258,24 @@ typedef enum
 	pathCount
 } PathType;
 
-typedef enum
+typedef enum cmp
 {
+        CMP_LESS = -1,
+        CMP_EQUAL = 0,
+        CMP_GREATER = 1,
 	cmpLess = -1,
 	cmpEqual = 0,
 	cmpGreater = 1
 } CmpType;
 
-typedef enum
+typedef enum action_tag
 {
+        ACTION_INVALID = -1,
+        ACTION_PLACE = 0,
+        ACTION_DISCARD,
+        ACTION_SKIP,
+        ACTION_QUIT,
+        ACTION_COUNT,
 	actionInvalid = -1,
 	actionPlace = 0,
 	actionDiscard,
@@ -183,17 +285,55 @@ typedef enum
 } ActionType;
 
 
-struct Game;
+typedef enum tile_tag tile_tag_t;
+typedef enum sq sq_t;
+typedef enum letter_tag letter_tag_t;
+typedef enum player_tag player_tag_t;
+typedef enum adjust_tag adjust_tag_t;
+typedef enum adjust_err_tag adjust_err_tag_t;
+typedef enum move_tag move_tag_t;
+typedef enum action_err_tag action_err_tag_t;
+typedef enum dir_err_tag dir_err_tag_t;
+typedef enum path_err_tag path_err_tag_t;
+typedef enum dir_tag dir_tag_t;
+typedef enum path_tag path_tag_t;
+typedef enum cmp cmp_t;
+typedef enum action_tag action_tag_t;
 
-typedef struct Word
+struct word;
+struct tile;
+struct loc;
+struct board;
+struct coor;
+struct move_place;
+struct move_discard;
+struct tile_adjust;
+struct adjust;
+struct move;
+struct bag;
+struct dir;
+struct path_dot;
+struct path_horz;
+struct path_vert;
+struct path;
+struct action_place;
+struct action_discard;
+struct action;
+struct ai_share;
+struct player;
+struct dict;
+struct rule;
+struct game;
+
+typedef struct word
 {
 	int len;
 	LetterType letter[BOARD_SIZE];
 } Word;
 
-typedef struct Tile
+typedef struct tile
 {
-	TileType type;
+	tile_tag_t type;
 	LetterType letter;
 } Tile;
 
@@ -222,170 +362,202 @@ typedef struct Tile
 #define VALID_TILES(t) NULL
 #endif
 
-typedef struct Loc
+typedef struct loc
 {
-	struct Tile tile;
-	SqType sq;
+	struct tile tile;
+	sq_t sq;
 } Loc;
 
-typedef struct Board
+typedef struct board
 {
-	struct Tile tile[BOARD_Y][BOARD_X];
-	SqType sq[BOARD_Y][BOARD_X];
-	/* struct Loc loc[BOARD_Y][BOARD_X]; */
+	struct tile tile[BOARD_Y][BOARD_X];
+	sq_t sq[BOARD_Y][BOARD_X];
+	/* struct loc loc[BOARD_Y][BOARD_X]; */
 } Board;
 
-typedef struct Coor
+typedef struct coor
 {
 	int x;
 	int y;
 } Coor;
 
-typedef struct MovePlace
+typedef struct move_place
 {
 	int num;
 	int rackIdx[RACK_SIZE];
-	struct Coor coor[RACK_SIZE];
+	struct coor coor[RACK_SIZE];
 } MovePlace;
 
-typedef struct MoveDiscard
+typedef struct move_discard
 {
 	int num;
 	int rackIdx[RACK_SIZE];
 } MoveDiscard;
 
-typedef struct TileAdjust
+typedef struct tile_adjust
 {
-	TileType type;
+	tile_tag_t type;
 	int idx;
 } TileAdjust;
 
-typedef struct Adjust
+typedef struct adjust
 {
-	AdjustType type;
+	adjust_tag_t type;
 	union {
-	struct TileAdjust tile[RACK_SIZE];
-	AdjustErrType err;
+	        struct tile_adjust tile[RACK_SIZE];
+        	adjust_err_tag_t err;
 	} data;
 } Adjust;
 
-typedef struct Move
+typedef struct move
 {
 	MoveType type;
 	int playerIdx;
 	union {
-	struct MovePlace place;
-	struct MoveDiscard discard;
+        	struct move_place place;
+        	struct move_discard discard;
 	} data;
 } Move;
 
-typedef struct Bag
+typedef struct bag
 {
 	int head;
 	int tail;
-	struct Tile tile[BAG_SIZE];
+	struct tile tile[BAG_SIZE];
 } Bag;
 
-typedef struct Dir
+typedef struct dir
 {
-	DirType type;
+	dir_tag_t type;
 	int x;
 	int y;
 	int len;
 	bool pos[BOARD_SIZE];
 } Dir;
 
-typedef struct Path
+struct path_dot 
 {
-	PathType type;
-	struct Board board;
+ 	struct dir right;
+	struct dir down; 
+};
+
+struct path_horz
+{
+ 	struct dir right;
+	struct dir down[BOARD_X]; 
+};
+
+struct path_vert
+{
+ 	struct dir right[BOARD_Y];
+	struct dir down; 
+};
+
+typedef struct path
+{
+	path_tag_t type;
+	struct board board;
 	union {
-	struct {
-	 	struct Dir right;
- 		struct Dir down; 
-	} dot;
-	struct {
-		struct Dir right;
-	 	struct Dir down[BOARD_X];
-	} horz;
-	struct {
-		struct Dir right[BOARD_Y];
- 		struct Dir down;
-	} vert;
+                struct path_dot dot;
+                struct path_horz horz;
+                struct path_vert vert;
 	} data;
 } Path;
 
-typedef struct ActionPlace
+typedef struct action_place
 {
 	int score;
  	int num;
 	int rackIdx[RACK_SIZE];
- 	struct Path path;
+ 	struct path path;
 } ActionPlace;
 
-typedef struct ActionDiscard
+typedef struct action_discard
 {
 	int score;
 	int num;
 	int rackIdx[RACK_SIZE];
 } ActionDiscard;
 
-typedef struct Action
+typedef struct action
 {
-	ActionType	type;
+	action_tag_t type;
 	int playerIdx;
 	union {
-	ActionPlace place;
-	ActionDiscard discard;
-	ActionErrType err;
+	        struct action_place place;
+        	struct action_discard discard;
+	        action_err_tag_t err;
 	} data;
 } Action;
 
-struct Game;
-
-typedef struct AiShare
+typedef struct ai_share
 {
-	struct Game *game;
-	Action action;
+	struct game *game;
+	struct action action;
 	float loading;
 	bool shareStart;
 	bool shareEnd;
 	int difficulty;
 } AiShare;
 
-typedef struct Player
+typedef struct player
 {
-	PlayerType type;
+	player_tag_t type;
 	bool active;
 	int score;
-	struct Tile tile[RACK_SIZE];
-	AiShare aiShare;
+	struct tile tile[RACK_SIZE];
+	struct ai_share aiShare;
 } Player;
 
-typedef struct Dict
+typedef struct dict
 {
 	long num;
-	struct Word *words;
+	struct word *words;
 } Dict;
 
-typedef struct Rule
+typedef struct rule
 {
-	bool (*place)(Word *, PathType, DirType);
-	bool (*discard)(struct Game *, MoveDiscard *);
-	bool (*skip)(struct Game *);
-	bool (*quit)(struct Game *);
+	bool (*place)(struct word *, path_tag_t, dir_tag_t);
+	bool (*discard)(struct game *, struct move_discard *);
+	bool (*skip)(struct game *);
+	bool (*quit)(struct game *);
 } Rule;
 
-typedef struct Game
+typedef struct game
 {
 	int turn;
 	int playerNum;
-	struct Player player[MAX_PLAYER];
-	struct Board board;
-	struct Bag bag;
-	struct Dict dict;
-	struct Rule rule;
+	struct player player[MAX_PLAYER];
+	struct board board;
+	struct bag bag;
+	struct dict dict;
+	struct rule rule;
 } Game;
+
+typedef struct word word_t;
+typedef struct tile tile_t;
+typedef struct loc loc_t;
+typedef struct board board_t;
+typedef struct coor coor_t;
+typedef struct move_place move_place_t;
+typedef struct move_discard move_discard_t;
+typedef struct tile_adjust tile_adjust_t;
+typedef struct adjust adjust_t;
+typedef struct move move_t;
+typedef struct bag bag_t; 
+typedef struct dir dir_t;
+typedef struct path_dot path_dot_t;
+typedef struct path_horz path_horz_t;
+typedef struct path_vert path_vert_t;
+typedef struct path path_t;
+typedef struct action_place action_place_t;
+typedef struct action_discard action_discard_t;
+typedef struct action action_t;
+typedef struct ai_share ai_share_t;
+typedef struct player player_t;
+typedef struct dict dict_t;
+typedef struct rule rule_t;
+typedef struct game game_t;
 
 void mkAdjust(Adjust *, Player *);
 void adjustSwap(Adjust *, int, int);
@@ -409,6 +581,7 @@ int adjustTileCount(Adjust *);
 bool wordValid(Word *, Dict *);
 bool boardEmpty(Board *b);
 
+bool bag_full(const Bag *b);
 bool bagEmpty(Bag *b);
 int bagCount(Bag *b);
 int bagSize(Bag *b);
