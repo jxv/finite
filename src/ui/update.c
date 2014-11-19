@@ -12,7 +12,7 @@ void actionToLastMove(LastMove *lm, Action *a);
 bool intervalTick(float lapsed, float interval)
 {
 	float v;
-	v = (lapsed / interval) - floorf(lapsed / interval);
+	v = interval == 0 ? 0 : (lapsed / interval) - floorf(lapsed / interval);
 	v *= interval;
 	v = v > 0 ? v : -v;
 	return v < SPF;  

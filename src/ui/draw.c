@@ -224,7 +224,7 @@ void guiDrawRack(IO *io, GridWidget *rw, Game *g, TransMove *tm)
 
 bool interval(float lapsed, float interval)
 {
-	return ((int)floorf(lapsed / interval)) % 2 == 0;
+	return interval == 0 ? 0 : ((int)floorf(lapsed / interval)) % 2 == 0;
 }
 
 void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
