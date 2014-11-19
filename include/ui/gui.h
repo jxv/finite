@@ -245,7 +245,7 @@ typedef struct IO
 	SDL_Surface *gmBack;
 	SDL_Surface *fader;
 	SDL_Surface *menuBg;
-	SDL_Surface *tile[tileCount][letterCount][tileLookCount];
+	SDL_Surface *tile[TILE_COUNT][letterCount][tileLookCount];
 	SDL_Surface *wild[tileLookCount];
 	SDL_Surface *wildUp;
 	SDL_Surface *wildDown;

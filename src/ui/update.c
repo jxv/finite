@@ -360,7 +360,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			tm->adjust.data.tile[a0] = b1;
 			tm->adjust.data.tile[a1] = b0;
 
-			if (tm->adjust.data.tile[a0].type == tileWild) {
+			if (tm->adjust.data.tile[a0].type == TILE_WILD) {
 				tm->type = transMovePlaceWild;
 				mmp->idx = a0;
 			}
@@ -369,7 +369,7 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 			
 			assert(mmp->boardIdx[mmp->idx].x == -1 && mmp->boardIdx[mmp->idx].y == -1);;
 			mmp->boardIdx[mmp->idx] = c->data.board;
-			if (tm->adjust.data.tile[*idx].type == tileLetter) {
+			if (tm->adjust.data.tile[*idx].type == TILE_LETTER) {
 				mmp->num++;
 				assert(mmp->num > 0 && mmp->num <= adjust_tile_count(tm->adjust.data.tile));
 				if (adjust_tile_count(tm->adjust.data.tile) == mmp->num) {
@@ -378,20 +378,20 @@ bool updateTransMovePlace(TransMove *tm, Cmd *c, Board *b, Player *p)
 					findNextMoveModePlaceIdx(tm);
 				}
 			} else {
-				assert(tm->adjust.data.tile[*idx].type == tileWild);
+				assert(tm->adjust.data.tile[*idx].type == TILE_WILD);
 				tm->type = transMovePlaceWild;
 			}
 		} 
 		return true;
 	}
 	case cmdRackSelect: {
-		TileType t;
+		tile_tag_t t;
 
 		assert(c->data.rack >= 0);
 		assert(c->data.rack < RACK_SIZE);
 		t = tm->adjust.data.tile[c->data.rack].type;
 		assert(t == TILE_NONE || t == TILE_LETTER || t == TILE_WILD);
-		if (t != tileNone && mmp->idx != c->data.rack) {
+		if (t != TILE_NONE && mmp->idx != c->data.rack) {
 			adjust_swap(mmp->idx, c->data.rack,
                                 tm->adjust.data.tile);
 			if (valid_board_idx(mmp->boardIdx[c->data.rack])) {

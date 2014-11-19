@@ -456,7 +456,7 @@ static bool on_free_squares(const board_t *b, const move_place_t *mp,
 		const int r = mp->rackIdx[i];
 		const int y = mp->coor[i].y;
 		const int x = mp->coor[i].x;
-		if (p->tile[r].type != tileNone && b->sq[y][x] == SQ_FREE)
+		if (p->tile[r].type != TILE_NONE && b->sq[y][x] == SQ_FREE)
 			return true;
 	}
 	return false;

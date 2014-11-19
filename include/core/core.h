@@ -25,17 +25,13 @@
 #define VALID_BOARD_SIZE(s) RANGE(s, 0, BOARD_SIZE - 1)
 #define VALID_RACK_SIZE(r) RANGE(r, 0, RACK_SIZE - 1)
 
-typedef enum tile_tag
+enum tile_tag
 {
         TILE_NONE = -1,
         TILE_WILD = 0,
         TILE_LETTER,
         TILE_COUNT,
-	tileNone = -1,
-	tileWild = 0,
-	tileLetter,
-	tileCount
-} TileType;
+};
 
 typedef enum sq
 {
@@ -338,13 +334,13 @@ typedef struct tile
 	letter_t letter;
 } Tile;
 
-#define VALID_TILE_TYPE(tt) (RANGE(tt, (-1), tileCount - 1))
-#define VALID_LETTER_TYPE(lt) (RANGE(lt, 0, letterCount - 1))
+#define VALID_TILE_TYPE(tt) (RANGE(tt, (-1), TILE_COUNT - 1))
+#define VALID_LETTER_TYPE(lt) (RANGE(lt, 0, LETTER_COUNT - 1))
 
 #ifdef DEBUG
 #define VALID_TILE(t) do { \
 			VALID_TILE_TYPE((t).type); \
-			if ((t).type != tileLetter) { \
+			if ((t).type != TILE_LETTER) { \
 				VALID_LETTER_TYPE((t).letter); \
 			} \
 		} while(0)

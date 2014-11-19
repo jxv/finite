@@ -689,18 +689,18 @@ bool initIO(Env *e)
 
 	for (i = 0; i < letterCount; i++) {
 		for (j = 0; j < tileLookCount; j++) {
-			e->io.tile[tileWild][i][j] = surfaceCpy(tile[j]);
-			if (!e->io.tile[tileWild][i][j]) {
+			e->io.tile[TILE_WILD][i][j] = surfaceCpy(tile[j]);
+			if (!e->io.tile[TILE_WILD][i][j]) {
 				return false;
 			}
-			e->io.tile[tileLetter][i][j] = surfaceCpy(tile[j]);
-			if (!e->io.tile[tileLetter][i][j]) {
+			e->io.tile[TILE_LETTER][i][j] = surfaceCpy(tile[j]);
+			if (!e->io.tile[TILE_LETTER][i][j]) {
 				return false;
 			}
 			sprintf(str,"%c", i + 'a');
-			strDraw(e->io.tile[tileWild][i][j], &e->io.blackFont, str, 3, 0);
+			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.blackFont, str, 3, 0);
 			sprintf(str,"%c", i + 'A');
-			strDraw(e->io.tile[tileLetter][i][j], &e->io.blackFont, str, 3, 0);
+			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.blackFont, str, 3, 0);
 			count++; e->io.loading += 1.f / COUNT;
 			count++; e->io.loading += 1.f / COUNT;
 		}
@@ -1008,8 +1008,8 @@ void quit(Env *e)
 	}	
 	for (i = 0; i < letterCount; i++) {
 		for (j = 0; j < tileLookCount; j++) {
-			surfaceFree(e->io.tile[tileWild][i][j]);
-			surfaceFree(e->io.tile[tileLetter][i][j]);
+			surfaceFree(e->io.tile[TILE_WILD][i][j]);
+			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
 		}
 	}
 

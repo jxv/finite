@@ -158,10 +158,10 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, Player *p, Gri
 		i = tm->adjust.data.tile[tm->place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
-		if (t->type == tileNone) {
+		if (t->type == TILE_NONE) {
 			break;
 		}
-		s = t->type == tileWild ? io->wild[tileLookGhost] : io->tile[t->type][t->letter][tileLookGhost];
+		s = t->type == TILE_WILD ? io->wild[tileLookGhost] : io->tile[t->type][t->letter][tileLookGhost];
 		surfaceDraw(io->screen, s, idx.x * TILE_WIDTH + bw->pos.x, idx.y * TILE_HEIGHT + bw->pos.y);
 		break;
 	}
@@ -254,10 +254,10 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 		
 		i = g->gameGui.rackWidget.index.x;
 		t = &gm->player[tm->playerIdx].tile[i];
-		if (t->type != tileNone) {
+		if (t->type != TILE_NONE) {
 			char str0[32];
 			SDL_Surface *s;
-			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
+			s = t->type == TILE_WILD ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
 			surfaceDraw(io->screen, s, 269, 9);
 			sprintf(str0,": %d", tile_score(t));
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);
@@ -295,10 +295,10 @@ void guiDraw(IO *io, GUI *g, Game *gm, TransMove *tm, GameControls *gc)
 
 		i = tm->adjust.data.tile[tm->place.idx].idx;
 		t = &gm->player[tm->playerIdx].tile[i];
-		if (t->type != tileNone) {
+		if (t->type != TILE_NONE) {
 			char str0[32];
 			SDL_Surface *s;
-			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
+			s = t->type == TILE_WILD ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
 			surfaceDraw(io->screen, s, 269, 9);
 			sprintf(str0,": %d", tile_score(t));
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);

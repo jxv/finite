@@ -44,8 +44,8 @@ void printTile(tile_t *t)
 	NOT(t);
 
 	switch (t->type) {
-	case tileWild: c = 'a' + t->letter; break;
-	case tileLetter: c = 'A' + t->letter; break;
+	case TILE_WILD: c = 'a' + t->letter; break;
+	case TILE_LETTER: c = 'A' + t->letter; break;
 	default: return;
 	}
 	putchar(c);
@@ -111,7 +111,7 @@ void printBoard(board_t *b)
 		for (x = 0; x < BOARD_X; x++) {
 			t = &b->tile[y][x];
 			sq = b->sq[y][x];
-			if (t->type != tileNone) {
+			if (t->type != TILE_NONE) {
 				printTile(t);
 			} else {
 				switch (sq) {
@@ -134,13 +134,13 @@ void printRack(player_t *p)
 {
 	for (int i = 0; i < RACK_SIZE; i++) {
 		tile_t *t = &p->tile[i];
-		if (t->type != tileNone) {
+		if (t->type != TILE_NONE) {
                         char c;
 			switch(t->type) {
-			case tileWild:
+			case TILE_WILD:
                                 c = '*';
                                 break;
-			case tileLetter:
+			case TILE_LETTER:
                                 c = 'A' + t->letter;
                                 break;
 			default:

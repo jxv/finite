@@ -72,13 +72,13 @@ void syncTaken(Cont *c, Board *b, DirType dt, int idx)
 	if (dt == dirDown) {
 		assert(idx < BOARD_X);
 		for (i = 0; i < BOARD_Y; i++) {
-			c->taken[i] = b->tile[i][idx].type != tileNone;
+			c->taken[i] = b->tile[i][idx].type != TILE_NONE;
 		}
 	} else {
 		assert(dt == dirRight);
 		assert(idx < BOARD_Y);
 		for (i = 0; i < BOARD_X; i++) {
-			c->taken[i] = b->tile[idx][i].type != tileNone;
+			c->taken[i] = b->tile[idx][i].type != TILE_NONE;
 		}
 	}
 }
@@ -231,22 +231,22 @@ bool eligibleCont(Cont *c, Board *b, DirType dt, int idx, bool firstMove)
 
 	switch (dt) {
 	case dirDown: {
-		if (c->offset > 0 && b->tile[c->offset - 1][idx].type != tileNone) {
+		if (c->offset > 0 && b->tile[c->offset - 1][idx].type != TILE_NONE) {
 			return true;
 		}
-		if (c->offset + c->len < BOARD_Y && b->tile[c->offset + c->len][idx].type != tileNone) {
+		if (c->offset + c->len < BOARD_Y && b->tile[c->offset + c->len][idx].type != TILE_NONE) {
 			return true;
 		}
 		if (idx > 0) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[i][idx - 1].type != tileNone) {
+				if (b->tile[i][idx - 1].type != TILE_NONE) {
 					return true;
 				}
 			}
 		}
 		if (idx < BOARD_X - 1) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[i][idx + 1].type != tileNone) {
+				if (b->tile[i][idx + 1].type != TILE_NONE) {
 					return true;
 				}
 			}
@@ -261,22 +261,22 @@ bool eligibleCont(Cont *c, Board *b, DirType dt, int idx, bool firstMove)
 		break;
 	}
 	case dirRight: {
-		if (c->offset > 0 && b->tile[idx][c->offset - 1].type != tileNone) {
+		if (c->offset > 0 && b->tile[idx][c->offset - 1].type != TILE_NONE) {
 			return true;
 		}
-		if (c->offset + c->len < BOARD_X && b->tile[idx][c->offset + c->len].type != tileNone) {
+		if (c->offset + c->len < BOARD_X && b->tile[idx][c->offset + c->len].type != TILE_NONE) {
 			return true;
 		}
 		if (idx > 0) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[idx - 1][i].type != tileNone) {
+				if (b->tile[idx - 1][i].type != TILE_NONE) {
 					return true;
 				}
 			}
 		}
 		if (idx < BOARD_Y - 1) {
 			for (i = c->offset; i < c->offset + c->len; i++) {
-				if (b->tile[idx + 1][i].type != tileNone) {
+				if (b->tile[idx + 1][i].type != TILE_NONE) {
 					return true;
 				}
 			}
@@ -426,7 +426,7 @@ int hueristic(ActionPlace *ap, Player *p)
 	c = 0;
 	for (i = 0; i < ap->num; i++) {
 		int j = ap->rackIdx[i];
-		if (p->tile[j].type == tileLetter) {
+		if (p->tile[j].type == TILE_LETTER) {
 			c += constant(p->tile[j].letter);
 		}
 	}

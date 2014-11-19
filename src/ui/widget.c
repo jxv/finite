@@ -203,7 +203,7 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 	case transMovePlace: {
 		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-				bw->button[idx.y][idx.x] = b->tile[idx.y][idx.x].type == tileNone;
+				bw->button[idx.y][idx.x] = b->tile[idx.y][idx.x].type == TILE_NONE;
 			}
 		}
 		break;
@@ -247,7 +247,7 @@ void updateBoardWidget(GridWidget *bw, TransMove *tm, Board *b)
 void updateRackWidget(GridWidget *rw, TransMove *tm)
 {
 	Coor idx;
-	TileType tt;
+	tile_tag_t tt;
 
 	NOT(rw);
 	NOT(tm);
@@ -270,8 +270,8 @@ void updateRackWidget(GridWidget *rw, TransMove *tm)
 	case transMoveDiscard: {
 		for (idx.x = 0; idx.x < RACK_SIZE; idx.x++) {
 			tt = tm->adjust.data.tile[idx.x].type;
-			assert(tt == tileNone || tt == tileWild || tt == tileLetter);
-			rw->button[idx.y][idx.x] = tt != tileNone; 
+			assert(tt == TILE_NONE || tt == TILE_WILD || tt == TILE_LETTER);
+			rw->button[idx.y][idx.x] = tt != TILE_NONE; 
 		}
 		break;
 	}
@@ -365,7 +365,7 @@ void boardWidgetDraw(IO *io, GridWidget *bw, Player *p, Board *b, TransMove *tm,
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			t = &b->tile[idx.y][idx.x];
-			if (t->type != tileNone) {
+			if (t->type != TILE_NONE) {
 				tlt = lm->type == lastMovePlace && lm->data.place[idx.y][idx.x] ? tileLookLast : tileLookNormal;
 				ts = io->tile[t->type][t->letter][tlt];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
@@ -410,7 +410,7 @@ void boardWidgetDrawWithoutTransMove(IO *io, GridWidget *bw, Board *b, LastMove 
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
 			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			t = &b->tile[idx.y][idx.x];
-			if (t->type != tileNone) {
+			if (t->type != TILE_NONE) {
 				tlt = lm->type == lastMovePlace && lm->data.place[idx.y][idx.x] ? tileLookLast : tileLookNormal;
 				ts = io->tile[t->type][t->letter][tlt];
 				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
@@ -423,8 +423,8 @@ void boardWidgetDrawWithoutTransMove(IO *io, GridWidget *bw, Board *b, LastMove 
 void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 {
 	int i;
-	Tile *t;
-	TileType tt;
+	tile_t *t;
+	tile_tag_t tt;
 	SDL_Surface *s;
 
 	NOT(io);
@@ -437,18 +437,18 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 	case transMovePlaceWild: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == tileNone) {
+			if (t->type == TILE_NONE) {
 				continue;
 			}
 			s = NULL;
 			if (tm->place.idx != i) {
 				if (!valid_board_idx(tm->place.boardIdx[i])) {
 					tt = tileLookNormal;
-					s = t->type == tileWild ? io->wild[tt] : io->tile[t->type][t->letter][tt];
+					s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 				}
 			} else {
 				tt = tileLookHold;
-				s = t->type == tileWild ? io->wild[tt] : io->tile[t->type][t->letter][tt];
+				s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
 			}
 			if (s) {
 				surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
@@ -462,12 +462,12 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 	case transMoveDiscard: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == tileNone) {
+			if (t->type == TILE_NONE) {
 				continue;
 			}
 			VALID_TILE(*t);
 			tt = tm->discard.rack[i] ? tileLookDisable : tileLookNormal;
-			s = t->type == tileWild ? io->wild[tt] : io->tile[tileLetter][t->letter][tt];
+			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
 			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
 			
 		}
@@ -476,10 +476,10 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, Coor dim, Player *p)
 	default: {
 		for (i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == tileNone) {
+			if (t->type == TILE_NONE) {
 				continue;
 			}
-			s = t->type == tileWild ? io->wild[tileLookNormal] : io->tile[tileLetter][t->letter][tileLookNormal];
+			s = t->type == TILE_WILD ? io->wild[tileLookNormal] : io->tile[TILE_LETTER][t->letter][tileLookNormal];
 			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
 		}
 		break;

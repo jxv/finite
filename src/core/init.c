@@ -15,7 +15,7 @@ void boardInit(Board *b)
 
 	for (y = 0; y < BOARD_Y; y++) {
 		for (x = 0; x < BOARD_X; x++) {
-			b->tile[y][x].type = tileNone;
+			b->tile[y][x].type = TILE_NONE;
 			b->sq[y][x] = sqNormal;
 			if ((x == y) || (BOARD_Y - y - 1 == x)) {
 				b->sq[y][x] = sqDblWrd;
@@ -240,17 +240,17 @@ void bagInit(Bag *b)
 	b->head = 0;
 	b->tail = BAG_SIZE - 1;
 	for (i = 0; i < tileWildNum; i++) {
-		b->tile[i].type = tileWild;
-		b->tile[i].letter = letterA;
+		b->tile[i].type = TILE_WILD;
+		b->tile[i].letter = LETTER_A;
 	}
 	for (k = 0, i = 2; k < letterCount; k++) {
 		for (j = 0; j < tileLetterNum[k]; j++, i++) {
-			b->tile[i].type = tileLetter;
-			b->tile[i].letter = letterA + k;
+			b->tile[i].type = TILE_LETTER;
+			b->tile[i].letter = LETTER_A + k;
 		}
 	}
 	for (; i < BAG_SIZE; i++) {
-		b->tile[i].type = tileNone;
+		b->tile[i].type = TILE_NONE;
 	}
 
 	/* short for testing */
@@ -266,8 +266,8 @@ void playerInit(Player *p, Bag *b)
 	NOT(p);
 
 	for (i = 0; i < RACK_SIZE; i++) {
-		p->tile[i].type = tileNone;
-		p->tile[i].letter = letterA;
+		p->tile[i].type = TILE_NONE;
+		p->tile[i].letter = LETTER_A;
 	}
 	rack_refill(b, p);
 
@@ -294,7 +294,7 @@ void initPlayerAI(Player *p, Bag *b)
 	p->aiShare.shareStart = false;
 	p->aiShare.shareEnd = false;
 	p->aiShare.loading = 0;
-	p->aiShare.action.type = actionInvalid;
+	p->aiShare.action.type = ACTION_INVALID;
 }
 
 void moveInit(Move *m)
