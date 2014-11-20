@@ -3,10 +3,10 @@ INC += -I include/core
 INC += -I include/ui
 INC += -I include/util
 
-SRC := $(wildcard src/*.c)
-SRC += $(wildcard src/core/*.c)
-SRC += $(wildcard src/ui/*.c)
-SRC += $(wildcard src/util/*.c)
+SRC := $(wildcard *.c)
+SRC += $(wildcard core/*.c)
+SRC += $(wildcard ui/*.c)
+SRC += $(wildcard util/*.c)
 
 CFLAGS := -std=c99
 # CFLAGS +=-Werror

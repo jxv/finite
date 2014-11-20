@@ -71,7 +71,7 @@ int tile_score(const tile_t *t)
 }
 
 static bool can_use_dbl_let(const board_t *b, const dir_t *d, int p, int x,
-		int y)
+			    int y)
 {
 	return d->pos[p] && b->sq[y][x] == SQ_DBL_LET;
 }
@@ -278,9 +278,11 @@ void apply_adjust(const tile_adjusts_t tile, player_t *p)
 
 int cmp_word(const word_t *w0, const word_t *w1)
 {
-	/* w0 > w1 -> 1
+	/*
+	 * w0 > w1 -> 1
 	 * w0 < w1 -> -1
-	 * w0 == w1 -> 0 */
+	 * w0 == w1 -> 0
+	 */
 	for (int i = 0; ; i++) {
 		if (w0->len  > w1->len && i == w1->len)
 			return 1;
