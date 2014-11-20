@@ -788,7 +788,7 @@ bool initMenuViews(IO *io, GUI *g)
 	Font *n, *h;
 
 	char *menuText[menuFocusCount] = {"Play", "Rules", "Settings", "Exit"};
-	char *playMenuText[playMenuFocusCount] = {"1 player_t", "2 player_t", "Options"};
+	char *playMenuText[playMenuFocusCount] = {"1 Player", "2 Player", "Options"};
 	char *optionsText[optionsFocusCount] = {"AI Difficulty:"};
 	char *gameMenuText[gameMenuFocusCount] = {"Resume", "Settings", "Skip", "Quit"};
 	char *settingsText[settingsFocusCount] = {"  SFX:     ", "Controls"};
@@ -848,17 +848,14 @@ void loadingScreen(Env *e)
 
 	if (pthread_create(&thread, NULL, cbInitIO, e) != 0) {
 		io->loaded = false;
-		return;	
+		return;
 	}
-	
 	while (!io->loadAttempted || (io->loadAttempted && pause > 0 && io->loaded)) {
 
 		int st = SDL_GetTicks();
 
-		if (io->loading >= 1.0) {
+		if (io->loading >= 1.0)
 			pause -= SPF;
-		}
-
 		SDL_FillRect(io->screen, NULL, 0);
 		drawScrollingBackground(io);
 		surfaceDraw(io->screen, io->titleScreen, 0, 0);

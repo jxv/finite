@@ -1,5 +1,5 @@
-#ifndef FINITE_CORE_H
-#define FINITE_CORE_H
+#ifndef __CORE_H__
+#define __CORE_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,12 +149,6 @@ enum path_tag {
 	PATH_COUNT,
 };
 
-enum cmp {
-	CMP_LESS = -1,
-	CMP_EQUAL = 0,
-	CMP_GREATER = 1,
-};
-
 enum action_tag {
 	ACTION_INVALID = -1,
 	ACTION_PLACE = 0,
@@ -176,7 +170,6 @@ typedef enum dir_err_tag dir_err_tag_t;
 typedef enum path_err_tag path_err_tag_t;
 typedef enum dir_tag dir_tag_t;
 typedef enum path_tag path_tag_t;
-typedef enum cmp cmp_t;
 typedef enum action_tag action_tag_t;
 
 struct word;
@@ -389,33 +382,33 @@ typedef struct dict dict_t;
 typedef struct rule rule_t;
 typedef struct game game_t;
 
-void	mk_adjust(const player_t *, adjust_t *);
-void	adjust_swap(int, int, tile_adjusts_t);
-adjust_err_t	find_adjust_err(const adjust_t *, const player_t *);
-void	apply_adjust(const tile_adjusts_t, player_t *);
-void	mk_action(const game_t *, const move_t *, action_t *);
-bool	apply_action(const action_t *, game_t *);
-void	next_turn(game_t *);
-cmp_t	cmp_word(const word_t *, const word_t *);
-void	move_clear(move_t *);
-void	action_clear(action_t *);
-void	rm_rack_tile(const int *, const int, player_t *);
-void	rack_shift(player_t *);
-void	rack_refill(bag_t *, player_t *);
-bool	end_game(const game_t *);
-int	find_winner(const game_t *);
-bool	valid_rack_idx(int);
-bool	valid_board_idx(coor_t);
-int	rack_count(const player_t *);
-int	adjust_tile_count(const tile_adjusts_t);
-bool	word_valid(const word_t *, const dict_t *);
-bool	board_empty(const board_t *b);
-bool	bag_full(const bag_t *);
-bool	bag_empty(const bag_t *);
-int	bag_count(const bag_t *);
-int	bag_size(const bag_t *);
-int	tile_score(const tile_t *);
-bool	vowel(letter_t);
-bool	constant(letter_t);
+void mk_adjust(const player_t *, adjust_t *);
+void adjust_swap(int, int, tile_adjusts_t);
+adjust_err_t find_adjust_err(const adjust_t *, const player_t *);
+void apply_adjust(const tile_adjusts_t, player_t *);
+void mk_action(const game_t *, const move_t *, action_t *);
+bool apply_action(const action_t *, game_t *);
+void next_turn(game_t *);
+int cmp_word(const word_t *, const word_t *);
+void move_clear(move_t *);
+void action_clear(action_t *);
+void rm_rack_tile(const int *, const int, player_t *);
+void rack_shift(player_t *);
+void rack_refill(bag_t *, player_t *);
+bool end_game(const game_t *);
+int find_winner(const game_t *);
+bool valid_rack_idx(int);
+bool valid_board_idx(coor_t);
+int rack_count(const player_t *);
+int adjust_tile_count(const tile_adjusts_t);
+bool word_valid(const word_t *, const dict_t *);
+bool board_empty(const board_t *b);
+bool bag_full(const bag_t *);
+bool bag_empty(const bag_t *);
+int bag_count(const bag_t *);
+int bag_size(const bag_t *);
+int tile_score(const tile_t *);
+bool vowel(letter_t);
+bool constant(letter_t);
 
 #endif
