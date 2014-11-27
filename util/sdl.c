@@ -1,85 +1,53 @@
 #include "dbg.h"
 #include "sdl.h"
 
-void surfaceFree(SDL_Surface *s)
+void surface_free(SDL_Surface *s)
 {
-	if (s) {
+	if (s)
 		 SDL_FreeSurface(s);
-	}
 }
 
-SDL_Surface *surfaceLoad(const char *filename)
+SDL_Surface *surface_load(const char *filename)
 {
-	SDL_Surface *s, *tmp;
-	Uint32 a;
-
-	NOT(filename); 
-	s = NULL;
-	tmp = IMG_Load(filename);
-	if (!tmp) {
+	SDL_Surface *tmp = IMG_Load(filename);
+	if (!tmp)
 		return NULL;
-	}
-	s = SDL_DisplayFormat(tmp);
+	SDL_Surface *s = SDL_DisplayFormat(tmp);
 	SDL_FreeSurface(tmp);
-	if (!s) { return NULL;
-	}
-	a = SDL_MapRGB(s->format, ALPHA_R, ALPHA_G, ALPHA_B);
+	if (!s)
+		return NULL;
+	Uint32 a = SDL_MapRGB(s->format, ALPHA_R, ALPHA_G, ALPHA_B);
 	SDL_SetColorKey(s, SDL_SRCCOLORKEY, a);
 	return s;
-} 
+}
 
-SDL_Surface *surfaceAlphaLoad(const char *filename)
+SDL_Surface *surface_alpha_load(const char *filename)
 {
-	SDL_Surface *s, *tmp;
-
-	NOT(filename);
-
-	s = NULL;
-	tmp = IMG_Load(filename);
-	if (!tmp) {
+	SDL_Surface *tmp = IMG_Load(filename);
+	if (!tmp)
 		return NULL;
-	}
-	s = SDL_DisplayFormatAlpha(tmp);
+	SDL_Surface *s = SDL_DisplayFormatAlpha(tmp);
 	SDL_FreeSurface(tmp);
-	if (!s) {
-		return NULL;
-	}
 	return s;
 }
 
 void delay(int st, int et, int fps)
 {
-	int ms;
-
-	assert(et >= st);
-	assert(fps > 0);
-	
-	ms = (1000 / fps) - (et - st);
-	if (ms > 0) {
+	const int ms = (1000 / fps) - (et - st);
+	if (ms > 0)
 		SDL_Delay(ms);
-	}
 }
 
-void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
+void surface_draw(SDL_Surface *s0, SDL_Surface *s1, int x, int y)
 {
-	SDL_Rect offset;
-
-	NOT(s0), NOT(s1);
-
-	offset.x = x;
-	offset.y = y;
+	SDL_Rect offset = {.x = x, .y = y};
 	SDL_BlitSurface(s1, NULL, s0, &offset);
 }
 
-SDL_Surface *surfaceCpy(SDL_Surface *s)
+SDL_Surface *surface_cpy(SDL_Surface *s)
 {
-	SDL_Surface *cpy;
-
-	NOT(s);	
-
-	cpy = SDL_CreateRGBSurface(0, s->w, s->h, SCREEN_BPP, 0, 0, 0, 0);
-	surfaceDraw(cpy, s, 0, 0);
+	SDL_Surface *cpy = SDL_CreateRGBSurface(0, s->w, s->h, SCREEN_BPP, 0, 0,
+						0, 0);
+	surface_draw(cpy, s, 0, 0);
 	return cpy;
 }
-
-

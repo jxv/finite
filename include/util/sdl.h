@@ -43,14 +43,13 @@ typedef struct
 	float time;
 } AxisState;
 
-void surfaceFree(SDL_Surface *s);
-SDL_Surface *surfaceLoad(const char *filename);
-SDL_Surface *surfaceAlphaLoad(const char *filename);
+void surface_free(SDL_Surface *s);
+SDL_Surface *surface_load(const char *filename);
+SDL_Surface *surface_alpha_load(const char *filename);
 void delay(int st, int et, int fps);
-void surfaceDraw(SDL_Surface *s0, SDL_Surface *s1, int x, int y);
-SDL_Surface *surfaceCpy(SDL_Surface *s);
-
-void axisStateUpdate(AxisState *as);
+void surface_draw(SDL_Surface *s0, SDL_Surface *s1, int x, int y);
+SDL_Surface *surface_cpy(SDL_Surface *s);
+void axis_state_update(AxisState *as);
 
 #endif
 

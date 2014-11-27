@@ -14,29 +14,21 @@ bool initMenuViews(IO *io, GUI *g);
 
 bool fontmapInit(Font *f, int w, int h, const char *filename)
 {
-	NOT(f);
-	NOT(filename);
-
 	f->width = w;
 	f->height = h;
 	f->spacing = 0;
-	f->map = surfaceAlphaLoad(filename);
+	f->map = surface_alpha_load(filename);
 	return f->map != NULL;
 }
 
 void fontmapQuit(Font *f)
 {
-	NOT(f);
-
-	if (f->map) {
-		surfaceFree(f->map);
-	}
+	if (f->map)
+		surface_free(f->map);
 }
 
 void initKeyState(KeyState *ks)
 {
-	NOT(ks);
-	
 	ks->type = keyStateUntouched;
 	ks->time = 0.0f;
 }
@@ -46,7 +38,6 @@ void initAxisState(AxisState *as)
 	const float deadZone = 0.33f;
 
 	NOT(as);
-	
 	as->type = axisStateInDeadZone;
 	as->deadZone = deadZone;
 	as->time = 0.f;
@@ -55,8 +46,6 @@ void initAxisState(AxisState *as)
 
 void initGameControls(GameControls *gc)
 {
-	NOT(gc);
-	
 	gc->key[gameKeyPlay] = hardwareKeySelect;
 	gc->key[gameKeyRecall] = hardwareKeyY;
 	gc->key[gameKeyShuffle] = -1;
@@ -337,38 +326,28 @@ int mkHighTexts(HighText *ht, Font *normal, Font *highlight, char **text, int co
 
 bool areHighTextsLoaded(HighText *ht, int count)
 {
-	int i;
-	for (i = 0; i < count; i++) {
-		if (!(ht[i].normal && ht[i].highlight)) {
+	for (int i = 0; i < count; i++)
+		if (!(ht[i].normal && ht[i].highlight))
 			return false;
-		}
-	}
 	return true;
 }
 
 void freeHighTexts(HighText *ht, int count)
 {
-	int i;
-	for (i = 0; i < count; i++) {
-		surfaceFree(ht[i].normal);
-		surfaceFree(ht[i].highlight);
+	for (int i = 0; i < count; i++) {
+		surface_free(ht[i].normal);
+		surface_free(ht[i].highlight);
 	}
 }
 
 void recenterMenuView(MenuView *mv, Font *n)
 {
-	NOT(mv);
-
 	mv->pos.x = (SCREEN_WIDTH - mv->len * (n->width + n->spacing)) / 2;
 	mv->pos.y = (SCREEN_HEIGHT - mv->menu->max * mv->spacing.y) / 2;
 }
 
 bool initMenuView(MenuView *mv, MenuWidget *mm, char *str[], Font *n, Font *h)
 {
-	NOT(mv);
-	NOT(mm);
-	NOT(str);
-
 	mv->spacing.x = 0;
 	mv->spacing.y = n->height * 2;
 	mv->menu = mm;
@@ -444,137 +423,135 @@ bool initIO(Env *e)
 	}
 
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.menuBg = surfaceAlphaLoad(RES_PATH "menu_bg.png")) == NULL) {
+	if ((e->io.menuBg = surface_alpha_load(RES_PATH "menu_bg.png")) == NULL)
+		return false;
+	count++; e->io.loading += 1.f / COUNT;
+	if ((e->io.scoreBoard = surface_alpha_load(RES_PATH "scoreboard.png")) == NULL)
+		return false;
+	count++; e->io.loading += 1.f / COUNT;
+	if ((e->io.textLog = surface_alpha_load(RES_PATH "text_log.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.scoreBoard = surfaceAlphaLoad(RES_PATH "scoreboard.png")) == NULL) {
+	if ((e->io.gmBack = surface_alpha_load(RES_PATH "game_bg.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.textLog = surfaceAlphaLoad(RES_PATH "text_log.png")) == NULL) {
+	if ((e->io.back = surface_alpha_load(RES_PATH "back.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.gmBack = surfaceAlphaLoad(RES_PATH "game_bg.png")) == NULL) {
+	if ((e->io.wildUp = surface_alpha_load(RES_PATH "wild_up.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.back = surfaceAlphaLoad(RES_PATH "back.png")) == NULL) {
+	if ((e->io.wildDown = surface_alpha_load(RES_PATH "wild_down.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.wildUp = surfaceAlphaLoad(RES_PATH "wild_up.png")) == NULL) {
+	if ((e->io.lockon = surface_alpha_load(RES_PATH "lockon.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.wildDown = surfaceAlphaLoad(RES_PATH "wild_down.png")) == NULL) {
+	if ((e->io.lockon0 = surface_alpha_load(RES_PATH "lockon0.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.lockon = surfaceAlphaLoad(RES_PATH "lockon.png")) == NULL) {
+	if ((e->io.recall = surface_alpha_load(RES_PATH "recall.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.lockon0 = surfaceAlphaLoad(RES_PATH "lockon0.png")) == NULL) {
+	if ((e->io.recallDisable = surface_alpha_load(RES_PATH "recall_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.recall = surfaceAlphaLoad(RES_PATH "recall.png")) == NULL) {
+	if ((e->io.mode = surface_alpha_load(RES_PATH "mode.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.recallDisable = surfaceAlphaLoad(RES_PATH "recall_disable.png")) == NULL) {
+	if ((e->io.modeDisable = surface_alpha_load(RES_PATH "mode_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.mode = surfaceAlphaLoad(RES_PATH "mode.png")) == NULL) {
+	if ((e->io.place = surface_alpha_load(RES_PATH "place.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.modeDisable = surfaceAlphaLoad(RES_PATH "mode_disable.png")) == NULL) {
+	if ((e->io.placeDisable = surface_alpha_load(RES_PATH "place_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.place = surfaceAlphaLoad(RES_PATH "place.png")) == NULL) {
+	if ((e->io.discard = surface_alpha_load(RES_PATH "discard.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.placeDisable = surfaceAlphaLoad(RES_PATH "place_disable.png")) == NULL) {
+	if ((e->io.discardDisable = surface_alpha_load(RES_PATH "discard_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.discard = surfaceAlphaLoad(RES_PATH "discard.png")) == NULL) {
+	if ((e->io.skip = surface_alpha_load(RES_PATH "skip.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.discardDisable = surfaceAlphaLoad(RES_PATH "discard_disable.png")) == NULL) {
+	if ((e->io.skipDisable = surface_alpha_load(RES_PATH "skip_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.skip = surfaceAlphaLoad(RES_PATH "skip.png")) == NULL) {
+	if ((e->io.play = surface_alpha_load(RES_PATH "play.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.skipDisable = surfaceAlphaLoad(RES_PATH "skip_disable.png")) == NULL) {
+	if ((e->io.playDisable = surface_alpha_load(RES_PATH "play_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.play = surfaceAlphaLoad(RES_PATH "play.png")) == NULL) {
+	if ((e->io.shuffle = surface_alpha_load(RES_PATH "shuffle.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.playDisable = surfaceAlphaLoad(RES_PATH "play_disable.png")) == NULL) {
-		return false;
-	}
-	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.shuffle = surfaceAlphaLoad(RES_PATH "shuffle.png")) == NULL) {
-		return false;
-	}
-	count++; e->io.loading += 1.f / COUNT;
-	if ((e->io.shuffleDisable = surfaceAlphaLoad(RES_PATH "shuffle_disable.png")) == NULL) {
+	if ((e->io.shuffleDisable = surface_alpha_load(RES_PATH "shuffle_disable.png")) == NULL) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
 
-	if (!(e->io.boardCover = surfaceAlphaLoad(RES_PATH "board_cover.png"))) {
+	if (!(e->io.boardCover = surface_alpha_load(RES_PATH "board_cover.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
 	
-	if (!(e->io.pauseTitle = surfaceAlphaLoad(RES_PATH "pause.png"))) {
+	if (!(e->io.pauseTitle = surface_alpha_load(RES_PATH "pause.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.settingsTitle = surfaceAlphaLoad(RES_PATH "settings.png"))) {
+	if (!(e->io.settingsTitle = surface_alpha_load(RES_PATH "settings.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.finiteTitle = surfaceAlphaLoad(RES_PATH "finite_title.png"))) {
+	if (!(e->io.finiteTitle = surface_alpha_load(RES_PATH "finite_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.controlsTitle = surfaceAlphaLoad(RES_PATH "controls_title.png"))) {
+	if (!(e->io.controlsTitle = surface_alpha_load(RES_PATH "controls_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.areYouSureTitle = surfaceAlphaLoad(RES_PATH "are_you_sure_title.png"))) {
+	if (!(e->io.areYouSureTitle = surface_alpha_load(RES_PATH "are_you_sure_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.chooseGameTitle = surfaceAlphaLoad(RES_PATH "choose_title.png"))) {
+	if (!(e->io.chooseGameTitle = surface_alpha_load(RES_PATH "choose_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.rulesTitle = surfaceAlphaLoad(RES_PATH "rules_title.png"))) {
+	if (!(e->io.rulesTitle = surface_alpha_load(RES_PATH "rules_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.optionsTitle = surfaceAlphaLoad(RES_PATH "options_title.png"))) {
+	if (!(e->io.optionsTitle = surface_alpha_load(RES_PATH "options_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
-	if (!(e->io.gameOverTitle = surfaceAlphaLoad(RES_PATH "gameover_title.png"))) {
+	if (!(e->io.gameOverTitle = surface_alpha_load(RES_PATH "gameover_title.png"))) {
 		return false;
 	}
 	count++; e->io.loading += 1.f / COUNT;
@@ -595,7 +572,7 @@ bool initIO(Env *e)
 		case hardwareKeySelect: str = RES_PATH "select.png"; break;
 		}
 
-		if ((e->io.btn[i] = surfaceAlphaLoad(str)) == NULL) {
+		if ((e->io.btn[i] = surface_alpha_load(str)) == NULL) {
 			return false;
 		}
 		count++; e->io.loading += 1.f / COUNT;
@@ -633,23 +610,23 @@ bool initIO(Env *e)
 	e->io.highlightFont.spacing = -2;
 	count++; e->io.loading += 1.f / COUNT;
 
-	e->io.sq[SQ_NORMAL] = surfaceAlphaLoad(RES_PATH "sq_normal.png");
+	e->io.sq[SQ_NORMAL] = surface_alpha_load(RES_PATH "sq_normal.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_DBL_LET] = surfaceAlphaLoad(RES_PATH "sq_dl.png");
+	e->io.sq[SQ_DBL_LET] = surface_alpha_load(RES_PATH "sq_dl.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_DBL_WRD] = surfaceAlphaLoad(RES_PATH "sq_dw.png");
+	e->io.sq[SQ_DBL_WRD] = surface_alpha_load(RES_PATH "sq_dw.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_TRP_LET] = surfaceAlphaLoad(RES_PATH "sq_tl.png");
+	e->io.sq[SQ_TRP_LET] = surface_alpha_load(RES_PATH "sq_tl.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_TRP_WRD] = surfaceAlphaLoad(RES_PATH "sq_tw.png");
+	e->io.sq[SQ_TRP_WRD] = surface_alpha_load(RES_PATH "sq_tw.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_FREE] = surfaceAlphaLoad(RES_PATH "sq_free.png");
+	e->io.sq[SQ_FREE] = surface_alpha_load(RES_PATH "sq_free.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_NO_VOWEL] = surfaceAlphaLoad(RES_PATH "sq_novowel.png");
+	e->io.sq[SQ_NO_VOWEL] = surface_alpha_load(RES_PATH "sq_novowel.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_BLOCK] = surfaceAlphaLoad(RES_PATH "sq_block.png");
+	e->io.sq[SQ_BLOCK] = surface_alpha_load(RES_PATH "sq_block.png");
 	count++; e->io.loading += 1.f / COUNT;
-	e->io.sq[SQ_MYSTERY] = surfaceAlphaLoad(RES_PATH "sq_mystery.png");
+	e->io.sq[SQ_MYSTERY] = surface_alpha_load(RES_PATH "sq_mystery.png");
 	count++; e->io.loading += 1.f / COUNT;
 
 	for (i = 0; i < SQ_COUNT; i++) {
@@ -659,15 +636,15 @@ bool initIO(Env *e)
 	}
 	
 
-	tile[tileLookDisable] = surfaceAlphaLoad(RES_PATH "tile_disable.png");
+	tile[tileLookDisable] = surface_alpha_load(RES_PATH "tile_disable.png");
 	count++; e->io.loading += 1.f / COUNT;
-	tile[tileLookNormal] = surfaceAlphaLoad(RES_PATH "tile_normal.png");
+	tile[tileLookNormal] = surface_alpha_load(RES_PATH "tile_normal.png");
 	count++; e->io.loading += 1.f / COUNT;
-	tile[tileLookHold] = surfaceAlphaLoad(RES_PATH "tile_hold.png");
+	tile[tileLookHold] = surface_alpha_load(RES_PATH "tile_hold.png");
 	count++; e->io.loading += 1.f / COUNT;
-	tile[tileLookGhost] = surfaceAlphaLoad(RES_PATH "tile_ghost.png");
+	tile[tileLookGhost] = surface_alpha_load(RES_PATH "tile_ghost.png");
 	count++; e->io.loading += 1.f / COUNT;
-	tile[tileLookLast] = surfaceAlphaLoad(RES_PATH "tile_last.png");
+	tile[tileLookLast] = surface_alpha_load(RES_PATH "tile_last.png");
 	count++; e->io.loading += 1.f / COUNT;
 
 	for (i = 0; i < tileLookCount; i++) {
@@ -679,11 +656,11 @@ bool initIO(Env *e)
 
 	for (i = 0; i < LETTER_COUNT; i++) {
 		for (j = 0; j < tileLookCount; j++) {
-			e->io.tile[TILE_WILD][i][j] = surfaceCpy(tile[j]);
+			e->io.tile[TILE_WILD][i][j] = surface_cpy(tile[j]);
 			if (!e->io.tile[TILE_WILD][i][j]) {
 				return false;
 			}
-			e->io.tile[TILE_LETTER][i][j] = surfaceCpy(tile[j]);
+			e->io.tile[TILE_LETTER][i][j] = surface_cpy(tile[j]);
 			if (!e->io.tile[TILE_LETTER][i][j]) {
 				return false;
 			}
@@ -702,7 +679,7 @@ bool initIO(Env *e)
 	}
 
 
-	e->io.fader = surfaceCpy(e->io.screen);
+	e->io.fader = surface_cpy(e->io.screen);
 	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 0));
 
 	e->io.pressStart = createText(&e->io.normalFont, "PRESS START");
@@ -858,7 +835,7 @@ void loadingScreen(Env *e)
 			pause -= SPF;
 		SDL_FillRect(io->screen, NULL, 0);
 		drawScrollingBackground(io);
-		surfaceDraw(io->screen, io->titleScreen, 0, 0);
+		surface_draw(io->screen, io->titleScreen, 0, 0);
 		drawProgressBar(e->io.screen, io->loading, 60, 180, 200, 10, 1);
 		SDL_Flip(io->screen);
 
@@ -897,30 +874,27 @@ bool init(Env *e)
 	}
 	SDL_ShowCursor(SDL_DISABLE);
 	SDL_WM_SetCaption("finite", NULL);
-	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, audioChanCount, 4096 ) == -1) {
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, audioChanCount, 4096 ) == -1)
 		return false;
-	}
-	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE)) == NULL) {
+	if ((e->io.screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT,
+					     SCREEN_BPP,
+					     SDL_SWSURFACE)) == NULL)
 		return false;
-	}
-	if ((e->io.titleScreen = surfaceAlphaLoad(RES_PATH "title_screen.png")) == NULL) {
+	if ((e->io.titleScreen =
+	     surface_alpha_load(RES_PATH "title_screen.png")) == NULL)
 		return false;
-	}
-	if (!(e->io.titleHover = surfaceAlphaLoad(RES_PATH "title_hover.png"))) {
+	if (!(e->io.titleHover =
+	      surface_alpha_load(RES_PATH "title_hover.png")))
 		return false;
-	}
-	if ((e->io.titleBackground = surfaceAlphaLoad(RES_PATH "title_background.png")) == NULL) {
+	if ((e->io.titleBackground =
+	     surface_alpha_load(RES_PATH "title_background.png")) == NULL)
 		return false;
-	}
-	if ((e->io.menuBackground = surfaceAlphaLoad(RES_PATH "menu_background.png")) == NULL) {
+	if ((e->io.menuBackground =
+	     surface_alpha_load(RES_PATH "menu_background.png")) == NULL)
 		return false;
-	}
-
 	loadingScreen(e);
-
 	e->game.player[1].aiShare.difficulty = e->gui.options.ai;
-
-	return e->io.loaded; 
+	return e->io.loaded;
 }
 
 void freeChunk(Mix_Chunk *c)
@@ -950,64 +924,59 @@ void quit(Env *e)
 
 	dictQuit(&e->game.dict);
 
-	surfaceFree(e->io.screen);
-	surfaceFree(e->io.titleScreen);
-	surfaceFree(e->io.titleHover);
-	surfaceFree(e->io.settingsTitle);
-	surfaceFree(e->io.pauseTitle);
-	surfaceFree(e->io.finiteTitle);
-	surfaceFree(e->io.controlsTitle);
-	surfaceFree(e->io.areYouSureTitle);
-	surfaceFree(e->io.chooseGameTitle);
-	surfaceFree(e->io.rulesTitle);
-	surfaceFree(e->io.optionsTitle);
-	surfaceFree(e->io.gameOverTitle);
-	surfaceFree(e->io.menuBg);
-	surfaceFree(e->io.gmBack);
-	surfaceFree(e->io.titleBackground);
-	surfaceFree(e->io.menuBackground);
-	surfaceFree(e->io.scoreBoard);
-	surfaceFree(e->io.textLog);
-	surfaceFree(e->io.pressStart);
-	surfaceFree(e->io.back);
-	surfaceFree(e->io.lockon);
-	surfaceFree(e->io.wildUp);
-	surfaceFree(e->io.wildDown);
-	surfaceFree(e->io.recall);
-	surfaceFree(e->io.recallDisable);
-	surfaceFree(e->io.mode);
-	surfaceFree(e->io.modeDisable);
-	surfaceFree(e->io.place);
-	surfaceFree(e->io.discard);
-	surfaceFree(e->io.discardDisable);
-	surfaceFree(e->io.skip);
-	surfaceFree(e->io.skipDisable);
-	surfaceFree(e->io.play);
-	surfaceFree(e->io.playDisable);
-	surfaceFree(e->io.shuffle);
-	surfaceFree(e->io.shuffleDisable);
-	surfaceFree(e->io.boardCover);
-	for (i = 0; i < SQ_COUNT; i++) {
-		surfaceFree(e->io.sq[i]);
-	}
-	for (i = 0; i < tileLookCount; i++) {
-		surfaceFree(e->io.wild[i]);
-	}	
+	surface_free(e->io.screen);
+	surface_free(e->io.titleScreen);
+	surface_free(e->io.titleHover);
+	surface_free(e->io.settingsTitle);
+	surface_free(e->io.pauseTitle);
+	surface_free(e->io.finiteTitle);
+	surface_free(e->io.controlsTitle);
+	surface_free(e->io.areYouSureTitle);
+	surface_free(e->io.chooseGameTitle);
+	surface_free(e->io.rulesTitle);
+	surface_free(e->io.optionsTitle);
+	surface_free(e->io.gameOverTitle);
+	surface_free(e->io.menuBg);
+	surface_free(e->io.gmBack);
+	surface_free(e->io.titleBackground);
+	surface_free(e->io.menuBackground);
+	surface_free(e->io.scoreBoard);
+	surface_free(e->io.textLog);
+	surface_free(e->io.pressStart);
+	surface_free(e->io.back);
+	surface_free(e->io.lockon);
+	surface_free(e->io.wildUp);
+	surface_free(e->io.wildDown);
+	surface_free(e->io.recall);
+	surface_free(e->io.recallDisable);
+	surface_free(e->io.mode);
+	surface_free(e->io.modeDisable);
+	surface_free(e->io.place);
+	surface_free(e->io.discard);
+	surface_free(e->io.discardDisable);
+	surface_free(e->io.skip);
+	surface_free(e->io.skipDisable);
+	surface_free(e->io.play);
+	surface_free(e->io.playDisable);
+	surface_free(e->io.shuffle);
+	surface_free(e->io.shuffleDisable);
+	surface_free(e->io.boardCover);
+	for (i = 0; i < SQ_COUNT; i++)
+		surface_free(e->io.sq[i]);
+	for (i = 0; i < tileLookCount; i++)
+		surface_free(e->io.wild[i]);
 	for (i = 0; i < LETTER_COUNT; i++) {
 		for (j = 0; j < tileLookCount; j++) {
-			surfaceFree(e->io.tile[TILE_WILD][i][j]);
-			surfaceFree(e->io.tile[TILE_LETTER][i][j]);
+			surface_free(e->io.tile[TILE_WILD][i][j]);
+			surface_free(e->io.tile[TILE_LETTER][i][j]);
 		}
 	}
-
-	for (i = 0; i < hardwareKeyCount; i++) {
-		surfaceFree(e->io.btn[i]);
-	}
-
+	for (i = 0; i < hardwareKeyCount; i++)
+		surface_free(e->io.btn[i]);
 	freeMenuViews(&e->io);
 	freeHighTexts(e->io.menuFocus, menuFocusCount);
 	freeHighTexts(e->io.gameMenuFocus, gameMenuFocusCount);
-	surfaceFree(e->io.areYouSureQuit);
+	surface_free(e->io.areYouSureQuit);
 	freeHighTexts(e->io.yesNo, yesNoCount);
 	fontmapQuit(&e->io.whiteFont);
 	fontmapQuit(&e->io.blackFont);
@@ -1073,7 +1042,6 @@ bool handleEvent(Controls *c)
 		default: break;
 		}
 	}
-
 	keyStateUpdate(&hc->key[hardwareKeyStart], ks[SDLK_RETURN]);
 	keyStateUpdate(&hc->key[hardwareKeySelect], ks[SDLK_ESCAPE]);
 	keyStateUpdate(&hc->key[hardwareKeyUp], ks[SDLK_UP]);
@@ -1086,18 +1054,14 @@ bool handleEvent(Controls *c)
 	keyStateUpdate(&hc->key[hardwareKeyY], ks[SDLK_SPACE]);
 	keyStateUpdate(&hc->key[hardwareKeyL], ks[SDLK_TAB]);
 	keyStateUpdate(&hc->key[hardwareKeyR], ks[SDLK_BACKSPACE]);
-
 	if (c->joyExists) {
-		axisStateUpdate(&hc->axisX);
-		axisStateUpdate(&hc->axisY);
+		axis_state_update(&hc->axisX);
+		axis_state_update(&hc->axisY);
 	}
-	
 	if (c->accelExists) {
-		axisStateUpdate(&hc->accelX);
-		axisStateUpdate(&hc->accelY);
+		axis_state_update(&hc->accelX);
+		axis_state_update(&hc->accelY);
 	}
-
-
 	return false;
 }
 

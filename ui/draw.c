@@ -125,14 +125,14 @@ void guiDrawLockon(IO *io, GameGUI *gg)
 	switch (gg->focus) {
 	case gameGUIFocusBoard: {
 		idx = gg->boardWidget.index;
-		surfaceDraw(io->screen, s,
+		surface_draw(io->screen, s,
 			    gg->boardWidget.pos.x - 2 + idx.x * w,
 			    gg->boardWidget.pos.y - 2 + idx.y * h);
 		break;
 	}
 	case gameGUIFocusRack: {
 		idx = gg->rackWidget.index;
-		surfaceDraw(io->screen, s,
+		surface_draw(io->screen, s,
 			    gg->rackWidget.pos.x - 2 + idx.x * w,
 			    gg->rackWidget.pos.y - 2);
 		break;
@@ -166,16 +166,16 @@ void guiDrawGhostTile(IO *io, GameGUIFocusType gf, TransMove *tm, player_t *p,
 			break;
 		}
 		s = t->type == TILE_WILD ? io->wild[tileLookGhost] : io->tile[t->type][t->letter][tileLookGhost];
-		surfaceDraw(io->screen, s, idx.x * TILE_WIDTH + bw->pos.x, idx.y * TILE_HEIGHT + bw->pos.y);
+		surface_draw(io->screen, s, idx.x * TILE_WIDTH + bw->pos.x, idx.y * TILE_HEIGHT + bw->pos.y);
 		break;
 	}
 	case transMovePlaceWild: {
 		i = tm->adjust.data.tile[tm->place.idx].idx;
 		idx = bw->index;
 		t = &p->tile[i];
-		surfaceDraw(io->screen, io->wildUp, idx.x * TILE_WIDTH + bw->pos.x,
+		surface_draw(io->screen, io->wildUp, idx.x * TILE_WIDTH + bw->pos.x,
 			(idx.y-1) * TILE_HEIGHT + bw->pos.y + (TILE_HEIGHT/2));
-		surfaceDraw(io->screen, io->wildDown, idx.x * TILE_WIDTH + bw->pos.x,
+		surface_draw(io->screen, io->wildDown, idx.x * TILE_WIDTH + bw->pos.x,
 			(idx.y+1) * TILE_HEIGHT + bw->pos.y);
 		break;
 	}
@@ -240,7 +240,7 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 	NOT(tm);
 	NOT(gc);
 	
-	surfaceDraw(io->screen, io->gmBack, 0, 0);
+	surface_draw(io->screen, io->gmBack, 0, 0);
 	guiDrawBoard(io, &g->gameGui.boardWidget, gm, tm, &g->gameGui.lastMove);
 	guiDrawRack(io, &g->gameGui.rackWidget, gm, tm);
 	drawScoreBoard(&g->scoreBoard, io);
@@ -254,7 +254,7 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 		tile_t *t;
 
 		strDraw(io->screen, &io->normalFont, "DISCARD", 126 + 12, 8);
-		surfaceDraw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
+		surface_draw(io->screen, io->boardCover, g->gameGui.boardWidget.pos.x, g->gameGui.boardWidget.pos.y);
 		
 		i = g->gameGui.rackWidget.index.x;
 		t = &gm->player[tm->playerIdx].tile[i];
@@ -262,7 +262,7 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 			char str0[32];
 			SDL_Surface *s;
 			s = t->type == TILE_WILD ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
-			surfaceDraw(io->screen, s, 269, 9);
+			surface_draw(io->screen, s, 269, 9);
 			sprintf(str0,": %d", tile_score(t));
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);
 		}
@@ -278,7 +278,7 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 			sq_t sq;
 			sq = gm->board.sq[idx->y][idx->x];
 
-			surfaceDraw(io->screen, io->sq[sq], 190, 9);
+			surface_draw(io->screen, io->sq[sq], 190, 9);
 
 			str = "\0";
 			switch (sq) {
@@ -303,7 +303,7 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 			char str0[32];
 			SDL_Surface *s;
 			s = t->type == TILE_WILD ? io->wild[tileLookNormal] : io->tile[t->type][t->letter][tileLookNormal];
-			surfaceDraw(io->screen, s, 269, 9);
+			surface_draw(io->screen, s, 269, 9);
 			sprintf(str0,": %d", tile_score(t));
 			strDraw(io->screen, &io->normalFont, str0, 281, 8);
 		}
@@ -325,7 +325,7 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 		strDraw(io->screen, &io->normalFont, tilesLeft, 13, 82);
 		len = strlen(tilesLeft) * (io->normalFont.width + io->normalFont.spacing) + 13;
 		len += 6;
-		surfaceDraw(io->screen, io->wild[tileLookNormal], len, 83);
+		surface_draw(io->screen, io->wild[tileLookNormal], len, 83);
 		len += 12;
 		strDraw(io->screen, &io->normalFont, "'s", len, 82);
 	}
@@ -336,8 +336,8 @@ void guiDraw(IO *io, GUI *g, game_t *gm, TransMove *tm, GameControls *gc)
 	}
 
 	if (tm->type == transMovePlace || tm->type == transMovePlacePlay || tm->type == transMovePlaceEnd) {
-		surfaceDraw(io->screen, io->btn[gc->key[gameKeyPrevTile]], 157, 218);
-		surfaceDraw(io->screen, io->btn[gc->key[gameKeyNextTile]], 274, 218);
+		surface_draw(io->screen, io->btn[gc->key[gameKeyPrevTile]], 157, 218);
+		surface_draw(io->screen, io->btn[gc->key[gameKeyNextTile]], 274, 218);
 	}
 
 
@@ -359,11 +359,11 @@ void drawScrollingBackground(IO *io)
 	off0 = scrollOffset(io->titleBackground->h, 20, io->time);
 	off1 = scrollOffset(io->titleHover->h, -30, io->time);
 
-	surfaceDraw(io->screen, io->titleBackground, 0, off0);
-	surfaceDraw(io->screen, io->titleBackground, 0, off0 - io->titleBackground->h);
+	surface_draw(io->screen, io->titleBackground, 0, off0);
+	surface_draw(io->screen, io->titleBackground, 0, off0 - io->titleBackground->h);
 	
-	surfaceDraw(io->screen, io->titleHover, 0, off1);
-	surfaceDraw(io->screen, io->titleHover, 0, off1 + io->titleHover->h);
+	surface_draw(io->screen, io->titleHover, 0, off1);
+	surface_draw(io->screen, io->titleHover, 0, off1 + io->titleHover->h);
 }
 
 void drawMenuBackground(IO *io)
@@ -374,8 +374,8 @@ void drawMenuBackground(IO *io)
 
 	off0 = scrollOffset(io->titleBackground->h, 20, io->time);
 
-	surfaceDraw(io->screen, io->menuBackground, 0, off0);
-	surfaceDraw(io->screen, io->menuBackground, 0, off0 - io->menuBackground->h);
+	surface_draw(io->screen, io->menuBackground, 0, off0);
+	surface_draw(io->screen, io->menuBackground, 0, off0 - io->menuBackground->h);
 }
 
 void drawNum(SDL_Surface *s, int x, int y, int num, Font *f)
@@ -424,7 +424,7 @@ void drawFader(IO *io, int val)
 
 	SDL_FillRect(io->fader, 0, SDL_MapRGBA(io->fader->format, 0, 0, 0, val));
 	SDL_SetAlpha(io->fader, SDL_SRCALPHA, val);
-	surfaceDraw(io->screen, io->fader, 0, 0);
+	surface_draw(io->screen, io->fader, 0, 0);
 }
 
 void drawScoreBoard(ScoreBoard *sb, IO *io)
@@ -436,8 +436,8 @@ void drawScoreBoard(ScoreBoard *sb, IO *io)
 	NOT(sb);
 	NOT(io);
 	
-	surfaceDraw(io->screen, io->scoreBoard, 8, 6);
-	surfaceDraw(io->screen, io->textLog, 8, 104);
+	surface_draw(io->screen, io->scoreBoard, 8, 6);
+	surface_draw(io->screen, io->textLog, 8, 104);
 	for (i = 0; i < sb->playerNum; i++) {
 		f = i == sb->turn || sb->ctr[i].cur < sb->ctr[i].end 
 				? &io->highlightFont 
@@ -461,7 +461,7 @@ void drawMenuView(SDL_Surface *s, MenuView *mv)
 		NOT(t);
 		x = mv->pos.x + mv->text[i].offset;
 		y = mv->pos.y + mv->spacing.y * i;
-		surfaceDraw(s, t, x, y);
+		surface_draw(s, t, x, y);
 	}
 }
 
@@ -478,7 +478,7 @@ void drawMenuViewRight(SDL_Surface *s, MenuView *mv)
 		NOT(t);
 		x = mv->pos.x + mv->text[i].offset * 2;
 		y = mv->pos.y + mv->spacing.y * i;
-		surfaceDraw(s, t, x, y);
+		surface_draw(s, t, x, y);
 	}
 }
 
@@ -495,7 +495,7 @@ void drawMenuViewLeft(SDL_Surface *s, MenuView *mv)
 		NOT(t);
 		x = mv->pos.x;
 		y = mv->pos.y + mv->spacing.y * i;
-		surfaceDraw(s, t, x, y);
+		surface_draw(s, t, x, y);
 	}
 }
 
@@ -504,9 +504,9 @@ void draw_guiFocusTitle(Env *e)
 	NOT(e);
 
 	drawScrollingBackground(&e->io);
-	surfaceDraw(e->io.screen, e->io.titleScreen, 0, 0);
+	surface_draw(e->io.screen, e->io.titleScreen, 0, 0);
 	if ((e->io.time - floorf(e->io.time)) > 0.5) {
-		surfaceDraw(e->io.screen, e->io.pressStart, 128, 200);
+		surface_draw(e->io.screen, e->io.pressStart, 128, 200);
 	}
 	/*drawProgressBar(e->io.screen, 0.5f, 60, 180, 200, 10, 1);*/
 }
@@ -516,7 +516,7 @@ void draw_guiFocusMenu(Env *e)
 	NOT(e);
 
 	drawMenuBackground(&e->io);
-	surfaceDraw(e->io.screen, e->io.finiteTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.finiteTitle, 0, 0);
 	drawMenuView(e->io.screen, &e->io.menuMV);
 }
 
@@ -602,7 +602,7 @@ void draw_guiFocusRules(Env *e)
 	rect.x += 2;
 	SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0xc0, 0x60, 0x00, 0xff));
 	
-	surfaceDraw(e->io.screen, e->io.rulesTitle, 0 , scroll);
+	surface_draw(e->io.screen, e->io.rulesTitle, 0 , scroll);
 
 
 	for (i = 0; i < rule_lines; i++) {
@@ -634,9 +634,9 @@ void draw_guiFocusSettings(Env *e)
 	if (e->gui.settings.previous == guiFocusMenu) {
 		drawMenuBackground(&e->io);
 	} else {
-		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+		surface_draw(e->io.screen, e->io.menuBg, 0, 0);
 	}
-	surfaceDraw(e->io.screen, e->io.settingsTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.settingsTitle, 0, 0);
 
 	drawMenuView(e->io.screen, &e->io.settingsMV);
 	for (i = 0; i < settingsFocusCount; i++) {
@@ -689,10 +689,10 @@ void draw_guiFocusControls(Env *e)
 	if (e->gui.settings.previous == guiFocusMenu) {
 		drawMenuBackground(&e->io);
 	} else {
-		surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
+		surface_draw(e->io.screen, e->io.menuBg, 0, 0);
 	}
 
-	surfaceDraw(e->io.screen, e->io.controlsTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.controlsTitle, 0, 0);
 
 	drawMenuViewRight(e->io.screen, &e->io.controlsMV);
 	
@@ -785,13 +785,13 @@ void draw_guiFocusGameGUI(Env *e)
 			rect.x += 5;
 
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeySelect]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeySelect]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyPlay]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyPlay]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyRecall]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyRecall]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyMode]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyMode]], rect.x, rect.y);
 
 			rect.y -= 4 * y;
 			rect.x += 18;
@@ -850,15 +850,15 @@ void draw_guiFocusGameGUI(Env *e)
 			y = e->io.normalFont.height + 1;
 			rect.x += 5;
 
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyPlay]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyPlay]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeySelect]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeySelect]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyRecall]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyRecall]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyCancel]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyCancel]], rect.x, rect.y);
 			rect.y += y;
-			surfaceDraw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyMode]], rect.x, rect.y);
+			surface_draw(e->io.screen, e->io.btn[e->io.controls.game.key[gameKeyMode]], rect.x, rect.y);
 
 			rect.y -= 4 * y;
 			rect.x += 18;
@@ -881,10 +881,10 @@ void draw_guiFocusGameMenu(Env *e)
 	NOT(e);
 
 	guiDraw(&e->io, &e->gui, &e->game, &e->gui.transMove, &e->io.controls.game); 
-	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0); 
+	surface_draw(e->io.screen, e->io.menuBg, 0, 0); 
 	drawMenuView(e->io.screen, &e->io.gameMenuMV);
 
-	surfaceDraw(e->io.screen, e->io.pauseTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.pauseTitle, 0, 0);
 	/*strDraw(e->io.screen, &e->io.normalFont, "- Pause -", SCREEN_WIDTH / 2 - 24, 18);*/
 }
 
@@ -894,7 +894,7 @@ void draw_guiFocusPlayMenu(Env *e)
 
 	drawMenuBackground(&e->io);
 	drawMenuView(e->io.screen, &e->io.playMenuMV);
-	surfaceDraw(e->io.screen, e->io.chooseGameTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.chooseGameTitle, 0, 0);
 }
 
 void draw_guiFocusOptions(Env *e)
@@ -913,7 +913,7 @@ void draw_guiFocusOptions(Env *e)
 	mv = &e->io.optionsMV;
 
 	drawMenuBackground(&e->io);
-	surfaceDraw(e->io.screen, e->io.optionsTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.optionsTitle, 0, 0);
 	drawMenuViewRight(e->io.screen, &e->io.optionsMV);
 
 	for (i = 0; i < optionsFocusCount; i++) {
@@ -950,7 +950,7 @@ void draw_guiGameAIPause(Env *e)
 	NOT(e);
 		
 	/*draw_guiFocusGameGUI(e);*/
-	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
+	surface_draw(e->io.screen, e->io.gmBack, 0, 0);
 	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
 	drawScoreBoard(&e->gui.scoreBoard, &e->io);
 	
@@ -972,7 +972,7 @@ void draw_guiFocusGameHotseatPause(Env *e)
 	NOT(e);
 
 
-	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
+	surface_draw(e->io.screen, e->io.gmBack, 0, 0);
 
 	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
 	drawScoreBoard(&e->gui.scoreBoard, &e->io);
@@ -997,7 +997,7 @@ void draw_guiFocusGameOver(Env *e)
 	NOT(e);
 
 	drawMenuBackground(&e->io);
-	surfaceDraw(e->io.screen, e->io.gmBack, 0, 0);
+	surface_draw(e->io.screen, e->io.gmBack, 0, 0);
 	guiDrawBoardWithoutTransMove(&e->io, &e->gui.gameGui.boardWidget, &e->game, &e->gui.gameGui.lastMove);
 	drawScoreBoard(&e->gui.scoreBoard, &e->io);
 	
@@ -1029,7 +1029,7 @@ void draw_guiFocusGameOver(Env *e)
 		SDL_FillRect(e->io.screen, &rect, SDL_MapRGBA(e->io.screen->format, 0x00, 0x00, 0x00, 0xff));
 	}
 
-	surfaceDraw(e->io.screen, e->io.gameOverTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.gameOverTitle, 0, 0);
 
 	{
 		char text[64];
@@ -1053,13 +1053,9 @@ void draw_guiFocusGameAreYouSureQuit(Env *e)
 	const int orgX = (SCREEN_WIDTH - e->io.areYouSureQuit->w)/2;
 	const int orgY = 80;
 */
-
-	NOT(e);
-
-	surfaceDraw(e->io.screen, e->io.menuBg, 0, 0);
-	
+	surface_draw(e->io.screen, e->io.menuBg, 0, 0);
 	drawMenuView(e->io.screen, &e->io.yesNoMV);
-	surfaceDraw(e->io.screen, e->io.areYouSureTitle, 0, 0);
+	surface_draw(e->io.screen, e->io.areYouSureTitle, 0, 0);
 }
 
 void draw_nothing(Env *e)

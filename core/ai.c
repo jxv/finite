@@ -1,50 +1,56 @@
-#include <time.h>
-
-#include "common.h"
+# include "common.h"
 #include "print.h"
+#include <time.h>
 
 #define MIN_LEN 2
 
-typedef enum
+enum placement_tag
 {
-	placementInvalid = -1,
-	placementHorizontal = 0,
-	placementVertical,
-	placementCount
-} PlacementType;
+	PLACEMENT_INVALID = -1,
+	PLACEMENT_HORIZONTAL = 0,
+	PLACEMENT_VERTICAL,
+	PLACEMENT_COUNT
+};
 
-typedef struct Cont
+typedef enum placement_tag placement_tag_t;
+
+struct cont
 {
 	int offset;
 	int len;
 	bool taken[BOARD_SIZE];
 	int num;
 	int openIdx[RACK_SIZE];
-} Cont;
+};
 
-typedef struct Combo
+struct combo
 {
-	int rackCount;
+	int rack_count;
 	int pathCount;
 	int rIdx[RACK_SIZE];
 	int pIdx[RACK_SIZE];
-} Combo;
+};
 
-typedef struct PlacementTile
+struct placement_tile
 {
-	int rIdx;
-	int bIdx;
-} PlacementTile;
+	int rack_idx;
+	int board_idx;
+};
 
-typedef struct Placement
+struct placement
 {
-	PlacementType type;
+	placement_tag_t type;
 	int idx;
 	int num;
-	struct PlacementTile tile[RACK_SIZE];
-} Placement;
+	struct placement_tile tile[RACK_SIZE];
+};
 
-bool nextCont(Cont *c)
+typedef struct cont cont_t;
+typedef struct combo combo_t;
+typedef struct placement_tile placement_tile_t;
+typedef struct placement placement_t;
+
+static bool next_cont(cont_t *c)
 {
 	if (c->offset + c->len < BOARD_SIZE) {
 		c->len++;
@@ -57,32 +63,23 @@ bool nextCont(Cont *c)
 	return true;
 }
 
-void syncTaken(Cont *c, board_t *b, dir_tag_t dt, int idx)
+static void sync_taken(cont_t *c, const board_t *b, dir_tag_t dt, int idx)
 {
-	int i;
-	assert(idx >= 0);
-	if (dt == DIR_DOWN) {
-		assert(idx < BOARD_X);
-		for (i = 0; i < BOARD_Y; i++) {
+	if (dt == DIR_DOWN)
+		for (int i = 0; i < BOARD_Y; i++)
 			c->taken[i] = b->tile[i][idx].type != TILE_NONE;
-		}
-	} else {
-		assert(dt == DIR_RIGHT);
-		assert(idx < BOARD_Y);
-		for (i = 0; i < BOARD_X; i++) {
+	else
+		for (int i = 0; i < BOARD_X; i++)
 			c->taken[i] = b->tile[idx][i].type != TILE_NONE;
-		}
-	}
 }
 
-bool findOpenIdx(Cont *c)
+static bool find_open_idx(cont_t *c)
 {
 	c->num = 0;
 	for (int i = c->offset; i < c->len + c->offset; i++) {
 		if (!c->taken[i]) {
-			if (c->num == RACK_SIZE) {
+			if (c->num == RACK_SIZE)
 				return false;
-			}
 			c->openIdx[c->num] = i;
 			c->num++;
 		}
@@ -90,114 +87,84 @@ bool findOpenIdx(Cont *c)
 	return true && c->num > 0;
 }
 
-void initCont(Cont *c)
+static void init_cont(cont_t *c)
 {
-	NOT(c);
-
 	c->offset = 0;
 	c->len = MIN_LEN;
 }
 
-bool nextCombo(int *c, int k, int n)
+static bool next_combo(int *c, int k, int n)
 {
-	int i;
-
-	NOT(c);
 	assert(k <= n);
 	assert(k > 0);
-
-	if (k > n) {
+	if (k > n)
 		return true;
-	}
-
-	i = k - 1;
+	int i = k - 1;
 	c[i]++;
 	while (i >= 0 && c[i] >= n - k + 1 + i) {
 		i--;
 		c[i]++;
 	}
-
-	if (c[0] > n - k) {
+	if (c[0] > n - k)
 		return false;
-	}
-
-	for (i = i + 1; i < k; i++) {
+	for (i = i + 1; i < k; i++)
 		c[i] = c[i - 1] + 1;
-	}
-
 	return true;
 }
 
-bool nextComboPerm(int *c, int n)
+static bool next_combo_perm(int *c, int n)
 {
-	int i, j, k, tmp;
-
-	NOT(c);
-
-	i = n - 2;
-	while (i >= 0 && c[i] > c[i + 1]) {
+	int i = n - 2;
+	while (i >= 0 && c[i] > c[i + 1])
 		i--;
-	}
-	if (i < 0) {
+	if (i < 0)
 		return false;
-	}
-	k = n - 1;
+	int k = n - 1;
 	while (c[i] > c[k])
 		k--;
-	tmp = c[i];
+	const int tmp = c[i];
 	c[i] = c[k];
 	c[k] = tmp;
-
-	k = 0;
-	for (k = 0, j = i + 1; j < (n + i) / 2 + 1; j++, k++) {
-		tmp = c[j];
+	for (int k = 0, j = i + 1; j < (n + i) / 2 + 1; j++, k++) {
+		const int tmp = c[j];
 		c[j] = c[n - k - 1];
 		c[n - k - 1] = tmp;
 	}
-
 	return true;
 }
 
-void printCombo(Combo *c)
+/*
+static void print_combo(const combo_t *c)
 {
-	int i;
-
 	printf("[");
-	for (i = 0; i < c->pathCount; i++) {
+	for (int i = 0; i < c->pathCount; i++)
 		printf("%d ", c->pIdx[i]);
-	}
 	printf("\b]\n");
 }
+*/
 
-bool stepCombo(Combo *c)
+static bool step_combo(combo_t *c)
 {
-	if (!nextComboPerm(c->pIdx, c->pathCount)) {
-		if (!nextCombo(c->rIdx, c->pathCount, c->rackCount))
+	if (!next_combo_perm(c->pIdx, c->pathCount)) {
+		if (!next_combo(c->rIdx, c->pathCount, c->rack_count))
 			return false;
 		memcpy(c->pIdx, c->rIdx, sizeof(0[c->rIdx]) * c->pathCount);
 	}
 	return true;
 }
 
-void initCombo(Combo *c)
+static void init_combo(combo_t *c)
 {
 	for (int i = 0; i < RACK_SIZE; i++)
 		c->rIdx[i] = c->pIdx[i] = i;
 	c->pathCount = 0;
 }
 
-bool eligibleCont(Cont *c, board_t *b, dir_tag_t dt, int idx, bool firstMove)
+static bool eligible_cont(const board_t *b, dir_tag_t dt, int idx,
+			  bool first_move, cont_t *c)
 {
-	int i;
-
-	NOT(c);
-	NOT(b);
-	assert(dt >= 0 && dt < DIR_COUNT);
-
-	if (c->num == 0) {
+	if (c->num == 0)
 		return false;
-	}
-
 	switch (dt) {
 	case DIR_DOWN:
 		if (c->offset > 0 &&
@@ -208,15 +175,15 @@ bool eligibleCont(Cont *c, board_t *b, dir_tag_t dt, int idx, bool firstMove)
 					TILE_NONE)
 			return true;
 		if (idx > 0)
-			for (i = c->offset; i < c->offset + c->len; i++)
+			for (int i = c->offset; i < c->offset + c->len; i++)
 				if (b->tile[i][idx - 1].type != TILE_NONE)
 					return true;
 		if (idx < BOARD_X - 1)
-			for (i = c->offset; i < c->offset + c->len; i++)
+			for (int i = c->offset; i < c->offset + c->len; i++)
 				if (b->tile[i][idx + 1].type != TILE_NONE)
 					return true;
-		if (firstMove)
-			for (i = c->offset; i < c->offset + c->len; i++)
+		if (first_move)
+			for (int i = c->offset; i < c->offset + c->len; i++)
 				if (b->sq[i][idx] == SQ_FREE)
 					return true;
 		break;
@@ -227,16 +194,16 @@ bool eligibleCont(Cont *c, board_t *b, dir_tag_t dt, int idx, bool firstMove)
 		if (c->offset + c->len < BOARD_X &&
 		    b->tile[idx][c->offset + c->len].type != TILE_NONE)
 			return true;
-		if (idx > 0) 
-			for (i = c->offset; i < c->offset + c->len; i++)
+		if (idx > 0)
+			for (int i = c->offset; i < c->offset + c->len; i++)
 				if (b->tile[idx - 1][i].type != TILE_NONE)
 					return true;
 		if (idx < BOARD_Y - 1)
-			for (i = c->offset; i < c->offset + c->len; i++)
+			for (int i = c->offset; i < c->offset + c->len; i++)
 				if (b->tile[idx + 1][i].type != TILE_NONE)
 					return true;
-		if (firstMove)
-			for (i = c->offset; i < c->offset + c->len; i++)
+		if (first_move)
+			for (int i = c->offset; i < c->offset + c->len; i++)
 				if (b->sq[idx][i] == SQ_FREE)
 					return true;
 		break;
@@ -246,243 +213,180 @@ bool eligibleCont(Cont *c, board_t *b, dir_tag_t dt, int idx, bool firstMove)
 	return false;
 }
 
-void printCont(Cont *c)
+void print_cont(const cont_t *c)
 {
-	int i;
-
-	NOT(c);
-	
 	printf("[%d-%d] [", c->offset, c->len);
-	for (i = 0; i < c->num; i++) {
+	for (int i = 0; i < c->num; i++)
 		printf("%d,", c->openIdx[i]);
-	}
 	printf("\b-%d]\n", c->num);
 }
 
-bool placementToMovePlace(move_place_t *mp, const Placement *p)
+bool placement_to_move_place(move_place_t *mp, const placement_t *p)
 {
-        int i;
-	NOT(mp);
-	NOT(p);
-	assert(p->type == placementHorizontal || p->type == placementVertical || p->type == placementInvalid);
-
 	switch (p->type) {
-	case placementHorizontal: {
-		assert(p->num > 0); 
-		assert(p->num <= RACK_SIZE);
+	case PLACEMENT_HORIZONTAL:
 		mp->num = p->num;
-		assert(p->idx >= 0);
-		assert(p->idx < BOARD_Y);
-		for (i = 0; i < p->num; i++) {
-			mp->rackIdx[i] = p->tile[i].rIdx;
-			mp->coor[i].x = p->tile[i].bIdx;
+		for (int i = 0; i < p->num; i++) {
+			mp->rackIdx[i] = p->tile[i].rack_idx;
+			mp->coor[i].x = p->tile[i].board_idx;
 			mp->coor[i].y = p->idx;
 		}
 		break;
-	}
-	case placementVertical: {
-		assert(p->num > 0);
-	       	assert(p->num <= RACK_SIZE);
+	case PLACEMENT_VERTICAL:
 		mp->num = p->num;
-		assert(p->idx >= 0);
-		assert(p->idx < BOARD_X);
-		for (i = 0; i < p->num; i++) {
-			mp->rackIdx[i] = p->tile[i].rIdx;
+		for (int i = 0; i < p->num; i++) {
+			mp->rackIdx[i] = p->tile[i].rack_idx;
 			mp->coor[i].x = p->idx;
-			mp->coor[i].y = p->tile[i].bIdx;
+			mp->coor[i].y = p->tile[i].board_idx;
 		}
 		break;
-	}
-	case placementInvalid:
-	default: return false;
+	case PLACEMENT_INVALID:
+	default:
+		return false;
 	}
 
 	return true;
 }
 
-void mkPlacement(Placement *p, Combo *cb, Cont *cn, dir_tag_t dt, int idx)
+void mk_placement(const combo_t *cb, const cont_t *cn, dir_tag_t dt, int idx,
+		  placement_t *p)
 {
-	int i;
-
-	NOT(p);
-	NOT(cb);
-	NOT(cn);
-
-	assert(cn->num >= 0);
-	assert(cb->pathCount >= 0);
-	/* assert(cb->pathCount <= cn->num)
-	assert(cb->pathCount <= RACK_SIZE);*/
-
 	if (cb->pathCount == 0) {
-		p->type = placementInvalid;
+		p->type = PLACEMENT_INVALID;
 		return;
 	}
-
 	switch (dt) {
-	case DIR_DOWN: {
-		p->type = placementVertical;
+	case DIR_DOWN:
+		p->type = PLACEMENT_VERTICAL;
 		assert(idx >= 0 && idx < BOARD_X);
 		p->idx = idx;
-		p->num = cb->pathCount; 
-		for (i = 0; i < p->num; i++) {
-			p->tile[i].rIdx = cb->pIdx[i];
-			p->tile[i].bIdx = cn->openIdx[i];
+		p->num = cb->pathCount;
+		for (int i = 0; i < p->num; i++) {
+			p->tile[i].rack_idx = cb->pIdx[i];
+			p->tile[i].board_idx = cn->openIdx[i];
 		}
 		break;
-	}
-	case DIR_RIGHT: {
-		p->type = placementHorizontal;
+	case DIR_RIGHT:
+		p->type = PLACEMENT_HORIZONTAL;
 		assert(idx >= 0 && idx < BOARD_Y);
 		p->idx = idx;
 		p->num = cb->pathCount;
-		for (i = 0; i < p->num; i++) {
-			p->tile[i].rIdx = cb->pIdx[i];
-			p->tile[i].bIdx = cn->openIdx[i];
+		for (int i = 0; i < p->num; i++) {
+			p->tile[i].rack_idx = cb->pIdx[i];
+			p->tile[i].board_idx = cn->openIdx[i];
 		}
 		break;
-	}
-	default: p->type = placementInvalid; break;
+	default:
+		p->type = PLACEMENT_INVALID;
+		break;
 	}
 }
 
-void printPlacement(Placement *p)
+void print_placement(const placement_t *p)
 {
-	int i;
-
-	NOT(p);
-	
 	switch (p->type) {
-	case placementHorizontal: 
-	case placementVertical: {
-		printf("[type:%s, idx:%d, num:%d] [", p->type == placementHorizontal ? "horz" : "vert", p->idx, p->num);
-		for (i = 0; i < p->num; i++) {
-			printf("(%d-%d),", p->tile[i].rIdx, p->tile[i].bIdx);
-		}
+	case PLACEMENT_HORIZONTAL:
+	case PLACEMENT_VERTICAL:
+		printf("[type:%s, idx:%d, num:%d] [",
+		       p->type == PLACEMENT_HORIZONTAL ? "horz" : "vert",
+		       p->idx, p->num);
+		for (int i = 0; i < p->num; i++)
+			printf("(%d-%d),", p->tile[i].rack_idx,
+			       p->tile[i].board_idx);
 		printf("\b]\n");
 		break;
-	}
-	default: break;
+	default:
+		break;
 	}
 }
 
-int hueristic(action_place_t *ap, player_t *p)
+int hueristic(const action_place_t *ap, const player_t *p)
 {
-	int i, s, c;
-
-	NOT(ap);
-	NOT(p);
-
-	s = ap->score;
-	c = 0;
-	for (i = 0; i < ap->num; i++) {
-		int j = ap->rackIdx[i];
-		if (p->tile[j].type == TILE_LETTER) {
-			c += constant(p->tile[j].letter);
-		}
+	int score = ap->score;
+	int constants = 0;
+	for (int i = 0; i < ap->num; i++) {
+		const int j = ap->rackIdx[i];
+		if (p->tile[j].type == TILE_LETTER)
+			constants += constant(p->tile[j].letter);
 	}
-	s += (ap->score * c) / RACK_SIZE;
-	return s;
+	score += (ap->score * constants) / RACK_SIZE;
+	return score;
 }
 
-void aiFindMove(move_t *m, int pIdx, game_t *g, rule_t *r, float *loading)
+void ai_find_move(move_t *m, int pIdx, game_t *g, rule_t *r, float *loading)
 {
-	int i, j;
-	int hiScore;
-	int midScore;
-	int lowScore;
-	int dir[2];
-	int bd[2];
-	bool firstMove;
-	Cont cont;
-	Combo combo;
-	Placement placement = {.type = placementInvalid, .idx = 0, .num = 0};
-	move_t move;
-	action_t action;
-	board_t *b;
-	player_t *p;
+	const int dir[2] = {
+		[0] = DIR_DOWN,
+		[1] = DIR_RIGHT,
+	};
+	const int bd[2] = {
+		[0] = BOARD_X,
+		[1] = BOARD_Y,
+	};
+	const board_t *b = &g->board;
+	const player_t *p = &g->player[pIdx];
+	const bool first_move = board_empty(b);
+	placement_t placement = {.type = PLACEMENT_INVALID, .idx = 0, .num = 0};
+	move_t move = {.type = MOVE_PLACE, .playerIdx = pIdx};
 	bool first = true;
-
-	NOT(m);
-	assert(pIdx >= 0 && pIdx < MAX_PLAYER);
-	NOT(g);
-	NOT(loading);
-
-	b = &g->board;
-	p = &g->player[pIdx];
-
-	bd[0] = BOARD_X;
-	bd[1] = BOARD_Y;
-
-	dir[0] = DIR_DOWN;
-	dir[1] = DIR_RIGHT;
-
-	hiScore = 0;
-	lowScore = 0;
-	midScore = 0;
-	combo.rackCount = rack_count(p);
-
-	if (combo.rackCount == 0) {
+	combo_t combo;
+	combo.rack_count = rack_count(p);
+	if (combo.rack_count == 0) {
 		m->playerIdx = pIdx;
 		m->type = MOVE_SKIP;
 		return;
 	}
-	
-	move.type = MOVE_PLACE;
-	move.playerIdx = pIdx; 
 	m->playerIdx = pIdx;
-
-	firstMove = board_empty(b);
-
-	for (j = 0; j < 2; j++) {
-		for (i = 0; i < bd[j]; i++) {
-			initCont(&cont);
-			syncTaken(&cont, b, dir[j], i);
+	int hi_score = 0;
+	int low_score = 0;
+	int mid_score = 0;
+	for (int j = 0; j < 2; j++) {
+		for (int i = 0; i < bd[j]; i++) {
+			cont_t cont;
+			init_cont(&cont);
+			sync_taken(&cont, b, dir[j], i);
 			do {
-				if (!findOpenIdx(&cont)) {
+				if (!find_open_idx(&cont))
 					continue;
-				}
 				assert(cont.num <= bd[j]);
-				if (!eligibleCont(&cont, b, dir[j], i, firstMove)) {
+				if (!eligible_cont(b, dir[j], i, first_move,
+						   &cont))
 					continue;
-				}
-				initCombo(&combo);
+				init_combo(&combo);
 				combo.pathCount = cont.num;
-				if (combo.pathCount > combo.rackCount) {
+				if (combo.pathCount > combo.rack_count)
 					continue;
-				}
 				do {
-					assert(combo.pathCount <= RACK_SIZE);
-					mkPlacement(&placement, &combo, &cont, dir[j], i);
-					
-					if (!placementToMovePlace(&move.data.place, &placement)) {
+					mk_placement(&combo, &cont, dir[j], i,
+						     &placement);
+					if (!placement_to_move_place(&move.data.place,
+								     &placement))
 						continue;
-					}
+					action_t action;
 					mk_action(g, &move, &action);
 					if (action.type == ACTION_PLACE) {
 						int diff, h;
-						diff = abs(hiScore - lowScore) * p->aiShare.difficulty / 10;
+						diff = abs(hi_score - low_score) * p->aiShare.difficulty / 10;
 						h = hueristic(&action.data.place, p);
-						if (first || h > hiScore) {
-							hiScore = h;
-						}
-						if (first || h < lowScore) {
-							lowScore = h;
-						}
-						if (first || abs(midScore - diff) > abs(h - diff)) {
-							midScore = h;
-							memCpy(&m->data.place, &move.data.place, sizeof(move.data.place));
+						if (first || h > hi_score)
+							hi_score = h;
+						if (first || h < low_score)
+							low_score = h;
+						if (first || abs(mid_score - diff) > abs(h - diff)) {
+							mid_score = h;
+							memcpy(&m->data.place, &move.data.place, sizeof(move.data.place));
 						}
 						first = false;
 					}
-				} while (stepCombo(&combo));
-			} while (nextCont(&cont));
+				} while (step_combo(&combo));
+			} while (next_cont(&cont));
 			*loading += 1.f / (float)(bd[j] * 2);
 		}
 	}
 
 	m->playerIdx = pIdx;
 
-	if (midScore > 0) {
+	if (mid_score > 0) {
 		m->type = MOVE_PLACE;
 	} else {
 		assert(rack_count(p) > 0);

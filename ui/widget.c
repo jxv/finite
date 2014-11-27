@@ -363,12 +363,12 @@ coor_t idx;
 
 	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+			surface_draw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != TILE_NONE) {
 				tlt = lm->type == lastMovePlace && lm->data.place[idx.y][idx.x] ? tileLookLast : tileLookNormal;
 				ts = io->tile[t->type][t->letter][tlt];
-				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+				surface_draw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			}
 		}
 	}
@@ -385,7 +385,7 @@ coor_t idx;
 			if (valid_board_idx(idx)) {
 				t = &p->tile[tm->adjust.data.tile[tm->place.rackIdx[idx.y][idx.x]].idx];
 				ts = io->tile[t->type][t->letter][tileLookHold];
-				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+				surface_draw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			}
 		}
 		break;
@@ -408,21 +408,21 @@ coor_t idx;
 
 	for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
 		for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
-			surfaceDraw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+			surface_draw(io->screen, io->sq[b->sq[idx.y][idx.x]], idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			t = &b->tile[idx.y][idx.x];
 			if (t->type != TILE_NONE) {
 				tlt = lm->type == lastMovePlace && lm->data.place[idx.y][idx.x] ? tileLookLast : tileLookNormal;
 				ts = io->tile[t->type][t->letter][tlt];
-				surfaceDraw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
+				surface_draw(io->screen, ts, idx.x * dim.x + bw->pos.x, idx.y * dim.y + bw->pos.y);
 			}
 		}
 	}
 
 }
 
-void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, coor_t dim, player_t *p)
+void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, coor_t dim,
+		    player_t *p)
 {
-	int i;
 	tile_t *t;
 	tile_tag_t tt;
 	SDL_Surface *s;
@@ -434,55 +434,60 @@ void rackWidgetDraw(IO *io, TransMove *tm, GridWidget *rw, coor_t dim, player_t 
 	switch (tm->type) {
 	case transMovePlace:
 	case transMovePlacePlay:
-	case transMovePlaceWild: {
-		for (i = 0; i < RACK_SIZE; i++) {
+	case transMovePlaceWild:
+		for (int i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == TILE_NONE) {
+			if (t->type == TILE_NONE)
 				continue;
-			}
 			s = NULL;
 			if (tm->place.idx != i) {
 				if (!valid_board_idx(tm->place.boardIdx[i])) {
 					tt = tileLookNormal;
-					s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
+					s = t->type == TILE_WILD
+						? io->wild[tt]
+						: io->tile[t->type][t->letter]
+						          [tt];
 				}
 			} else {
 				tt = tileLookHold;
-				s = t->type == TILE_WILD ? io->wild[tt] : io->tile[t->type][t->letter][tt];
+				s = t->type == TILE_WILD
+					? io->wild[tt]
+					: io->tile[t->type][t->letter][tt];
 			}
-			if (s) {
-				surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
-			}
+			if (s)
+				surface_draw(io->screen, s,
+					     i * dim.x + rw->pos.x, rw->pos.y);
 		}
 		break;
-	}
-	case transMovePlaceEnd: {
+	case transMovePlaceEnd:
 		break;
-	}
-	case transMoveDiscard: {
-		for (i = 0; i < RACK_SIZE; i++) {
+	case transMoveDiscard:
+		for (int i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == TILE_NONE) {
+			if (t->type == TILE_NONE)
 				continue;
-			}
-			tt = tm->discard.rack[i] ? tileLookDisable : tileLookNormal;
-			s = t->type == TILE_WILD ? io->wild[tt] : io->tile[TILE_LETTER][t->letter][tt];
-			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
-			
+			tt = tm->discard.rack[i]
+				? tileLookDisable : tileLookNormal;
+			s = t->type == TILE_WILD
+				? io->wild[tt]
+				: io->tile[TILE_LETTER][t->letter][tt];
+			surface_draw(io->screen, s, i * dim.x + rw->pos.x,
+				     rw->pos.y);
 		}
 		break;
-	}
-	default: {
-		for (i = 0; i < RACK_SIZE; i++) {
+	default:
+		for (int i = 0; i < RACK_SIZE; i++) {
 			t = &p->tile[tm->adjust.data.tile[i].idx];
-			if (t->type == TILE_NONE) {
+			if (t->type == TILE_NONE)
 				continue;
-			}
-			s = t->type == TILE_WILD ? io->wild[tileLookNormal] : io->tile[TILE_LETTER][t->letter][tileLookNormal];
-			surfaceDraw(io->screen, s, i * dim.x + rw->pos.x, rw->pos.y);
+			s = t->type == TILE_WILD
+				? io->wild[tileLookNormal]
+				: io->tile[TILE_LETTER][t->letter]
+				          [tileLookNormal];
+			surface_draw(io->screen, s, i * dim.x + rw->pos.x,
+				     rw->pos.y);
 		}
 		break;
-	}
 	}
 }
 

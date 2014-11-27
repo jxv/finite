@@ -48,56 +48,46 @@ void toTransScreenFadePausePixelate(GUI *g, GUIFocusType next, float time)
 	g->transScreen.next = next;
 }
 
-void axisStateUpdate(AxisState *as)
+void axis_state_update(AxisState *as)
 {
-	NOT(as);
-
 	if ((as->value > 0 ? as->value : -as->value) > as->deadZone) {
 		switch (as->type) {
-		case axisStateInDeadZone: {
+		case axisStateInDeadZone:
 			as->type = axisStateExitDeadZone;
 			as->time = 0.0f;
 			break;
-		}
-		case axisStateExitDeadZone: {
+		case axisStateExitDeadZone:
 			as->type = axisStateOutDeadZone;
 			as->time = 0.0f;
 			break;
-		}
-		case axisStateOutDeadZone: {
+		case axisStateOutDeadZone:
 			as->type = axisStateOutDeadZone;
 			as->time += SPF;
 			break;
-		}
-		case axisStateEnterDeadZone: {
+		case axisStateEnterDeadZone:
 			as->type = axisStateExitDeadZone;
 			as->time = 0.0f;
 			break;
-		}
 		default: break;
 		}
 	} else {
 		switch (as->type) {
-		case axisStateInDeadZone: {
+		case axisStateInDeadZone:
 			as->type = axisStateInDeadZone;
 			as->time += SPF;
 			break;
-		}
-		case axisStateExitDeadZone: {
+		case axisStateExitDeadZone:
 			as->type = axisStateEnterDeadZone;
 			as->time = 0.0f;
 			break;
-		}
-		case axisStateOutDeadZone: {
+		case axisStateOutDeadZone:
 			as->type = axisStateEnterDeadZone;
 			as->time = 0.0f;
 			break;
-		}
-		case axisStateEnterDeadZone: {
+		case axisStateEnterDeadZone:
 			as->type = axisStateInDeadZone;
 			as->time = 0.0f;
 			break;
-		}
 		default: break;
 		}
 	}
@@ -105,52 +95,42 @@ void axisStateUpdate(AxisState *as)
 
 void keyStateUpdate(KeyState *ks, bool touched)
 {
-	NOT(ks);
-
 	if (touched) {
 		switch(ks->type) {
-		case keyStateUntouched: {
+		case keyStateUntouched:
 			ks->type = keyStatePressed;
 			ks->time = 0.0f;
 			break;
-		}
-		case keyStatePressed: {
+		case keyStatePressed:
 			ks->type = keyStateHeld;
 			ks->time = 0.0f;
 			break;
-		}
-		case keyStateHeld: {
+		case keyStateHeld:
 			ks->time += SPF;
 			break;
-		}
-		case keyStateReleased: {
+		case keyStateReleased:
 			ks->type = keyStatePressed;
 			ks->time = 0.0f;
 			break;
-		}
 		default: break;
 		}
 	} else {
 		switch(ks->type) {
-		case keyStateUntouched: {
+		case keyStateUntouched:
 			ks->time += SPF;
 			break;
-		}
-		case keyStatePressed: {
+		case keyStatePressed:
 			ks->type = keyStateReleased;
 			ks->time = 0.0f;
 			break;
-		}
-		case keyStateHeld: {
+		case keyStateHeld:
 			ks->type = keyStateReleased;
 			ks->time = 0.0f;
 			break;
-		}
-		case keyStateReleased: {
+		case keyStateReleased:
 			ks->type = keyStateUntouched;
 			ks->time = 0.0f;
 			break;
-		}
 		default: break;
 		}
 	}
@@ -159,13 +139,9 @@ void keyStateUpdate(KeyState *ks, bool touched)
 bool isPressed(Controls *c, GameKeyType gkt)
 {
 	bool axis;
-
-	NOT(c);
-	
-	if (!(gkt >= 0 && gkt < gameKeyCount)) {
+	if (!(gkt >= 0 && gkt < gameKeyCount))
 		return false;
-	}
-	
+
 	assert(gkt >= 0);
 	assert(gkt < gameKeyCount);
 
@@ -1558,22 +1534,15 @@ void updateGameHotseatPause(GUI *g, Controls *c, game_t *gm)
 void *cbUpdateAi(void *data)
 {
 	move_t m;
-	ai_share_t *as; 
+	ai_share_t *as;
 	game_t *gm;
-
 	NOT(data);
-
 	as = data;
 	gm = as->game;
-
-	aiFindMove(&m, gm->turn, gm, NULL, &as->loading);
-
+	ai_find_move(&m, gm->turn, gm, NULL, &as->loading);
 	mk_action(gm, &m, &as->action);
-
 	as->loading = 1.f;
-
 	as->shareEnd = true;
-
 	return NULL;
 }
 
@@ -1613,59 +1582,39 @@ void updateGameAIPause(GUI *g, Controls *c, game_t *gm)
 
 void updateGameAreYouSureQuit(GUI *g, game_t *gm, Controls *c)
 {
-	NOT(g);
-	NOT(c);
-	NOT(gm);
-
 	updateMenuWidget(&g->gameAreYouSureQuit, c);
-	
 	if (submitted(c)) {
 		g->next = guiFocusGameMenu;
 		if (g->gameAreYouSureQuit.focus == yes) {
 			move_t m;
 			action_t a;
-
 			g->next = guiFocusGameOver;
-
 			m.type = MOVE_QUIT;
 			m.playerIdx = gm->turn;
-
 			mk_action(gm, &m, &a);
-
 			assert(a.type == ACTION_QUIT);
-
 			apply_action(&a, gm);
 		}
 		return;
 	}
-	if (goBack(c)) {
+	if (goBack(c))
 		g->next = guiFocusGameMenu;
-	}
 }
 
 void updateGameOver(GUI *g, Controls *c, game_t *gm)
 {
-	NOT(g);
-	NOT(c);
-		
-	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed) {
+	if (c->hardware.key[hardwareKeyStart].type == keyStatePressed)
 		toTransScreenFadePausePixelate(g, guiFocusTitle, 1.0f);
-	}
 	updateScoreBoard(&g->scoreBoard, gm, SPF);
 }
 
 void update_guiFocusTransScreen(GUI *g, float timeStep)
 {
 	TransScreen *ts;
-
-	NOT(g);
-
 	ts = &g->transScreen;
 	ts->elapsed += timeStep;
-
-	if (ts->elapsed >= ts->time) {
+	if (ts->elapsed >= ts->time)
 		g->next = ts->next;
-	}
 }
 
 void update(Env *e)
