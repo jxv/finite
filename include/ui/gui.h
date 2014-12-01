@@ -196,11 +196,11 @@ typedef enum
 
 typedef struct
 {
-	KeyState key[hardwareKeyCount];
-	AxisState axisX;
-	AxisState axisY;
-	AxisState accelX;
-	AxisState accelY;
+	key_state_t key[hardwareKeyCount];
+	axis_state_t axisX;
+	axis_state_t axisY;
+	axis_state_t accelX;
+	axis_state_t accelY;
 } HardwareControls;
 
 typedef enum
@@ -525,7 +525,7 @@ void initGame1vs1Human(game_t *g);
 void initGame1vs1HumanAI(game_t *g);
 void initScoreBoard(ScoreBoard *sb, game_t *g);
 
-void keyStateUpdate(KeyState *ks, bool);
+void keyStateUpdate(key_state_t *ks, bool);
 
 bool isPressed(Controls *c, GameKeyType gkt);
 bool isPressedHeld(Controls *c, GameKeyType gkt);

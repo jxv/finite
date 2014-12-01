@@ -27,19 +27,17 @@ void fontmapQuit(Font *f)
 		surface_free(f->map);
 }
 
-void initKeyState(KeyState *ks)
+void initKeyState(key_state_t *ks)
 {
-	ks->type = keyStateUntouched;
+	ks->type = KEY_STATE_UNTOUCHED;
 	ks->time = 0.0f;
 }
 
-void initAxisState(AxisState *as)
+void initAxisState(axis_state_t *as)
 {
-	const float deadZone = 0.33f;
-
-	NOT(as);
-	as->type = axisStateInDeadZone;
-	as->deadZone = deadZone;
+	const float dead_zone = 0.33f;
+	as->type = AXIS_STATE_IN_DEAD_ZONE;
+	as->dead_zone = dead_zone;
 	as->time = 0.f;
 	as->value = 0.f;
 }
@@ -91,11 +89,11 @@ void initDefaultRule(rule_t *r)
 
 void initGame1vs1Human(game_t *g)
 {
-	boardInit(&g->board);
-	bagInit(&g->bag);
+	board_init(&g->board);
+	bag_init(&g->bag);
 	g->playerNum = 2;
-	initplayer_tHuman(&g->player[0], &g->bag);
-	initplayer_tHuman(&g->player[1], &g->bag);
+	init_player_human(&g->player[0], &g->bag);
+	init_player_human(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
@@ -103,11 +101,11 @@ void initGame1vs1Human(game_t *g)
 
 void initGame1vs1HumanAI(game_t *g)
 {
-	boardInit(&g->board);
-	bagInit(&g->bag);
+	board_init(&g->board);
+	bag_init(&g->bag);
 	g->playerNum = 2;
-	initplayer_tHuman(&g->player[0], &g->bag);
-	initplayer_tAI(&g->player[1], &g->bag);
+	init_player_human(&g->player[0], &g->bag);
+	init_player_ai(&g->player[1], &g->bag);
 	g->player[0].active = true;
 	g->player[1].active = true;
 	initDefaultRule(&g->rule);
@@ -129,7 +127,6 @@ void initScoreBoard(ScoreBoard *sb, game_t *g)
 		sb->ctr[i].end = 0;
 		sb->ctr[i].stable = true;
 	}
-	
 }
 
 void initMenuWidget(MenuWidget *m, int focus, int max)
@@ -142,16 +139,9 @@ void initMenuWidget(MenuWidget *m, int focus, int max)
 
 void initSettings(Settings *s)
 {
-	int i;
-
-	NOT(s);
-
-	for (i = 0; i < volCount; i++) {
+	for (int i = 0; i < volCount; i++)
 		s->vol[i] = MAX_GUI_VOLUME;
-		
-	}
-
-	s->previous = guiFocusMenu; 
+	s->previous = guiFocusMenu;
 	initMenuWidget(&s->menu, settingsFocusSfx, settingsFocusCount);
 }
 
@@ -175,8 +165,6 @@ void initTextLog(TextLog *tl)
 
 void initGameGUI(GameGUI *gg)
 {
-	NOT(gg);
-	
 	mkRackWidget(&gg->rackWidget);
 	mkBoardWidget(&gg->boardWidget);
 	gg->focus = gameGUIFocusBoard;
@@ -192,13 +180,9 @@ void actionToLastMove(LastMove *lm, action_t *a)
 
 		NOT(lm);
 		NOT(a);
-		
-		for (idx.y = 0; idx.y < BOARD_Y; idx.y++) {
-			for (idx.x = 0; idx.x < BOARD_X; idx.x++) {
+		for (idx.y = 0; idx.y < BOARD_Y; idx.y++)
+			for (idx.x = 0; idx.x < BOARD_X; idx.x++)
 				lm->data.place[idx.y][idx.x] = false;
-			}
-		}
-
 		if (a->type != ACTION_PLACE) {
 			lm->type = lastMoveNone;
 			return;
@@ -210,10 +194,12 @@ void actionToLastMove(LastMove *lm, action_t *a)
 		switch (p->type) {
 		case PATH_DOT: {
 			if (p->data.dot.right.type == DIR_RIGHT) {
-				lm->data.place[p->data.dot.right.y][p->data.dot.right.x] = true;
+				lm->data.place[p->data.dot.right.y]
+					      [p->data.dot.right.x] = true;
 			}
 			if (p->data.dot.down.type == DIR_DOWN) {
-				lm->data.place[p->data.dot.down.y][p->data.dot.down.x] = true;
+				lm->data.place[p->data.dot.down.y]
+					      [p->data.dot.down.x] = true;
 			}
 			break;
 		}
@@ -223,10 +209,11 @@ void actionToLastMove(LastMove *lm, action_t *a)
 				break;
 			}
 			idx.y = p->data.horz.right.y;
-			for (idx.x = p->data.horz.right.x; idx.x < p->data.horz.right.x + p->data.horz.right.len; idx.x++) {
-				lm->data.place[idx.y][idx.x] = p->data.horz.right.pos[idx.x];
-			}
-				
+			for (int x = p->data.horz.right.x;
+			     x < p->data.horz.right.x + p->data.horz.right.len;
+			     x++)
+				lm->data.place[idx.y][x] =
+					p->data.horz.right.pos[x];
 			break;
 		}
 		case PATH_VERT: {
@@ -235,10 +222,12 @@ void actionToLastMove(LastMove *lm, action_t *a)
 				break;
 			}
 			idx.x = p->data.vert.down.x;
-			for (idx.y = p->data.vert.down.y; idx.y < p->data.vert.down.y + p->data.vert.down.len; idx.y++) {
-				lm->data.place[idx.y][idx.x] = p->data.vert.down.pos[idx.y];
-			}
-				
+			for (idx.y = p->data.vert.down.y;
+			     idx.y < p->data.vert.down.y +
+				p->data.vert.down.len;
+			     idx.y++)
+				lm->data.place[idx.y][idx.x] =
+					p->data.vert.down.pos[idx.y];
 			break;
 		}
 		default: break;
@@ -665,22 +654,24 @@ bool initIO(Env *e)
 				return false;
 			}
 			sprintf(str,"%c", i + 'a');
-			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.blackFont, str, 3, 0);
+			strDraw(e->io.tile[TILE_WILD][i][j], &e->io.blackFont,
+				str, 3, 0);
 			sprintf(str,"%c", i + 'A');
-			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.blackFont, str, 3, 0);
+			strDraw(e->io.tile[TILE_LETTER][i][j], &e->io.blackFont,
+				str, 3, 0);
 			count++; e->io.loading += 1.f / COUNT;
 			count++; e->io.loading += 1.f / COUNT;
 		}
 	}
-	
 	count++; e->io.loading += 1.f / COUNT;
-	if (!dictInitCount7(&e->game.dict, &e->io.loading, 50.f / COUNT, RES_PATH "dict.txt")) {
+	if (!dict_init_count_7(&e->game.dict, &e->io.loading, 50.f / COUNT,
+			    RES_PATH "dict.txt"))
 		return false;
-	}
 
 
 	e->io.fader = surface_cpy(e->io.screen);
-	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0, 0));
+	SDL_FillRect(e->io.fader, 0, SDL_MapRGBA(e->io.fader->format, 0, 0, 0,
+						 0));
 
 	e->io.pressStart = createText(&e->io.normalFont, "PRESS START");
 	count++; e->io.loading += 1.f / COUNT;
@@ -688,15 +679,15 @@ bool initIO(Env *e)
 	e->gui.scoreBoard.playerNum = e->game.playerNum = 0;
 	initGUI(&e->gui);
 	count++; e->io.loading += 1.f / COUNT;
-	if (!initMenuViews(&e->io, &e->gui)) {
+	if (!initMenuViews(&e->io, &e->gui))
 		return false;
-	}
 	count++; e->io.loading += 1.f / COUNT;
 
 	e->io.areYouSureQuit = createText(&e->io.normalFont, "Are you sure?");
 	{
 		char *text[gameMenuFocusCount] = {"Yes", "No"};
-		mkHighTexts(e->io.yesNo, &e->io.normalFont, &e->io.highlightFont, text, yesNoCount, NULL);
+		mkHighTexts(e->io.yesNo, &e->io.normalFont,
+			    &e->io.highlightFont, text, yesNoCount, NULL);
 	}
 	count++; e->io.loading += 1.f / COUNT;
 	if (!areHighTextsLoaded(e->io.yesNo, yesNoCount)) {
@@ -911,18 +902,12 @@ void freeMusic(Mix_Music *m)
 
 void quit(Env *e)
 {
-	int i, j;
-
-	NOT(e);
-
-	if (e->io.joystick) {
+	if (e->io.joystick)
 		SDL_JoystickClose(e->io.joystick);
-	}
-	if (e->io.accel) {
+	if (e->io.accel)
 		SDL_JoystickClose(e->io.accel);
-	}
 
-	dictQuit(&e->game.dict);
+	dict_quit(&e->game.dict);
 
 	surface_free(e->io.screen);
 	surface_free(e->io.titleScreen);
@@ -961,17 +946,16 @@ void quit(Env *e)
 	surface_free(e->io.shuffle);
 	surface_free(e->io.shuffleDisable);
 	surface_free(e->io.boardCover);
-	for (i = 0; i < SQ_COUNT; i++)
+	for (int i = 0; i < SQ_COUNT; i++)
 		surface_free(e->io.sq[i]);
-	for (i = 0; i < tileLookCount; i++)
+	for (int i = 0; i < tileLookCount; i++)
 		surface_free(e->io.wild[i]);
-	for (i = 0; i < LETTER_COUNT; i++) {
-		for (j = 0; j < tileLookCount; j++) {
+	for (int i = 0; i < LETTER_COUNT; i++)
+		for (int j = 0; j < tileLookCount; j++) {
 			surface_free(e->io.tile[TILE_WILD][i][j]);
 			surface_free(e->io.tile[TILE_LETTER][i][j]);
 		}
-	}
-	for (i = 0; i < hardwareKeyCount; i++)
+	for (int i = 0; i < hardwareKeyCount; i++)
 		surface_free(e->io.btn[i]);
 	freeMenuViews(&e->io);
 	freeHighTexts(e->io.menuFocus, menuFocusCount);

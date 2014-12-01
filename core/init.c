@@ -5,7 +5,7 @@
 #include "common.h"
 
 
-void boardInit(board_t *b)
+void board_init(board_t *b)
 {
 	assert(BOARD_X == 15);
 	assert(BOARD_Y == 15);
@@ -53,74 +53,6 @@ void boardInit(board_t *b)
 	b->sq[6][8] = SQ_DBL_LET;
 	b->sq[8][6] = SQ_DBL_LET;
 
-/*
-	for (y = 0; y <= 7; y++) {
-		for (x = 0; x <= 7; x++) {
-			b->sq[y][x] = SQ_NORMAL;
-			if (x == y && x == 0) {
-				b->sq[y][x] = SQ_DBL_LET;
-				continue;
-			}
-			if (((x == y) && (x == 2 || x == 7)) || (x + y == 5 && x < 4 && y < 4)) {
-				b->sq[y][x] = SQ_BLOCK;
-				continue;
-			}
-			if (x > 0 && y > 0 && x + y == 3) {
-				b->sq[y][x] = SQ_FREE;
-				continue;
-			}
-			if ((x == 6 && y == 5 ) || (x == 5 && y == 6)) {
-				b->sq[y][x] = SQ_NO_VOWEL;
-				continue;
-			}
-			if (((x == 0 || x == 7) && (y == 0 || y == 7)) || (x == 6 && y == 7) || (x == 7 && y == 6)) {
-				b->sq[y][x] = SQ_TRP_WRD;
-				continue;
-			}
-			if (x < 6 && y < 6 && x + y == 7) {
-				b->sq[y][x] = SQ_DBL_WRD;
-				continue;
-			}
-			if ((x == 3 || x == 7)&& (y == 3 || y == 7)) {
-				b->sq[y][x] = SQ_TRP_LET;
-				continue;
-			}
-			if ((x % 3 == 2  && y % 3 == 2) || (x % 5 == 1 && y % 5 == 1)) {
-				b->sq[y][x] = SQ_DBL_LET;
-				continue;
-			}
-			
-		}
-	}
-
-	for (y = 0; y <= 7; y++) {
-		for (x = 7; x < 15; x++) {
-			b->sq[y][x] = b->sq[y][14-x];
-		}
-	}
-	for (y = 7; y < 15; y++) {
-		for (x = 15; x >= 7; x--) {
-			b->sq[y][x] = b->sq[14-y][14-x];
-		}
-	}
-	for (y = 7; y < 15; y++) {
-		for (x = 0; x <= 7; x++) {
-			b->sq[y][x] = b->sq[14-y][x];
-		}
-	}
-
-	for (x = 4; x < 7; x++) {
-		b->sq[13][x] = SQ_BLOCK;
-		b->sq[1][14-x] = SQ_BLOCK;
-	}
-
-	b->sq[7][7] = SQ_BLOCK;
-	
-	b->sq[7][3]  = SQ_NO_VOWEL;
-	b->sq[7][11] = SQ_NO_VOWEL;
-
-*/
-
 	b->sq[1][1] = SQ_DBL_WRD;
 	b->sq[13][1] = SQ_DBL_WRD;
 	b->sq[1][13] = SQ_DBL_WRD;
@@ -156,7 +88,7 @@ void boardInit(board_t *b)
 }
 
 
-void bagShake(bag_t *b, int offset)
+void bag_shake(bag_t *b, int offset)
 {
 	int val[BAG_SIZE];
 	srand(offset);
@@ -183,7 +115,7 @@ void bagShake(bag_t *b, int offset)
 	}
 }
 
-void bagInit(bag_t *b)
+void bag_init(bag_t *b)
 {
 	int i, j, k;
 
@@ -218,8 +150,6 @@ void bagInit(bag_t *b)
 
 	static const int tileWildNum = 2;
 
-	NOT(b);
-
 	b->head = 0;
 	b->tail = BAG_SIZE - 1;
 	for (i = 0; i < tileWildNum; i++) {
@@ -238,17 +168,13 @@ void bagInit(bag_t *b)
 
 	/* short for testing */
 	/*b->tail = 20; bagShake(b, 0);*/
-	bagShake(b, time(NULL));
+	bag_shake(b, time(NULL));
 }
 
 
-void playerInit(player_t *p, bag_t *b)
+void player_init(player_t *p, bag_t *b)
 {
-	int i;
-
-	NOT(p);
-
-	for (i = 0; i < RACK_SIZE; i++) {
+	for (int i = 0; i < RACK_SIZE; i++) {
 		p->tile[i].type = TILE_NONE;
 		p->tile[i].letter = LETTER_A;
 	}
@@ -258,15 +184,15 @@ void playerInit(player_t *p, bag_t *b)
 	p->active = true;
 }
 
-void initplayer_tHuman(player_t *p, bag_t *b)
+void init_player_human(player_t *p, bag_t *b)
 {
-	playerInit(p, b);
+	player_init(p, b);
 	p->type = PLAYER_HUMAN;
 }
 
-void initplayer_tAI(player_t *p, bag_t *b)
+void init_player_ai(player_t *p, bag_t *b)
 {
-	playerInit(p, b);
+	player_init(p, b);
 	p->type = PLAYER_AI;
 	p->aiShare.shareStart = false;
 	p->aiShare.shareEnd = false;
@@ -274,7 +200,7 @@ void initplayer_tAI(player_t *p, bag_t *b)
 	p->aiShare.action.type = ACTION_INVALID;
 }
 
-void moveInit(move_t *m)
+void move_init(move_t *m)
 {
 	m->type = MOVE_PLACE;
 	m->data.place.num = 4;
@@ -290,11 +216,10 @@ void moveInit(move_t *m)
 }
 
 
-void wordCons(word_t *w, const char *str)
+void word_cons(word_t *w, const char *str)
 {
 	w->len = 0;
-	for (int i = 0; str[i] != '\0' && w->len < BOARD_SIZE;
-	     i++) {
+	for (int i = 0; str[i] != '\0' && w->len < BOARD_SIZE; i++) {
 		char c = toupper(str[i]);
 		if (c >= 'A' && c <= 'Z') {
 			w->letter[w->len] = LETTER_A + c - 'A';
@@ -304,7 +229,7 @@ void wordCons(word_t *w, const char *str)
 }
 
 
-void swapWord(word_t *w0, word_t *w1)
+void swap_sord(word_t *w0, word_t *w1)
 {
 	const word_t tmp = *w0;
 	*w0 = *w1;
@@ -312,28 +237,24 @@ void swapWord(word_t *w0, word_t *w1)
 }
 
 
-int cmpWordWrapper(const void *p0, const void *p1)
+int cmp_word_wrapper(const void *p0, const void *p1)
 {
 	return cmp_word(p0, p1);
 }
 
-bool dictInit(dict_t *d, const char *name)
+bool dict_init(dict_t *d, const char *name)
 {
-	long i;
-	FILE *f = NULL;
-	word_t w;
 	char buf[BOARD_SIZE + 1];
-	f = fopen(name, "r");
-	if (f == NULL) {
+	FILE *f = fopen(name, "r");
+	if (f == NULL)
 		return false;
-	}
 	/* count */
 	d->num = 0;
 	while (fgets(buf, BOARD_SIZE + 1, f)) {
-		wordCons(&w, buf);
-		if (w.len > 1) {
+		word_t w;
+		word_cons(&w, buf);
+		if (w.len > 1)
 			d->num++;
-		}
 	}
 	/* error check */
 	if (ferror(f)) {
@@ -343,18 +264,15 @@ bool dictInit(dict_t *d, const char *name)
 	rewind(f);
 	assert(d->num > 0);
 	/* alloc */
-	d->words = memAlloc(sizeof(word_t) * d->num);
-
+	d->words = malloc(sizeof(word_t) * d->num);
 	NOT(d->words);
-
-	i = 0;
-	for (i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
-		wordCons(&w, buf);
-		if (w.len > 1) {
+	for (int i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
+		word_t w;
+		word_cons(&w, buf);
+		if (w.len > 1)
 			d->words[i] = w;
-		} else {
+		else
 			i--;
-		}
 	}
 	/* error check */
 	if (ferror(f)) {
@@ -363,30 +281,25 @@ bool dictInit(dict_t *d, const char *name)
 	}
 	fclose(f);
 	/* sort */
-	qsort(d->words, d->num, sizeof(word_t), cmpWordWrapper);
+	qsort(d->words, d->num, sizeof(word_t), cmp_word_wrapper);
 	return true;
 }
 
-bool dictInitCount7(dict_t *d, float *count, float increase, const char *name)
+bool dict_init_count_7(dict_t *d, float *count, float increase,
+		       const char *name)
 {
-	long i;
-	FILE *f = NULL;
-	word_t w;
 	char buf[BOARD_SIZE + 1];
-	NOT(d);
-	NOT(name);
-	f = fopen(name, "r");
-	if (f == NULL) {
+	FILE *f = fopen(name, "r");
+	if (f == NULL)
 		return false;
-	}
 	*count += increase;
 	/* count */
 	d->num = 0;
 	while (fgets(buf, BOARD_SIZE + 1, f)) {
-		wordCons(&w, buf);
-		if (w.len > 1) {
+		word_t w;
+		word_cons(&w, buf);
+		if (w.len > 1)
 			d->num++;
-		}
 	}
 	*count += increase;
 	/* error check */
@@ -398,19 +311,16 @@ bool dictInitCount7(dict_t *d, float *count, float increase, const char *name)
 	*count += increase;
 	assert(d->num > 0);
 	/* alloc */
-	d->words = memAlloc(sizeof(word_t) * d->num);
+	d->words = malloc(sizeof(word_t) * d->num);
 	*count += increase;
-
 	NOT(d->words);
-
-	i = 0;
-	for (i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
-		wordCons(&w, buf);
-		if (w.len > 1) {
+	for (int i = 0; i < d->num && fgets(buf, BOARD_SIZE + 1, f); i++) {
+		word_t w;
+		word_cons(&w, buf);
+		if (w.len > 1)
 			d->words[i] = w;
-		} else {
+		else
 			i--;
-		}
 	}
 	*count += increase;
 	/* error check */
@@ -421,17 +331,12 @@ bool dictInitCount7(dict_t *d, float *count, float increase, const char *name)
 	fclose(f);
 	/* sort */
 	*count += increase;
-	qsort(d->words, d->num, sizeof(word_t), cmpWordWrapper);
+	qsort(d->words, d->num, sizeof(word_t), cmp_word_wrapper);
 	*count += increase;
 	return true;
 }
 
-
-void dictQuit(dict_t *dict)
+void dict_quit(dict_t *dict)
 {
-	NOT(dict);
-	if (dict->words)
-		memFree(dict->words);
+	free(dict->words);
 }
-
-
